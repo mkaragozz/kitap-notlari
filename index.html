@@ -4,12 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Kitap Notlarım</title>
-  <meta name="description" content="Kitaplardan alıntılarınızı sayfa numarasıyla saklayın, arayın ve dışa aktarın.">
+  <meta name="description" content="Kitaplardan alıntılarınızı sayfa numarasıyla saklayın; düşüncelerinizi ve günlüğünüzü yazın.">
   <meta name="theme-color" content="#7C5CFF">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Kitap Notlarım">
   <meta name="mobile-web-app-capable" content="yes">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,10 +22,13 @@
     <nav class="nav" id="nav">
       <div class="nav-brand"><span class="logo">📚</span> Kitap Notlarım</div>
       <a href="#/" data-nav="home"><span class="ni">📚</span><span>Kitaplar</span></a>
+      <a href="#/thoughts" data-nav="thoughts"><span class="ni">💡</span><span>Düşünceler</span></a>
+      <a href="#/journal" data-nav="journal"><span class="ni">📔</span><span>Günlük</span></a>
       <a href="#/search" data-nav="search"><span class="ni">🔎</span><span>Ara</span></a>
-      <a href="#/reread" data-nav="reread"><span class="ni">🔖</span><span>Tekrar Oku</span><b class="nav-badge" id="reread-badge" hidden></b></a>
-      <a href="#/tags" data-nav="tags"><span class="ni">🏷️</span><span>Etiketler</span></a>
-      <a href="#/settings" data-nav="settings"><span class="ni">⚙️</span><span>Ayarlar</span></a>
+      <a href="#/more" data-nav="more" class="mob-only"><span class="ni">☰</span><span>Diğer</span><b class="nav-badge" hidden></b></a>
+      <a href="#/reread" data-nav="reread" class="desk-only"><span class="ni">🔖</span><span>Tekrar Oku</span><b class="nav-badge" hidden></b></a>
+      <a href="#/tags" data-nav="tags" class="desk-only"><span class="ni">🏷️</span><span>Etiketler</span></a>
+      <a href="#/settings" data-nav="settings" class="desk-only"><span class="ni">⚙️</span><span>Ayarlar</span></a>
     </nav>
     <main id="view" tabindex="-1"></main>
   </div>
