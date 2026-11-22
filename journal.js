@@ -7,7 +7,9 @@ import * as Lock from './lock.js';
 import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, rerender, go, today, fmtTime, fmtDateTime,
   longDate, addDays, parseDate, localDate, MONTHS, pickFiles, loadImage, dataUrlToBlob } from './ui.js';
 
-export const PROMPTS = [
+// Hazır başlıklar. Kullanıcı bunların adını/emojisini değiştirebilir, gizleyebilir;
+// ayrıca kendi başlıklarını ekleyebilir (DB 'prompts' deposunda saklanır, yedeğe dahildir).
+export const BUILTIN = [
   { id: 'place', e: '📍', l: 'Bugün nereye gittim', ph: 'Bugün nerelere gittiniz, kimlerle?' },
   { id: 'saw', e: '👀', l: 'Ne gördüm', ph: 'Gördüğünüz bir manzara, bir yüz, bir an…' },
   { id: 'event', e: '⚡', l: 'Önemli bir olay', ph: 'Bugün ne oldu? Nasıl gelişti?' },
@@ -16,7 +18,25 @@ export const PROMPTS = [
   { id: 'remember', e: '📌', l: 'Bunu unutmamalıyım', ph: 'İleride hatırlamak istediğiniz şey…' },
   { id: 'free', e: '✍️', l: 'Serbest yazı', ph: 'İçinizden geldiği gibi yazın…' },
 ];
-const P = Object.fromEntries(PROMPTS.map((p) => [p.id, p]));
+const BUILTIN_IDS = new Set(BUILTIN.map((p) => p.id));
+const EMOJIS = ['😊', '🙏', '🌅', '🌙', '☀️', '🌧️', '🌳', '🌊', '⛰️', '🏠', '🚶', '🚗', '✈️', '🕌', '📚', '📖', '✏️', '🎓', '💼', '🏃', '⚽', '🍽️', '☕', '🎵', '🎬', '👨‍👩‍👧', '👶', '🧑‍🤝‍🧑', '💬', '📞', '🎁', '🎉', '💡', '🎯', '✅', '⭐', '🌟', '💪', '😌', '😢', '😡', '🤔', '🤲', '🕊️', '🌹', '📷', '💰', '🩺'];
+
+/** Görünen başlık listesi: hazır başlıklar (değişiklikleriyle, gizlenenler hariç) + kendi başlıklarınız */
+export function prompts({ withHidden = false } = {}) {
+  const recs = new Map(DB.promptRecords().map((r) => [r.id, r]));
+  const out = BUILTIN.map((b) => { const r = recs.get(b.id) || {}; return { ...b, e: r.e || b.e, l: r.l || b.l, hidden: !!r.hidden, builtin: true }; });
+  DB.promptRecords().filter((r) => !BUILTIN_IDS.has(r.id)).sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''))
+    .forEach((r) => out.push({ id: r.id, e: r.e || '🔖', l: r.l || 'Başlık', ph: r.ph || 'Yazın…', hidden: !!r.hidden, builtin: false }));
+  return withHidden ? out : out.filter((p) => !p.hidden);
+}
+/** Bir yazının başlığı: güncel başlık; silinmişse yazıya kaydedilen kopya; o da yoksa Serbest yazı */
+export function getPrompt(id, m = null) {
+  const p = prompts({ withHidden: true }).find((x) => x.id === id);
+  if (p) return p;
+  if (m && m.pl) return { id, e: m.pe || '🔖', l: m.pl, ph: 'Yazın…' };
+  return prompts({ withHidden: true }).find((x) => x.id === 'free');
+}
+
 export const MOODS = [['😄', 'Çok iyi'], ['🙂', 'İyi'], ['😐', 'Normal'], ['😔', 'Üzgün'], ['😢', 'Çok kötü']];
 
 function lockBtn() { return Lock.enabled() ? '<button class="btn sm ghost" data-act="lock-now" title="Kilitle">🔒</button>' : ''; }
@@ -48,8 +68,9 @@ export function renderJournal(date) {
   });
   h += `<div class="card mood-card"><span class="small muted" style="font-weight:800">${isToday ? 'Bugün' : 'O gün'} genel olarak nasıldınız?</span>
     <div class="moods">${MOODS.map(([e, l]) => `<button class="${day && day.mood === e ? 'on' : ''}" data-act="mood" data-d="${date}" data-m="${e}" title="${l}">${e}<small>${l}</small></button>`).join('')}</div></div>
-    <div class="section-title">✏️ Yazmak için bir başlık seçin</div>
-    <div class="prompt-grid">${PROMPTS.map((p) => `<button class="prompt-btn" data-act="moment-new" data-d="${date}" data-p="${p.id}"><span>${p.e}</span>${esc(p.l)}</button>`).join('')}</div>`;
+    <div class="section-title">✏️ Yazmak için bir başlık seçin <button class="btn sm ghost" data-act="prompts-manage" style="margin-left:auto">⚙️ Başlıklar</button></div>
+    <div class="prompt-grid">${prompts().map((p) => `<button class="prompt-btn" data-act="moment-new" data-d="${date}" data-p="${p.id}"><span>${p.e}</span>${esc(p.l)}</button>`).join('')}
+      <button class="prompt-btn add" data-act="prompt-new"><span>＋</span>Yeni başlık ekle</button></div>`;
   if (!ms.length) {
     h += `<div class="empty small"><div class="e">📖</div><h3>${isToday ? 'Bugün' : 'Bu gün'} henüz bir şey yazmadınız</h3><p>Yukarıdaki başlıklardan birine dokunun. Gün içinde istediğiniz kadar yazabilirsiniz; her biri yazdığınız saatle kaydedilir.</p></div>`;
   } else {
@@ -61,7 +82,7 @@ export function renderJournal(date) {
 }
 
 function momentHtml(m, date) {
-  const p = P[m.prompt] || P.free;
+  const p = getPrompt(m.prompt, m);
   const otherDay = m.at && localDate(new Date(m.at)) !== date;
   return `<section class="moment">
     <div class="m-head"><span class="m-time">${esc(fmtTime(m.at))}</span><span class="m-label">${p.e} ${esc(m.title || p.l)}</span>
@@ -86,11 +107,13 @@ function openMomentEditor({ id = null, date = today(), prompt = 'free' } = {}) {
   const m = id ? { ...DB.getMoment(id) } : { date, prompt, text: '', photos: [] };
   if (id && !m.id) return;
   let photos = [...(m.photos || [])];
-  const p = P[m.prompt] || P.free;
+  const p = getPrompt(m.prompt, m);
+  const list = prompts();
+  if (!list.some((x) => x.id === p.id)) list.unshift(p);
   const s = openSheet({
     title: `${p.e} ${m.title || p.l}`,
     body: `<p class="hint">${id ? `Yazılış: ${esc(fmtDateTime(m.at))}` : `🕒 ${esc(fmtDateTime(new Date().toISOString()))} olarak kaydedilecek${date !== today() ? ` · ${esc(longDate(date))} sayfasına` : ''}.`}</p>
-      <label class="field"><span>Başlık</span><select id="m-prompt">${PROMPTS.map((x) => `<option value="${x.id}" ${x.id === m.prompt ? 'selected' : ''}>${x.e} ${esc(x.l)}</option>`).join('')}</select></label>
+      <label class="field"><span>Başlık</span><select id="m-prompt">${list.map((x) => `<option value="${x.id}" ${x.id === m.prompt ? 'selected' : ''}>${x.e} ${esc(x.l)}</option>`).join('')}</select></label>
       <label class="field"><textarea id="m-text" class="serif" rows="8" placeholder="${esc(p.ph)}">${esc(m.text || '')}</textarea></label>
       <div class="field"><span>Fotoğraflar</span><div class="m-photos edit" id="m-photos"></div>
         <div class="row-actions"><button type="button" class="btn sm" data-x="cam">📷 Fotoğraf çek</button><button type="button" class="btn sm" data-x="gal">🖼️ Galeriden seç</button></div>
@@ -101,7 +124,7 @@ function openMomentEditor({ id = null, date = today(), prompt = 'free' } = {}) {
     $('#m-photos', s).innerHTML = photos.map((ph) => `<div class="ph"><img src="${ph.data}" alt=""><button type="button" data-rm="${ph.id}" aria-label="Kaldır">×</button></div>`).join('');
   };
   paint();
-  $('#m-prompt', s).onchange = (e) => { $('#m-text', s).placeholder = (P[e.target.value] || P.free).ph; };
+  $('#m-prompt', s).onchange = (e) => { $('#m-text', s).placeholder = getPrompt(e.target.value).ph; };
   s.addEventListener('click', async (e) => {
     const rm = e.target.closest('[data-rm]');
     if (rm) { photos = photos.filter((x) => x.id !== rm.dataset.rm); paint(); return; }
@@ -115,6 +138,7 @@ function openMomentEditor({ id = null, date = today(), prompt = 'free' } = {}) {
       const text = $('#m-text', s).value.trim();
       if (!text && !photos.length) { toast('Bir şey yazın ya da fotoğraf ekleyin'); return; }
       m.prompt = $('#m-prompt', s).value; m.text = text; m.photos = photos;
+      const cur = getPrompt(m.prompt, m); m.pe = cur.e; m.pl = cur.l; // başlık sonradan silinse de yazıda kalsın
       if (!m.at) m.at = new Date().toISOString(); else m.editedAt = new Date().toISOString();
       await DB.save('moments', m);
       await closeSheet(); toast('Günlüğe kaydedildi ✓'); rerender();
@@ -199,7 +223,7 @@ function exportMonth(ym) {
     const withPh = $('#ex-ph', s).checked;
     const days = dates.map((d) => ({
       date: d, label: longDate(d), mood: (DB.getDay(d) || {}).mood || '',
-      moments: DB.momentsOn(d).map((m) => ({ at: m.at, promptLabel: `${(P[m.prompt] || P.free).e} ${(P[m.prompt] || P.free).l}`, text: m.text, photos: withPh ? m.photos || [] : [] })),
+      moments: DB.momentsOn(d).map((m) => ({ at: m.at, promptLabel: `${getPrompt(m.prompt, m).e} ${getPrompt(m.prompt, m).l}`, text: m.text, photos: withPh ? m.photos || [] : [] })),
     }));
     if (b.dataset.f === 'pdf') { await closeSheet(); EX.printHtml(EX.buildJournalPrintHtml(title, days)); return; }
     try {
@@ -212,7 +236,85 @@ function exportMonth(ym) {
   });
 }
 
+// ---- Başlık ekleme / düzenleme ----
+function firstEmoji(str) {
+  const t = String(str || '').trim();
+  if (!t) return '';
+  try { const seg = new Intl.Segmenter('tr', { granularity: 'grapheme' }); return [...seg.segment(t)][0].segment; } catch (e) { return [...t][0]; }
+}
+function openPromptEditor(id = null, onDone = null) {
+  const cur = id ? prompts({ withHidden: true }).find((x) => x.id === id) : null;
+  let emoji = cur ? cur.e : '😊';
+  const s = openSheet({
+    title: cur ? 'Başlığı düzenle' : '＋ Yeni günlük başlığı',
+    body: `<div class="pe-preview"><span id="pe-e">${emoji}</span><b id="pe-l">${esc(cur ? cur.l : 'Başlık adı')}</b></div>
+      <label class="field"><span>Başlık adı</span><input id="pe-name" maxlength="40" value="${esc(cur ? cur.l : '')}" placeholder="ör. Bugün şükrettiklerim"></label>
+      <div class="field"><span>Emoji: aşağıdan seçin ya da klavyenizin emoji tuşuyla yazın</span>
+        <div style="display:flex;gap:8px;align-items:center"><input id="pe-emoji" class="input" style="width:80px;text-align:center;font-size:24px" value="${emoji}" aria-label="Emoji"><span class="small muted">Kendi emojinizi buraya yazabilirsiniz</span></div>
+        <div class="emoji-grid">${EMOJIS.map((x) => `<button type="button" data-em="${x}" class="${x === emoji ? 'on' : ''}">${x}</button>`).join('')}</div></div>
+      ${cur && cur.builtin ? '' : `<label class="field"><span>Yazı kutusundaki ipucu (isteğe bağlı)</span><input id="pe-ph" maxlength="80" value="${esc(cur && !cur.builtin ? cur.ph : '')}" placeholder="ör. Bugün neler için minnettarsınız?"></label>`}
+      ${cur && cur.builtin ? '<p class="hint">Bu hazır bir başlık; adını ve emojisini değiştirebilirsiniz.</p>' : ''}`,
+    foot: `<button class="btn" data-act="close-sheet">Vazgeç</button><button class="btn primary" data-x="save">💾 Kaydet</button>`,
+  });
+  const paint = () => {
+    $('#pe-e', s).textContent = emoji;
+    $('#pe-l', s).textContent = $('#pe-name', s).value.trim() || 'Başlık adı';
+    s.querySelectorAll('[data-em]').forEach((b) => b.classList.toggle('on', b.dataset.em === emoji));
+  };
+  $('#pe-name', s).oninput = paint;
+  $('#pe-emoji', s).oninput = (e) => { const f = firstEmoji(e.target.value); if (f) { emoji = f; e.target.value = f; paint(); } };
+  s.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-em]'); if (!b) return;
+    emoji = b.dataset.em; $('#pe-emoji', s).value = emoji; paint();
+  });
+  $('[data-x="save"]', s).onclick = async () => {
+    const l = $('#pe-name', s).value.trim();
+    if (!l) { toast('Başlık adını yazın'); $('#pe-name', s).focus(); return; }
+    const ph = $('#pe-ph', s) ? $('#pe-ph', s).value.trim() : '';
+    const rec = (cur && DB.promptRecords().find((r) => r.id === cur.id)) || (cur ? { id: cur.id } : {});
+    Object.assign(rec, { e: emoji, l, hidden: cur ? cur.hidden : false });
+    if (!cur || !cur.builtin) rec.ph = ph;
+    await DB.save('prompts', rec);
+    await closeSheet();
+    toast(cur ? 'Başlık güncellendi ✓' : 'Yeni başlık eklendi ✓');
+    if (onDone) onDone(); else rerender();
+  };
+  setTimeout(() => $('#pe-name', s).focus(), 250);
+}
+
+function managePrompts() {
+  const all = prompts({ withHidden: true });
+  const s = openSheet({
+    title: '⚙️ Günlük başlıkları',
+    body: `<p class="hint">Kendi başlıklarınızı ekleyin, adlarını ve emojilerini değiştirin. Kullanmadığınız hazır başlıkları gizleyebilirsiniz; eski yazılarınız etkilenmez.</p>
+      ${all.map((p) => `<div class="nb-item ${p.hidden ? 'dim' : ''}"><span>${p.e} ${esc(p.l)}${p.builtin ? '' : ' <small class="muted">(benim)</small>'}</span>
+        <button class="btn sm" data-ed="${p.id}" aria-label="Düzenle">✏️</button>
+        ${p.builtin ? `<button class="btn sm" data-hide="${p.id}">${p.hidden ? '👁️ Göster' : '🙈 Gizle'}</button>` : `<button class="btn sm danger" data-del="${p.id}" aria-label="Sil">🗑️</button>`}</div>`).join('')}
+      <button class="btn primary block mt" data-x="new">＋ Yeni başlık ekle</button>`,
+  });
+  s.addEventListener('click', async (e) => {
+    const ed = e.target.closest('[data-ed]'), hide = e.target.closest('[data-hide]'), del = e.target.closest('[data-del]');
+    if (ed) openPromptEditor(ed.dataset.ed, () => { managePrompts(); rerender(); });
+    if (e.target.closest('[data-x="new"]')) openPromptEditor(null, () => { managePrompts(); rerender(); });
+    if (hide) {
+      const id = hide.dataset.hide;
+      const rec = DB.promptRecords().find((r) => r.id === id) || { id };
+      rec.hidden = !rec.hidden;
+      if (rec.hidden && prompts().length <= 1) { toast('En az bir başlık görünür kalmalı'); return; }
+      await DB.save('prompts', rec); managePrompts(); rerender();
+    }
+    if (del) {
+      const p = all.find((x) => x.id === del.dataset.del);
+      if (await confirmDialog(`“${p.l}” başlığı silinsin mi? Bu başlıkla yazdığınız eski yazılar silinmez.`, 'Sil')) {
+        await DB.remove('prompts', p.id); toast('Başlık silindi'); rerender();
+      }
+    }
+  });
+}
+
 export const JOURNAL_ACTIONS = {
+  'prompt-new': () => openPromptEditor(),
+  'prompts-manage': () => managePrompts(),
   jday: (el) => { if (!el.disabled) go('#/journal/' + el.dataset.d); },
   mood: async (el) => {
     const d = el.dataset.d;

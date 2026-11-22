@@ -349,6 +349,13 @@ mark { background: #FFE27A; color: inherit; border-radius: 3px; padding: 0 1px; 
 .prompt-btn { border: 0; background: var(--card); box-shadow: var(--shadow); border-radius: 14px; padding: 12px 10px; font-weight: 800; font-size: 14px; color: var(--ink); cursor: pointer; display: flex; align-items: center; gap: 8px; text-align: left; line-height: 1.25; }
 .prompt-btn span { font-size: 22px; }
 .prompt-btn:active { transform: scale(.97); }
+.prompt-btn.add { background: transparent; box-shadow: none; border: 2px dashed var(--line); color: var(--muted); }
+.pe-preview { display: flex; align-items: center; gap: 10px; background: var(--card); box-shadow: var(--shadow); border-radius: 14px; padding: 12px 14px; margin-bottom: 14px; font-size: 15px; }
+.pe-preview span { font-size: 26px; }
+.emoji-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); gap: 6px; margin-top: 10px; }
+.emoji-grid button { border: 2px solid transparent; background: var(--card); border-radius: 10px; font-size: 22px; padding: 4px 0; cursor: pointer; }
+.emoji-grid button.on { border-color: var(--violet); background: var(--violet-soft); }
+.nb-item.dim span:first-child { opacity: .45; text-decoration: line-through; }
 .day-page { background: #FFFDF8; border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 16px; background-image: repeating-linear-gradient(transparent 0 31px, #F3EADF 31px 32px); }
 .day-page h2 { font-family: 'Lora', Georgia, serif; font-size: 20px; margin-bottom: 10px; }
 .moment { padding: 6px 0 12px; }

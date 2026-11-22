@@ -7,9 +7,9 @@ import { $, $$, esc, view, nav, toast, openSheet, closeSheet, confirmDialog, mod
 import { pageNum, sortQuotes, allTags, quoteCard, thoughtCard, thoughtText, openRelated, starFilterHtml, applyStarFilter,
   tagInputHtml, bindTagInput } from './cards.js';
 import { renderThoughts, renderThought, THOUGHT_ACTIONS } from './thoughts.js';
-import { renderJournal, renderJournalCal, JOURNAL_ACTIONS, PROMPTS } from './journal.js';
+import { renderJournal, renderJournalCal, JOURNAL_ACTIONS, getPrompt } from './journal.js';
 
-const APP_VERSION = '2.0';
+const APP_VERSION = '2.1';
 const COLORS = [['#7C5CFF', '#FF5DA2'], ['#FF6B57', '#FFB020'], ['#10B8A6', '#2F9BFF'], ['#FF5DA2', '#FFB020'], ['#2F9BFF', '#7C5CFF'], ['#10B8A6', '#7CD957'], ['#FF8A3D', '#FF5D7A']];
 const TAG_COLORS = ['#7C5CFF', '#FF5DA2', '#10B8A6', '#FF6B57', '#2F9BFF', '#FFB020', '#8E5CF7', '#13A88F'];
 const STATUS = { okunuyor: '📖 Okunuyor', okunacak: '🕮 Okunacak', bitti: '✅ Bitti' };
@@ -560,7 +560,7 @@ function renderSearch(q) {
   if (mHits.length) {
     h += `<div class="section-title">📔 Günlük <span class="count">${mHits.length}</span></div>`;
     mHits.slice(0, 60).forEach((m) => {
-      const p = PROMPTS.find((x) => x.id === m.prompt) || PROMPTS[PROMPTS.length - 1];
+      const p = getPrompt(m.prompt, m);
       h += `<a class="card m-hit" href="#/journal/${m.date}"><div class="small muted"><b>${esc(longDate(m.date))}</b> · ${esc(fmtTime(m.at))} · ${p.e} ${esc(p.l)}</div><div class="m-text clamp3">${highlight(m.text, terms)}</div></a>`;
     });
   }

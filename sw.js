@@ -1,7 +1,7 @@
 // Çevrimdışı çalışma için önbellek. Sürüm değişince eski önbellek silinir.
 // Yeni sürüm yüklendiğinde hemen devreye girmez; uygulama "Yeni sürüm hazır" uyarısı gösterir,
 // kullanıcı "Yenile"ye basınca devreye girer.
-const VERSION = 'kn-v2.0';
+const VERSION = 'kn-v2.1';
 const SHELL = ['./', 'index.html', 'styles.css', 'app.js', 'ui.js', 'db.js', 'cards.js', 'lock.js', 'scanner.js', 'thoughts.js', 'journal.js', 'export.js',
   'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'privacy.html', 'lib/html5-qrcode.min.js'];
 const CDN = /^https:\/\/(cdn\.jsdelivr\.net|cdnjs\.cloudflare\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)\//;

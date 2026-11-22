@@ -9,10 +9,11 @@
 //   notebooks : düşünce defterleri
 //   moments   : günlük anları (gün, saat, başlık türü, metin, fotoğraflar)
 //   days      : günlük gün bilgisi (ruh hâli). id = 'YYYY-MM-DD'
+//   prompts   : günlük başlıkları (kendi eklediğiniz başlıklar + hazır başlıklarda yaptığınız değişiklikler)
 
 const DB_NAME = 'kitap-notlari';
-const DB_VERSION = 2;
-export const STORES = ['books', 'quotes', 'thoughts', 'notebooks', 'moments', 'days'];
+const DB_VERSION = 3;
+export const STORES = ['books', 'quotes', 'thoughts', 'notebooks', 'moments', 'days', 'prompts'];
 let dbPromise = null;
 
 export const S = Object.fromEntries(STORES.map((s) => [s, new Map()]));
@@ -120,6 +121,7 @@ export function getNotebook(id) { const n = S.notebooks.get(id); return n && !n.
 export function moments() { return live('moments'); }
 export function momentsOn(date) { return moments().filter((m) => m.date === date).sort((a, b) => (a.at || '').localeCompare(b.at || '')); }
 export function getMoment(id) { const m = S.moments.get(id); return m && !m.deleted ? m : null; }
+export function promptRecords() { return live('prompts'); }
 export function getDay(date) { const d = S.days.get(date); return d && !d.deleted ? d : null; }
 
 // ---- Genel kaydetme / silme ----
