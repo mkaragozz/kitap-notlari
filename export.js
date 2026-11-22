@@ -1,4 +1,5 @@
-// Dışa aktarma: PDF (yazdır), Word (.docx), Excel (.xlsx), kaynakça biçimleri, dosya kaydetme.
+// Dışa aktarma: PDF (yazdır), Word (.docx), Excel (.xlsx), dosya kaydetme.
+// Kitap notları, düşünceler ve günlük için.
 
 const DOCX_URL = 'https://cdn.jsdelivr.net/npm/docx@8.5.0/+esm';
 const XLSX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
@@ -39,75 +40,17 @@ export function safeName(s) {
   return String(s || 'kitap').replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, ' ').trim().slice(0, 80) || 'kitap';
 }
 
-// ---------- Kaynakça biçimleri ----------
-function splitAuthors(a) {
-  return String(a || '').split(/\s*(?:;|,|&| ve | and )\s*/).map((x) => x.trim()).filter(Boolean);
-}
-function nameParts(full) {
-  const p = full.split(/\s+/);
-  const last = p.pop() || '';
-  return { first: p.join(' '), last };
-}
-const trUpper = (s) => s.toLocaleUpperCase('tr');
-function initials(first) {
-  return first.split(/[\s-]+/).filter(Boolean).map((w) => trUpper(w[0]) + '.').join(' ');
-}
-function ordinalEd(ed) { return ed && String(ed) !== '1' ? `${ed}. bs.` : ''; }
-
+// ---------- Kaynak gösterimi: "Yazar, Kitap, s. X" ----------
 /** Biçimli parçalar döner: [{t:'metin', i:true/false}] (i = italik) */
-export function citation(book, style, page) {
-  const authors = splitAuthors(book.author);
-  const title = book.title + (book.subtitle ? ': ' + book.subtitle : '');
-  const pg = page ? String(page) : '';
+export function citation(book, page) {
   const out = [];
-  const T = (t) => out.push({ t, i: false });
-  const I = (t) => out.push({ t, i: true });
-
-  if (style === 'apa') {
-    const names = authors.map((a) => { const n = nameParts(a); return n.first ? `${n.last}, ${initials(n.first)}` : n.last; });
-    let au = names.length <= 1 ? (names[0] || '') : names.length === 2 ? `${names[0]} & ${names[1]}` : names.slice(0, -1).join(', ') + ', & ' + names[names.length - 1];
-    if (au) T(au + ' ');
-    T(`(${book.year || 't.y.'}). `);
-    I(title);
-    const extra = [book.translator ? `Çev. ${book.translator}` : '', ordinalEd(book.edition)].filter(Boolean).join('; ');
-    T((extra ? ` (${extra})` : '') + '. ');
-    if (book.publisher) T(book.publisher + '.');
-    if (pg) T(` s. ${pg}.`);
-  } else if (style === 'mla') {
-    if (authors.length) {
-      const n = nameParts(authors[0]);
-      let au = n.first ? `${n.last}, ${n.first}` : n.last;
-      if (authors.length === 2) au += `, ve ${authors[1]}`;
-      if (authors.length > 2) au += ', vd.';
-      T(au + '. ');
-    }
-    I(title); T('. ');
-    if (book.translator) T(`Çev. ${book.translator}, `);
-    if (book.edition && String(book.edition) !== '1') T(`${book.edition}. bs., `);
-    T([book.publisher, book.year].filter(Boolean).join(', ') + (pg ? `, s. ${pg}.` : '.'));
-  } else if (style === 'chicago') {
-    if (authors.length) {
-      const n = nameParts(authors[0]);
-      let au = n.first ? `${n.last}, ${n.first}` : n.last;
-      if (authors.length > 1) au += ', ' + authors.slice(1).join(', ');
-      T(au + '. ');
-    }
-    I(title); T('. ');
-    if (book.translator) T(`Çev. ${book.translator}. `);
-    if (book.edition && String(book.edition) !== '1') T(`${book.edition}. bs. `);
-    const place = [book.city, book.publisher].filter(Boolean).join(': ');
-    T([place, book.year].filter(Boolean).join(', ') + '.');
-    if (pg) T(` s. ${pg}.`);
-  } else {
-    // Kısa: Yazar, Kitap, s. X
-    if (book.author) T(book.author + ', ');
-    I(book.title);
-    if (pg) T(`, s. ${pg}`);
-  }
+  if (book.author) out.push({ t: book.author + ', ', i: false });
+  out.push({ t: book.title, i: true });
+  if (page) out.push({ t: `, s. ${page}`, i: false });
   return out;
 }
-export const citationText = (book, style, page) => citation(book, style, page).map((p) => p.t).join('');
-export const citationHtml = (book, style, page) => citation(book, style, page).map((p) => (p.i ? `<i>${esc(p.t)}</i>` : esc(p.t))).join('');
+export const citationText = (book, page) => citation(book, page).map((p) => p.t).join('');
+export const citationHtml = (book, page) => citation(book, page).map((p) => (p.i ? `<i>${esc(p.t)}</i>` : esc(p.t))).join('');
 
 export function pageLabel(q) {
   if (!q.page) return '';
@@ -124,16 +67,6 @@ export function bookMetaLine(b) {
     b.edition && `${b.edition}. baskı`,
     b.isbn && `ISBN ${b.isbn}`,
   ].filter(Boolean).join(' · ');
-}
-
-const KIND_LABEL = { alinti: 'Alıntı', not: 'Not', tekrar: 'Tekrar okunacak' };
-
-function sortByPage(qs) {
-  return [...qs].sort((a, b) => (parseInt(a.page, 10) || 1e9) - (parseInt(b.page, 10) || 1e9) || (a.createdAt || '').localeCompare(b.createdAt || ''));
-}
-
-function selectQuotes(quotes, opt) {
-  return sortByPage(quotes.filter((q) => (q.kind === 'alinti' && opt.quotes) || (q.kind === 'not' && opt.notes) || (q.kind === 'tekrar' && opt.reread)));
 }
 
 // Basit markdown (özet için)
@@ -155,6 +88,22 @@ export function mdToHtml(md) {
   return html;
 }
 
+const STAR_TXT = ['', '⭐ Önemli', '⭐⭐ Çok önemli', '⭐⭐⭐ Müthiş tespit'];
+const pad2 = (n) => String(n).padStart(2, '0');
+function dt(iso) { if (!iso) return ''; const d = new Date(iso); return `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}.${d.getFullYear()} · ${pad2(d.getHours())}:${pad2(d.getMinutes())}`; }
+function hm(iso) { if (!iso) return ''; const d = new Date(iso); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; }
+
+function sortByPage(qs) {
+  return [...qs].sort((a, b) => (parseInt(a.page, 10) || 1e9) - (parseInt(b.page, 10) || 1e9) || (a.createdAt || '').localeCompare(b.createdAt || ''));
+}
+
+/** opt: { minStars, rereadOnly, comments, tags } */
+function selectQuotes(quotes, opt) {
+  return sortByPage(quotes.filter((q) => (q.stars || 0) >= (opt.minStars || 0)
+    && (!opt.rereadOnly || (q.reread && !q.reread.done))
+    && (q.text || (opt.comments && q.comment))));
+}
+
 // ---------- PDF / Yazdır ----------
 export function buildPrintHtml(book, toc, quotes, opt) {
   const qs = selectQuotes(quotes, opt);
@@ -169,19 +118,19 @@ export function buildPrintHtml(book, toc, quotes, opt) {
     h += `</ul></section>`;
   }
   if (qs.length) {
-    h += `<section><h2>Alıntılar ve Notlar</h2>`;
+    h += `<section><h2>Alıntılar</h2>`;
     qs.forEach((q, i) => {
-      h += `<div class="pd-q"><blockquote>${esc(q.text || '').replace(/\n/g, '<br>')}</blockquote>`;
       const pl = pageLabel(q);
-      const ref = opt.style === 'page' ? (pl ? `s. ${esc(pl)}` : '') : citationHtml(book, opt.style, pl);
-      h += `<p class="pd-ref"><sup>${i + 1}</sup> ${ref}${q.chapter ? ` — ${esc(q.chapter)}` : ''}${q.kind !== 'alinti' ? ` <span class="pd-kind">(${KIND_LABEL[q.kind]})</span>` : ''}</p>`;
-      if (opt.comments && q.comment) h += `<p class="pd-comment"><b>Notum:</b> ${esc(q.comment)}</p>`;
+      h += `<div class="pd-q">`;
+      if (q.text) h += `<blockquote>${esc(q.text).replace(/\n/g, '<br>')}</blockquote>`;
+      h += `<p class="pd-ref"><sup>${i + 1}</sup> ${pl ? `s. ${esc(pl)}` : ''}${q.chapter ? ` — ${esc(q.chapter)}` : ''}${q.stars ? ` <span class="pd-stars">${STAR_TXT[q.stars]}</span>` : ''}</p>`;
+      if (opt.comments && q.comment) h += `<p class="pd-comment"><b>💭 Yorumum:</b> ${esc(q.comment).replace(/\n/g, '<br>')}</p>`;
       if (opt.tags && q.tags && q.tags.length) h += `<p class="pd-tags">${q.tags.map((t) => '#' + esc(t)).join(' ')}</p>`;
       h += `</div>`;
     });
     h += `</section>`;
   }
-  h += `<footer class="pd-foot">Kaynak: ${citationHtml(book, opt.style === 'page' ? 'apa' : opt.style)}</footer>`;
+  h += `<footer class="pd-foot">Kaynak: ${citationHtml(book)}</footer>`;
   h += `</article>`;
   return h;
 }
@@ -192,15 +141,22 @@ export function printHtml(html) {
   document.body.classList.add('printing');
   const done = () => { document.body.classList.remove('printing'); area.innerHTML = ''; window.removeEventListener('afterprint', done); };
   window.addEventListener('afterprint', done);
-  setTimeout(() => window.print(), 50);
+  setTimeout(() => window.print(), 80);
 }
 
 // ---------- Word ----------
 let docxMod = null;
-async function getDocx() { docxMod = docxMod || (await import(DOCX_URL)); return docxMod; }
+async function getDocx() {
+  try { docxMod = docxMod || (await import(DOCX_URL)); } catch (e) { throw new Error('Word kütüphanesi yüklenemedi (internet bağlantısını kontrol edin).'); }
+  return docxMod;
+}
+const DOC_STYLES = { default: { document: { run: { font: 'Calibri', size: 23 } } } };
 
 function runsFromCitation(D, parts, size, color) {
   return parts.map((p) => new D.TextRun({ text: p.t, italics: p.i, size, color }));
+}
+function textRuns(D, text, opts = {}) {
+  return String(text || '').split(/\n/).flatMap((line, i) => (i ? [new D.TextRun({ ...opts, text: line, break: 1 })] : [new D.TextRun({ ...opts, text: line })]));
 }
 
 function mdToDocx(D, md) {
@@ -254,54 +210,42 @@ export async function buildDocx(sections, opt) {
     }
     const qs = selectQuotes(quotes, opt);
     if (qs.length) {
-      children.push(new D.Paragraph({ text: 'Alıntılar ve Notlar', heading: D.HeadingLevel.HEADING_1 }));
+      children.push(new D.Paragraph({ text: 'Alıntılar', heading: D.HeadingLevel.HEADING_1 }));
       qs.forEach((q) => {
         const pl = pageLabel(q);
-        const textRuns = String(q.text || '').split(/\n/).flatMap((line, i) => (i ? [new D.TextRun({ text: line, break: 1 })] : [new D.TextRun(line)]));
-        if (opt.footnotes) {
-          const parts = opt.style === 'page' ? citation(book, 'short', pl) : citation(book, opt.style, pl);
-          footnotes[fn] = { children: [new D.Paragraph({ children: runsFromCitation(D, parts) })] };
-          textRuns.push(new D.FootnoteReferenceRun(fn));
-          fn++;
+        if (q.text) {
+          const runs = textRuns(D, q.text);
+          if (opt.footnotes) {
+            footnotes[fn] = { children: [new D.Paragraph({ children: runsFromCitation(D, citation(book, pl)) })] };
+            runs.push(new D.FootnoteReferenceRun(fn));
+            fn++;
+          }
+          children.push(new D.Paragraph({
+            children: runs,
+            indent: { left: 360 },
+            border: { left: { style: D.BorderStyle.SINGLE, size: 18, color: '7C5CFF', space: 10 } },
+            spacing: { before: 200, after: 40 },
+          }));
         }
-        children.push(new D.Paragraph({
-          children: textRuns,
-          indent: { left: 360 },
-          border: { left: { style: D.BorderStyle.SINGLE, size: 18, color: '7C5CFF', space: 10 } },
-          spacing: { before: 200, after: 40 },
-        }));
-        // Sayfa bilgisi: alıntının hemen altında
-        const refParts = opt.style === 'page' ? (pl ? [{ t: `s. ${pl}`, i: false }] : []) : citation(book, opt.style, pl);
-        const refRuns = [new D.TextRun({ text: '↳ ', color: '7C5CFF', size: 18 }), ...runsFromCitation(D, refParts, 18, '555555')];
+        const refRuns = [new D.TextRun({ text: '↳ ', color: '7C5CFF', size: 18 })];
+        if (pl) refRuns.push(new D.TextRun({ text: `s. ${pl}`, size: 18, color: '555555' }));
         if (q.chapter) refRuns.push(new D.TextRun({ text: ` — ${q.chapter}`, size: 18, color: '555555' }));
-        if (q.kind !== 'alinti') refRuns.push(new D.TextRun({ text: ` (${KIND_LABEL[q.kind]})`, size: 18, color: 'D9480F' }));
-        children.push(new D.Paragraph({ children: refRuns, indent: { left: 360 }, spacing: { after: 80 } }));
-        if (opt.comments && q.comment) children.push(new D.Paragraph({ indent: { left: 360 }, children: [new D.TextRun({ text: 'Notum: ', bold: true, size: 20 }), new D.TextRun({ text: q.comment, italics: true, size: 20 })] }));
+        if (q.stars) refRuns.push(new D.TextRun({ text: `  ${STAR_TXT[q.stars]}`, size: 18, color: 'B7791F' }));
+        children.push(new D.Paragraph({ children: refRuns, indent: { left: 360 }, spacing: { before: q.text ? 0 : 200, after: 80 } }));
+        if (opt.comments && q.comment) children.push(new D.Paragraph({ indent: { left: 360 }, children: [new D.TextRun({ text: '💭 Yorumum: ', bold: true, size: 20 }), ...textRuns(D, q.comment, { italics: true, size: 20 })] }));
         if (opt.tags && q.tags && q.tags.length) children.push(new D.Paragraph({ indent: { left: 360 }, children: [new D.TextRun({ text: q.tags.map((t) => '#' + t).join('  '), size: 18, color: '0FB9A8' })] }));
       });
     }
-    children.push(new D.Paragraph({ spacing: { before: 300 }, children: [new D.TextRun({ text: 'Kaynak: ', bold: true, size: 20 }), ...runsFromCitation(D, citation(book, opt.style === 'page' ? 'apa' : opt.style), 20)] }));
+    children.push(new D.Paragraph({ spacing: { before: 300 }, children: [new D.TextRun({ text: 'Kaynak: ', bold: true, size: 20 }), ...runsFromCitation(D, citation(book), 20)] }));
   });
 
   const doc = new D.Document({
     creator: 'Kitap Notlarım',
     title: sections.length === 1 ? sections[0].book.title : 'Kitap Notlarım',
-    styles: { default: { document: { run: { font: 'Calibri', size: 23 } } } },
+    styles: DOC_STYLES,
     footnotes,
     sections: [{ properties: {}, children }],
   });
-  return D.Packer.toBlob(doc);
-}
-
-export async function buildBibliographyDocx(books, style) {
-  const D = await getDocx();
-  const sorted = [...books].sort((a, b) => (a.author || a.title).localeCompare(b.author || b.title, 'tr'));
-  const children = [new D.Paragraph({ text: 'Kaynakça', heading: D.HeadingLevel.TITLE })];
-  sorted.forEach((b) => children.push(new D.Paragraph({
-    children: runsFromCitation(D, citation(b, style)),
-    indent: { left: 720, hanging: 720 }, spacing: { after: 120 },
-  })));
-  const doc = new D.Document({ styles: { default: { document: { run: { font: 'Calibri', size: 23 } } } }, sections: [{ children }] });
   return D.Packer.toBlob(doc);
 }
 
@@ -315,24 +259,25 @@ export async function buildXlsx(sections, opt) {
     selectQuotes(quotes, opt).forEach((q) => qRows.push({
       'Kitap': book.title,
       'Yazar': book.author || '',
-      'Tür': KIND_LABEL[q.kind] || '',
-      'Alıntı / Not': q.text || '',
+      'Alıntı': q.text || '',
       'Sayfa': pageLabel(q),
       'Bölüm': q.chapter || '',
-      'Etiketler': (q.tags || []).join(', '),
-      'Yorumum': q.comment || '',
-      'Kaynak gösterimi': citationText(book, opt.style === 'page' ? 'apa' : opt.style, pageLabel(q)),
+      'Önem': STAR_TXT[q.stars || 0],
+      'Etiketler': opt.tags ? (q.tags || []).join(', ') : '',
+      'Yorumum': opt.comments ? q.comment || '' : '',
+      'Tekrar oku': q.reread ? (q.reread.done ? 'Okundu' : (q.reread.due || 'Evet')) : '',
+      'Kaynak': citationText(book, pageLabel(q)),
       'Eklenme': (q.createdAt || '').slice(0, 10),
     }));
   });
-  const ws1 = X.utils.json_to_sheet(qRows.length ? qRows : [{ 'Bilgi': 'Seçilen türde kayıt yok' }]);
-  ws1['!cols'] = [{ wch: 28 }, { wch: 20 }, { wch: 14 }, { wch: 80 }, { wch: 8 }, { wch: 24 }, { wch: 22 }, { wch: 40 }, { wch: 50 }, { wch: 11 }];
+  const ws1 = X.utils.json_to_sheet(qRows.length ? qRows : [{ 'Bilgi': 'Seçilen ölçütlerde kayıt yok' }]);
+  ws1['!cols'] = [{ wch: 28 }, { wch: 20 }, { wch: 80 }, { wch: 8 }, { wch: 24 }, { wch: 18 }, { wch: 22 }, { wch: 40 }, { wch: 12 }, { wch: 40 }, { wch: 11 }];
   X.utils.book_append_sheet(wb, ws1, 'Alıntılar');
 
   const bRows = sections.map(({ book, quotes }) => ({
     'Kitap': book.title, 'Alt başlık': book.subtitle || '', 'Yazar': book.author || '', 'Çevirmen': book.translator || '',
     'Yayınevi': book.publisher || '', 'Basım yeri': book.city || '', 'Yıl': book.year || '', 'Baskı': book.edition || '',
-    'ISBN': book.isbn || '', 'Sayfa sayısı': book.pages || '', 'Durum': book.status || '', 'Başlama': book.startDate || '',
+    'ISBN': book.isbn || '', 'Sayfa sayısı': book.pages || '', 'Konu': book.categories || '', 'Durum': book.status || '', 'Başlama': book.startDate || '',
     'Bitiş': book.endDate || '', 'Puan': book.rating || '', 'Alıntı sayısı': quotes.length,
   }));
   X.utils.book_append_sheet(wb, X.utils.json_to_sheet(bRows), 'Kitaplar');
@@ -348,4 +293,80 @@ export async function buildXlsx(sections, opt) {
   }
   const arr = X.write(wb, { type: 'array', bookType: 'xlsx' });
   return new Blob([arr], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+
+// ---------- Düşünceler ----------
+/** groups: [{ name, thoughts: [...] }] */
+export function buildThoughtsPrintHtml(title, groups) {
+  let h = `<article class="print-doc"><header class="pd-head"><h1>${esc(title)}</h1><p class="pd-meta">Dışa aktarma: ${esc(dt(new Date().toISOString()))}</p></header>`;
+  groups.forEach((g) => {
+    if (!g.thoughts.length) return;
+    h += `<section><h2>📓 ${esc(g.name)}</h2>`;
+    g.thoughts.forEach((t) => {
+      h += `<div class="pd-thought"><h3>${esc(t.title || 'Başlıksız düşünce')}${t.stars ? ` <span class="pd-stars">${STAR_TXT[t.stars]}</span>` : ''}</h3>`;
+      (t.parts || []).forEach((p) => { h += `<p class="pd-part"><span class="pd-time">${esc(dt(p.at))}</span><br>${esc(p.text).replace(/\n/g, '<br>')}</p>`; });
+      if (t.tags && t.tags.length) h += `<p class="pd-tags">${t.tags.map((x) => '#' + esc(x)).join(' ')}</p>`;
+      h += `</div>`;
+    });
+    h += `</section>`;
+  });
+  return h + `</article>`;
+}
+export async function buildThoughtsDocx(title, groups) {
+  const D = await getDocx();
+  const children = [new D.Paragraph({ text: title, heading: D.HeadingLevel.TITLE })];
+  groups.forEach((g) => {
+    if (!g.thoughts.length) return;
+    children.push(new D.Paragraph({ text: g.name, heading: D.HeadingLevel.HEADING_1 }));
+    g.thoughts.forEach((t) => {
+      children.push(new D.Paragraph({ heading: D.HeadingLevel.HEADING_2, children: [new D.TextRun(t.title || 'Başlıksız düşünce'), ...(t.stars ? [new D.TextRun({ text: '  ' + STAR_TXT[t.stars], size: 20, color: 'B7791F' })] : [])] }));
+      (t.parts || []).forEach((p) => {
+        children.push(new D.Paragraph({ children: [new D.TextRun({ text: dt(p.at), size: 18, color: '7C5CFF', bold: true })], spacing: { before: 120 } }));
+        children.push(new D.Paragraph({ children: textRuns(D, p.text), spacing: { after: 80 } }));
+      });
+      if (t.tags && t.tags.length) children.push(new D.Paragraph({ children: [new D.TextRun({ text: t.tags.map((x) => '#' + x).join('  '), size: 18, color: '0FB9A8' })] }));
+    });
+  });
+  const doc = new D.Document({ creator: 'Kitap Notlarım', title, styles: DOC_STYLES, sections: [{ children }] });
+  return D.Packer.toBlob(doc);
+}
+
+// ---------- Günlük ----------
+/** days: [{ date, label, mood, moments: [{at, promptLabel, text, photos:[{data,w,h}]}] }] */
+export function buildJournalPrintHtml(title, days) {
+  let h = `<article class="print-doc"><header class="pd-head"><h1>${esc(title)}</h1></header>`;
+  days.forEach((d) => {
+    h += `<section class="pd-day"><h2>${esc(d.label)} ${d.mood || ''}</h2>`;
+    d.moments.forEach((m) => {
+      h += `<div class="pd-moment"><p class="pd-mhead"><span class="pd-time">${esc(hm(m.at))}</span> · <b>${esc(m.promptLabel)}</b></p>`;
+      if (m.text) h += `<p>${esc(m.text).replace(/\n/g, '<br>')}</p>`;
+      if (m.photos && m.photos.length) h += `<div class="pd-photos">${m.photos.map((p) => `<img src="${p.data}" alt="">`).join('')}</div>`;
+      h += `</div>`;
+    });
+    h += `</section>`;
+  });
+  return h + `</article>`;
+}
+function dataUrlBytes(dataUrl) {
+  const bin = atob(dataUrl.split(',')[1] || '');
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return arr;
+}
+export async function buildJournalDocx(title, days) {
+  const D = await getDocx();
+  const children = [new D.Paragraph({ text: title, heading: D.HeadingLevel.TITLE })];
+  days.forEach((d) => {
+    children.push(new D.Paragraph({ text: `${d.label} ${d.mood || ''}`.trim(), heading: D.HeadingLevel.HEADING_1 }));
+    d.moments.forEach((m) => {
+      children.push(new D.Paragraph({ spacing: { before: 160 }, children: [new D.TextRun({ text: hm(m.at) + '  ', bold: true, color: '7C5CFF', size: 20 }), new D.TextRun({ text: m.promptLabel, bold: true, size: 20 })] }));
+      if (m.text) children.push(new D.Paragraph({ children: textRuns(D, m.text), spacing: { after: 80 } }));
+      (m.photos || []).forEach((p) => {
+        const w = 420, hgt = p.w && p.h ? Math.round((420 * p.h) / p.w) : 315;
+        try { children.push(new D.Paragraph({ children: [new D.ImageRun({ data: dataUrlBytes(p.data), transformation: { width: w, height: hgt } })] })); } catch (e) { /* görsel eklenemedi */ }
+      });
+    });
+  });
+  const doc = new D.Document({ creator: 'Kitap Notlarım', title, styles: DOC_STYLES, sections: [{ children }] });
+  return D.Packer.toBlob(doc);
 }
