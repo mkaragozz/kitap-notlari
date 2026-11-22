@@ -26,8 +26,9 @@ Adresi göndermeniz yeterli (Ayarlar ya da Diğer → **📤 Uygulamayı paylaş
 Her kişinin verileri **kendi cihazında** saklanır; kimse başkasının notlarını göremez.
 
 ## Güncellemeler
-Yeni sürüm yayınlandığında uygulama açılışta **"✨ Yeni sürüm hazır · Yenile"** uyarısı gösterir.
-"Yenile"ye basmanız yeterli; verileriniz etkilenmez.
+Yeni sürüm yayınlandığında uygulama kendini otomatik günceller ve **"✨ Uygulama güncellendi"** bildirimi gösterir.
+Verileriniz etkilenmez. Uygulama açılmazsa birkaç saniye sonra **"🔄 Onar ve yeniden aç"** düğmesi çıkar;
+bu düğme yalnızca uygulama dosyalarını yeniden indirir, notlarınızı silmez.
 
 ## Bölümler
 - **📚 Kitaplar:** Kitap eklerken arka kapaktaki **barkodu okutun**; adı, yazarı, yayınevi, yılı,
@@ -56,5 +57,6 @@ en son düzenlenen kalır. Yedek dosyası günlüğünüzü ve fotoğraflarını
 - Gizlilik politikası: `privacy.html` (uygulamada Diğer → Gizlilik politikası).
 
 ## Geliştirici notu
-Uygulama dosyalarında değişiklik yaptığınızda `sw.js` içindeki `VERSION` değerini de değiştirin
-(ör. `kn-v2.0` → `kn-v2.1`). Böylece kullanıcılara "Yeni sürüm hazır" uyarısı gider.
+Uygulama dosyalarında değişiklik yaptığınızda sürümü yükseltin: `sw.js` içindeki `V` değerini ve
+tüm dosyalardaki `?v=...` eklerini (index.html ve .js dosyalarındaki import satırları) birlikte değiştirin
+(ör. `2.2` → `2.3`). Sürüm eki, GitHub önbelleğinin eski dosya vermesini ve dosyaların karışmasını önler.

@@ -1,7 +1,7 @@
 // Barkod okuyucu + ISBN ile kitap bilgisi bulma (ücretsiz kaynaklar: Open Library, Google Books).
-import { $, esc, openSheet, closeSheet, pickFiles, fileToDataUrl, toast } from './ui.js';
+import { $, esc, openSheet, closeSheet, pickFiles, fileToDataUrl, toast } from './ui.js?v=2.2';
 
-const LIB = 'lib/html5-qrcode.min.js';
+const LIB = 'lib/html5-qrcode.min.js?v=2.3.8';
 let libLoad = null;
 function loadLib() {
   if (window.__Html5QrcodeLibrary__) return Promise.resolve(window.__Html5QrcodeLibrary__);

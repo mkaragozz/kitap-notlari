@@ -1,11 +1,11 @@
 // 📔 Günlük: yönlendirici başlıklarla gün içinde istediğiniz kadar "an" yazın.
 // Her an yazıldığı saatle kaydedilir; gün sonunda hepsi tek bir sayfa olarak okunur.
 // Ruh hâli, fotoğraf, takvim ve "geçen yıl bugün" hatırlatması.
-import * as DB from './db.js';
-import * as EX from './export.js';
-import * as Lock from './lock.js';
+import * as DB from './db.js?v=2.2';
+import * as EX from './export.js?v=2.2';
+import * as Lock from './lock.js?v=2.2';
 import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, rerender, go, today, fmtTime, fmtDateTime,
-  longDate, addDays, parseDate, localDate, MONTHS, pickFiles, loadImage, dataUrlToBlob } from './ui.js';
+  longDate, addDays, parseDate, localDate, MONTHS, pickFiles, loadImage, dataUrlToBlob } from './ui.js?v=2.2';
 
 // Hazır başlıklar. Kullanıcı bunların adını/emojisini değiştirebilir, gizleyebilir;
 // ayrıca kendi başlıklarını ekleyebilir (DB 'prompts' deposunda saklanır, yedeğe dahildir).

@@ -1,8 +1,8 @@
 // PIN kilidi: yalnızca Düşünceler ve Günlük bölümlerini korur.
 // PIN cihazda açık metin olarak değil, tuzlanmış SHA-256 özeti olarak saklanır.
 // Not: Bu bir "meraklı gözlere karşı" kilittir; veriler cihazda şifrelenmiş değildir.
-import * as DB from './db.js';
-import { $, $$, esc, toast, openSheet, closeSheet, rerender } from './ui.js';
+import * as DB from './db.js?v=2.2';
+import { $, $$, esc, toast, openSheet, closeSheet, rerender } from './ui.js?v=2.2';
 
 const IDLE_MS = 5 * 60 * 1000;
 let unlocked = false;
