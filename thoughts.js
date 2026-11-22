@@ -1,11 +1,11 @@
 // 💡 Düşüncelerim: kitaplardan bağımsız fikirler. Defterler, ortak etiketler, yıldız,
 // her parça tarih-saatli; eski bir düşüncenin altına sonradan ekleme yapılabilir.
-import * as DB from './db.js';
-import * as EX from './export.js';
-import * as Lock from './lock.js';
+import * as DB from './db.js?v=2.2';
+import * as EX from './export.js?v=2.2';
+import * as Lock from './lock.js?v=2.2';
 import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, rerender, go, fmtDateTime, today, norm,
-  starPickerHtml, bindStarPicker, starsBadge, STAR_LABELS } from './ui.js';
-import { thoughtCard, thoughtTitle, thoughtText, thoughtLastAt, tagInputHtml, bindTagInput, openRelated } from './cards.js';
+  starPickerHtml, bindStarPicker, starsBadge, STAR_LABELS } from './ui.js?v=2.2';
+import { thoughtCard, thoughtTitle, thoughtText, thoughtLastAt, tagInputHtml, bindTagInput, openRelated } from './cards.js?v=2.2';
 
 const state = { nb: 'all', sort: 'new', stars: 'all', q: '' };
 

@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=2.2">
 </head>
 <body>
   <div id="app">
@@ -35,6 +35,30 @@
   <div id="modal-root"></div>
   <div id="toast" role="status" aria-live="polite"></div>
   <div id="print-area"></div>
-  <script type="module" src="app.js"></script>
+  <script type="module" src="app.js?v=2.2"></script>
+  <script>
+    // Güvenlik ağı: uygulama birkaç saniye içinde açılamazsa (ör. bozuk önbellek) onarma düğmesi göster.
+    (function () {
+      var errs = [];
+      // Yalnızca uygulama dosyalarını (önbellek + servis çalışanı) siler; notlar (IndexedDB) silinmez.
+      window.__knRepair = function () {
+        var p = [];
+        if ('serviceWorker' in navigator) p.push(navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }));
+        if (window.caches) p.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }));
+        Promise.all(p).catch(function () {}).then(function () { location.replace(location.pathname + '?r=' + Date.now() + location.hash); });
+      };
+      window.addEventListener('error', function (e) { errs.push((e.message || (e.target && (e.target.src || e.target.href)) || 'hata')); }, true);
+      window.addEventListener('unhandledrejection', function (e) { errs.push(String(e.reason && (e.reason.message || e.reason))); });
+      setTimeout(function () {
+        if (window.__knStarted) return;
+        var v = document.getElementById('view');
+        v.innerHTML = '<div class="empty"><div class="e">🛠️</div><h3>Uygulama açılamadı</h3>' +
+          '<p>Büyük ihtimalle telefondaki eski dosyalar yenileriyle karıştı. Aşağıdaki düğme yalnızca uygulama dosyalarını yeniden indirir; <b>notlarınız silinmez</b>.</p>' +
+          '<button class="btn primary" id="kn-repair">🔄 Onar ve yeniden aç</button>' +
+          (errs.length ? '<p class="small muted" style="margin-top:14px;word-break:break-word">Ayrıntı: ' + errs.slice(0, 3).join(' · ').replace(/</g, '&lt;') + '</p>' : '') + '</div>';
+        document.getElementById('kn-repair').onclick = window.__knRepair;
+      }, 6000);
+    })();
+  </script>
 </body>
 </html>

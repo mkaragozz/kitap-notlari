@@ -1,15 +1,16 @@
-import * as DB from './db.js';
-import * as EX from './export.js';
-import * as Lock from './lock.js';
-import * as Scan from './scanner.js';
+import * as DB from './db.js?v=2.2';
+import * as EX from './export.js?v=2.2';
+import * as Lock from './lock.js?v=2.2';
+import * as Scan from './scanner.js?v=2.2';
 import { $, $$, esc, view, nav, toast, openSheet, closeSheet, confirmDialog, modal, today, fmtDate, norm, highlight,
-  pickFiles, fileToDataUrl, copyText, starPickerHtml, bindStarPicker, longDate, fmtTime } from './ui.js';
+  pickFiles, fileToDataUrl, copyText, starPickerHtml, bindStarPicker, longDate, fmtTime } from './ui.js?v=2.2';
 import { pageNum, sortQuotes, allTags, quoteCard, thoughtCard, thoughtText, openRelated, starFilterHtml, applyStarFilter,
-  tagInputHtml, bindTagInput } from './cards.js';
-import { renderThoughts, renderThought, THOUGHT_ACTIONS } from './thoughts.js';
-import { renderJournal, renderJournalCal, JOURNAL_ACTIONS, getPrompt } from './journal.js';
+  tagInputHtml, bindTagInput } from './cards.js?v=2.2';
+import { renderThoughts, renderThought, THOUGHT_ACTIONS } from './thoughts.js?v=2.2';
+import { renderJournal, renderJournalCal, JOURNAL_ACTIONS, getPrompt } from './journal.js?v=2.2';
 
-const APP_VERSION = '2.1';
+const APP_VERSION = '2.2';
+window.__knStarted = true; // index.html'deki güvenlik ağı için: modüller sorunsuz yüklendi
 const COLORS = [['#7C5CFF', '#FF5DA2'], ['#FF6B57', '#FFB020'], ['#10B8A6', '#2F9BFF'], ['#FF5DA2', '#FFB020'], ['#2F9BFF', '#7C5CFF'], ['#10B8A6', '#7CD957'], ['#FF8A3D', '#FF5D7A']];
 const TAG_COLORS = ['#7C5CFF', '#FF5DA2', '#10B8A6', '#FF6B57', '#2F9BFF', '#FFB020', '#8E5CF7', '#13A88F'];
 const STATUS = { okunuyor: '📖 Okunuyor', okunacak: '🕮 Okunacak', bitti: '✅ Bitti' };
@@ -81,7 +82,7 @@ function route() {
     else renderHome();
   } catch (err) {
     console.error(err);
-    view.innerHTML = `<div class="empty"><div class="e">😕</div><h3>Bir hata oluştu</h3><p>${esc(err.message)}</p></div>`;
+    view.innerHTML = `<div class="empty"><div class="e">😕</div><h3>Bir hata oluştu</h3><p>${esc(err.message)}</p><p class="small mt">Uygulama yeni güncellendiyse eski dosyalar karışmış olabilir. Bu düğme yalnızca uygulama dosyalarını yeniden indirir, <b>notlarınız silinmez</b>.</p><button class="btn primary" onclick="window.__knRepair && window.__knRepair()">🔄 Onar ve yeniden aç</button></div>`;
   }
   if (path !== lastPath) { window.scrollTo(0, 0); lastPath = path; }
   updateBadge();
@@ -778,10 +779,6 @@ const ACTIONS = {
     if (!(await confirmDialog('Son kez soruyorum: her şey silinsin mi?', 'Evet, hepsini sil'))) return;
     await DB.wipeAll(); toast('Tüm veriler silindi'); go('#/');
   },
-  'reload-app': () => {
-    const w = swReg && swReg.waiting;
-    if (w) w.postMessage('skip-waiting'); else location.reload();
-  },
 };
 
 document.addEventListener('click', (e) => {
@@ -792,26 +789,19 @@ document.addEventListener('click', (e) => {
 });
 
 // ================= Güncelleme ve başlatma =================
-let swReg = null;
-function showUpdateBar() {
-  if ($('#update-bar')) return;
-  const bar = document.createElement('div');
-  bar.id = 'update-bar';
-  bar.innerHTML = `<span>✨ Yeni sürüm hazır.</span><button class="btn sm primary" data-act="reload-app">Yenile</button><button class="x" aria-label="Kapat" onclick="this.parentNode.remove()">✕</button>`;
-  document.body.appendChild(bar);
-}
+// Yeni sürüm yayınlandığında servis çalışanı onu indirir ve hemen devreye alır; açık sayfa
+// kendini bir kez yeniler ve "Uygulama güncellendi" bildirimi gösterir.
 function setupServiceWorker() {
   if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
+  const hadController = !!navigator.serviceWorker.controller;
   let reloading = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => { if (reloading) return; reloading = true; location.reload(); });
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloading) return; // ilk kurulumda yenilemeye gerek yok
+    reloading = true;
+    try { sessionStorage.setItem('kn-updated', '1'); } catch (e) { /* yok say */ }
+    location.reload();
+  });
   navigator.serviceWorker.register('sw.js').then((reg) => {
-    swReg = reg;
-    if (reg.waiting && navigator.serviceWorker.controller) showUpdateBar();
-    reg.addEventListener('updatefound', () => {
-      const nw = reg.installing;
-      if (!nw) return;
-      nw.addEventListener('statechange', () => { if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdateBar(); });
-    });
     const check = () => reg.update().catch(() => { /* çevrimdışı */ });
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
     setInterval(check, 60 * 60 * 1000);
@@ -820,11 +810,14 @@ function setupServiceWorker() {
 
 async function start() {
   try { await DB.load(); } catch (err) {
-    view.innerHTML = `<div class="empty"><div class="e">⚠️</div><h3>Veritabanı açılamadı</h3><p>${esc(err.message)}</p><p class="small">Gizli sekmede olabilirsiniz ya da tarayıcı depolamayı engelliyor olabilir.</p></div>`;
+    view.innerHTML = `<div class="empty"><div class="e">⚠️</div><h3>Veritabanı açılamadı</h3><p>${esc(err.message)}</p><p class="small">Gizli sekmede olabilirsiniz ya da tarayıcı depolamayı engelliyor olabilir.</p><p class="small mt">Uygulama yeni güncellendiyse eski dosyalar karışmış olabilir. Bu düğme yalnızca uygulama dosyalarını yeniden indirir, <b>notlarınız silinmez</b>.</p><button class="btn primary" onclick="window.__knRepair && window.__knRepair()">🔄 Onar ve yeniden aç</button></div>`;
     return;
   }
   window.addEventListener('hashchange', route);
   route();
   setupServiceWorker();
+  let updated = false;
+  try { updated = sessionStorage.getItem('kn-updated') === '1'; sessionStorage.removeItem('kn-updated'); } catch (e) { /* yok say */ }
+  if (updated) toast(`✨ Uygulama güncellendi (sürüm ${APP_VERSION})`, 4000);
 }
 start();

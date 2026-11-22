@@ -1,8 +1,8 @@
 // Alıntı ve düşünce kartları, etiket bağlantıları, ortak liste yardımcıları.
-import * as DB from './db.js';
-import * as Lock from './lock.js';
-import { pageLabel } from './export.js';
-import { $, $$, esc, norm, highlight, fmtDate, fmtDateTime, openSheet, starsBadge } from './ui.js';
+import * as DB from './db.js?v=2.2';
+import * as Lock from './lock.js?v=2.2';
+import { pageLabel } from './export.js?v=2.2';
+import { $, $$, esc, norm, highlight, fmtDate, fmtDateTime, openSheet, starsBadge } from './ui.js?v=2.2';
 
 export function pageNum(p) { const n = parseInt(p, 10); return isNaN(n) ? null : n; }
 
