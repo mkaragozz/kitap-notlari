@@ -18,7 +18,8 @@ Durum: **Not alındı, uygulanmadı.** Kullanıcı "uygula" diyene kadar kodda d
   yazı boyutu değişse de korunur. Alıntıya kaydedilen sayfa numarası kaydederken düzeltilebilir.
 - **Alışveriş Listem:** Kategoriler (Market, Eczane…) altında işaretlenebilir maddeler; alınanlar ✓,
   istenirse alınanlar silinir.
-- **Açık kalan:** Uygulama sırası (önerilen: 1) A + D, 2) C, 3) B).
+- **Uygulama sırası:** 1) A (barkod) + D (Not Defteri) + E (ayarlar, gizlilik, kılavuz), 2) C (kitap listeleri), 3) B (e-kitap okuyucu).
+- **Gizlilik iletişimi:** Şimdilik GitHub sayfası (github.com/mkaragozz/kitap-notlari/issues); e-posta yazılmayacak. Play Store'a geçilirse e-posta eklenecek.
 
 ## A. Kitap ekleme ve bilgi bulma
 1. **Tam ekran barkod okuyucu:** Kamera tam ekran açılsın, kendiliğinden ve sürekli odaklansın; barkodu
