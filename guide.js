@@ -5,7 +5,7 @@ export const GUIDE = [
   {
     id: 'basla', e: '👋', t: 'Başlarken',
     h: `<p><b>Kitap & Notlarım</b>; okuduğunuz kitaplardan alıntıları sayfa numarasıyla saklamanız, kendi notlarınızı ve düşüncelerinizi yazmanız, günlük tutmanız için hazırlanmış bir uygulamadır.</p>
-      <ul><li>Alttaki menüden bölümler arasında geçersiniz: <b>📚 Kitaplar · 📝 Notlar · 💡 Düşünceler · 📔 Günlük · 🔎 Ara · ☰ Diğer</b>. <b>📄 Makaleler</b>, <b>✍️ Blog</b>, Tekrar Oku ve Etiketler ☰ Diğer'dedir.</li>
+      <ul><li>Alttaki menüden bölümler arasında geçersiniz: <b>📚 Kitaplar · 📝 Notlar · 💡 Düşünceler · 📔 Günlük · ✍️ Blog · 🔎 Ara · ☰ Diğer</b>. Tekrar Oku, Etiketler ve Raporlar ☰ Diğer'dedir.</li><li>Ana sayfadaki arama kutusunun yanındaki <b>📷</b> düğmesi barkod okuyucuyu açar. Altındaki kutularla Kütüphanem, Satın Alınacaklar, Seçkin, Özel Kitaplar, E-kitaplar ve <b>📄 Makalelerim</b>'e geçersiniz.</li>
       <li>Menüde hangi bölümlerin görüneceğini <b>Ayarlar → 🧭 Menü</b>'den değiştirebilirsiniz; menüde olmayanlar <b>☰ Diğer</b> sayfasında durur.</li>
       <li>Bilgisayarda menü solda, telefonda altta görünür.</li>
       <li>Bütün verileriniz <b>yalnızca bu cihazda</b> saklanır. Düzenli olarak yedek alın (bkz. <i>Yedekleme</i>).</li></ul>`,
@@ -80,7 +80,7 @@ export const GUIDE = [
   },
   {
     id: 'makale', e: '📄', t: 'Makaleler',
-    h: `<ol><li>Menüden (ya da ☰ Diğer'den) <b>📄 Makaleler</b> → <b>＋ Makale</b>.</li>
+    h: `<ol><li>Ana sayfadaki <b>📄 Makalelerim</b> kutusundan (ya da ☰ Diğer'den) → <b>＋ Makale</b>.</li>
       <li><b>DOI</b> numarasını yazıp <b>🔍 Bul</b>'a basın: başlık, yazarlar, dergi, yıl, cilt, sayı ve sayfalar kendiliğinden dolar.</li>
       <li>İsterseniz PDF ya da Word dosyasını ekleyin. Dosyası olmayan (yalnızca bağlantısı olan ya da kâğıt) makaleleri de kaydedebilirsiniz.</li></ol>
       <ul><li>Makaleler kitap okuyucusuyla okunur; alıntı, renk, yıldız, etiket, yorum, tekrar oku, sayfaya yorum ve kaldığı yerden devam <b>kitaplardaki gibidir</b>.</li>

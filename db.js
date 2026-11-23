@@ -319,7 +319,7 @@ const DEFAULTS = {
   // Barkod
   scanVibrate: true, scanBeep: true, searchLinks: ['kitapyurdu', 'google'],
   // Alt menüde görünen bölümler ve sırası (Kitaplar ve Diğer sabit)
-  nav: ['notes', 'thoughts', 'journal', 'search'],
+  nav: ['notes', 'thoughts', 'journal', 'blog', 'search'],
   // Okuyucu (Ayarlar → Okuma görünümü)
   reader: { bg: '#FBF5E6', fg: '#2B2B2B', font: 'Literata', size: 19, line: 1.6, margin: 22, turn: 'slide' },
   backupFiles: false,
