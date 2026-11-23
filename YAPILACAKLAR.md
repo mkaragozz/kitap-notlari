@@ -23,6 +23,12 @@ Durum: **Not alındı, uygulanmadı.** Kullanıcı "uygula" diyene kadar kodda d
 ## A. Kitap ekleme ve bilgi bulma
 1. **Tam ekran barkod okuyucu:** Kamera tam ekran açılsın, kendiliğinden ve sürekli odaklansın; barkodu
    küçük bir çerçeveye getirmek gerekmesin, görüntünün her yerinde algılasın.
+   **Hassasiyet:** Kamera barkodu görür görmez anında algılasın. Yapılacaklar:
+   - Android Chrome'daki yerleşik barkod algılayıcı (BarcodeDetector) öncelikli kullanılsın; donanım destekli ve en hızlısı.
+   - Yüksek çözünürlüklü görüntü, sürekli otomatik odak (focusMode: continuous) ve uygunsa yakınlaştırma.
+   - Saniyede daha fazla kare taransın; tarama alanı sınırlaması kaldırılsın (tüm görüntü taransın).
+   - Okununca titreşim ve kısa ses; aynı barkod iki kez okunmasın.
+   - Karanlık ortam için **🔦 fener** düğmesi (telefon destekliyorsa).
 2. **Kitap bulunamazsa** "🔎 Kitapyurdu'nda ara" ve "🔎 Google'da ara" düğmeleri (ISBN ile arama sayfası açılır).
 3. **Kendi kayıtlarından doldurma:** Elle girilmiş bir ISBN tekrar okutulunca bilgiler kendiliğinden dolsun.
 
