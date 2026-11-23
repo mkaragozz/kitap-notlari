@@ -1,20 +1,25 @@
 // 📚 Kitap listeleri: Okuyorum, Okunacak, Kütüphanem, Satın Alınacak, Seçkin, Özel.
 // Kitap bir kez kaydedilir; listeler işaretlerle çalışır. Konu başlıkları kitap ve makalelerde ortaktır.
-import * as DB from './db.js?v=3.0';
-import * as EX from './export.js?v=3.0';
-import * as Lock from './lock.js?v=3.0';
-import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, rerender, go, norm, today, fmtDate } from './ui.js?v=3.0';
+import * as DB from './db.js?v=3.1';
+import * as EX from './export.js?v=3.1';
+import * as Lock from './lock.js?v=3.1';
+import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, rerender, go, norm, today, fmtDate } from './ui.js?v=3.1';
 
+// Ayrı bölümler (menüde / Diğer'de): Kütüphanem, Satın Alınacaklar, Seçkin, Özel Kitaplar, E-kitaplar.
+// Okuma listeleri (ana sayfadan açılır): Okuyorum, Okumak istediklerim, Okuduklarım.
 export const LISTS = {
-  all: { e: '📚', l: 'Tümü' },
   reading: { e: '📖', l: 'Okuyorum' },
-  toread: { e: '🕮', l: 'Okunacak' },
+  toread: { e: '🕮', l: 'Okumak istediklerim' },
+  read: { e: '✅', l: 'Okuduklarım' },
   library: { e: '🏠', l: 'Kütüphanem' },
-  wish: { e: '🛒', l: 'Satın Alınacak' },
-  fav: { e: '💎', l: 'Seçkin' },
+  wish: { e: '🛒', l: 'Satın Alınacaklar' },
+  fav: { e: '💎', l: 'Seçkin Kitaplar' },
+  private: { e: '🔒', l: 'Özel Kitaplar' },
   ebooks: { e: '📱', l: 'E-kitaplar' },
-  private: { e: '🔒', l: 'Özel' },
 };
+/** Ayrı bölümlerin adresleri */
+export const SECTION_ROUTES = { library: 'library', wish: 'wish', fav: 'favorites', private: 'private', ebooks: 'ebooks' };
+export const listHref = (key) => (SECTION_ROUTES[key] ? `#/${SECTION_ROUTES[key]}` : `#/books/${key}`);
 const COLORS = [['#7C5CFF', '#FF5DA2'], ['#FF6B57', '#FFB020'], ['#10B8A6', '#2F9BFF'], ['#FF5DA2', '#FFB020'], ['#2F9BFF', '#7C5CFF'], ['#10B8A6', '#7CD957'], ['#FF8A3D', '#FF5D7A']];
 function hashStr(s) { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h); }
 export function thumbHtml(b) {
@@ -26,9 +31,9 @@ const TOPIC_EMOJIS = ['📚', '🧠', '🕌', '📜', '⚖️', '🧭', '💼', 
 
 /** Kitabın hangi listelerde olduğu */
 export function inList(b, key) {
-  if (key === 'all') return !b.private;
   if (key === 'reading') return b.status === 'okunuyor' && !b.private;
-  if (key === 'toread') return (b.status || 'okunacak') === 'okunacak' && !b.wish && !b.private;
+  if (key === 'toread') return (b.status || 'okunacak') === 'okunacak' && !b.private;
+  if (key === 'read') return b.status === 'bitti' && !b.private;
   if (key === 'library') return !!b.owned && !b.private;
   if (key === 'wish') return !!b.wish && !b.private;
   if (key === 'fav') return !!b.favorite && !b.private;
@@ -56,7 +61,7 @@ function listCard(b, key, idx) {
   if (key === 'wish') side = `<div class="lc-order"><b>${idx + 1}</b><button class="btn sm" data-act="list-move" data-id="${b.id}" data-d="-1">↑</button><button class="btn sm" data-act="list-move" data-id="${b.id}" data-d="1">↓</button></div>`;
   const actions = [];
   if (key === 'ebooks') actions.push(`<a class="btn sm primary" href="#/read/${b.id}">📖 Oku</a>`);
-  if (key === 'library' || key === 'fav' || key === 'private' || key === 'ebooks') actions.push(`<button class="btn sm ${read ? 'teal' : ''}" data-act="toggle-read" data-id="${b.id}">${read ? '✅ Okudum' : '○ Okumadım'}</button>`);
+  if (key === 'library' || key === 'fav' || key === 'private' || key === 'ebooks' || key === 'read') actions.push(`<button class="btn sm ${read ? 'teal' : ''}" data-act="toggle-read" data-id="${b.id}">${read ? '✅ Okudum' : '○ Okumadım'}</button>`);
   if (key === 'wish') actions.push(`<button class="btn sm teal" data-act="bought" data-id="${b.id}">🛒 Aldım</button>`);
   if (key === 'toread') actions.push(`<button class="btn sm" data-act="start-reading" data-id="${b.id}">📖 Okumaya başla</button>`);
   const starField = key === 'wish' ? 'wishStars' : key === 'toread' ? 'toReadStars' : null;
@@ -104,9 +109,10 @@ export function renderListTab(key) {
   const hints = {
     reading: 'Şu an okuduğunuz kitaplar. Kitabın Bilgiler sekmesinden durumunu değiştirebilirsiniz.',
     toread: 'Okumak istediğiniz kitaplar. ↑↓ ile okuma sıranızı belirleyin, ⭐ ile önem verin.',
+    read: 'Okuduğunuz bütün kitaplar.',
     library: 'Evinizdeki kitaplar. Okuduklarınızı “Okudum” olarak işaretleyin; kataloğunuzu PDF olarak alın.',
     wish: 'Satın almak istediğiniz kitaplar. Aldığınızda “🛒 Aldım”a basın, kitap Kütüphanem\'e geçer.',
-    fav: '“Hayatıma dokundu” dediğiniz kitaplar. Kitabın düzenleme ekranından “💎 Seçkin” işaretini koyun.',
+    fav: '“Hayatıma dokundu” dediğiniz kitaplar.',
     private: 'Herkesin görmesini istemediğiniz kitaplar. Kilitliyken başka hiçbir listede ve aramada görünmez.',
     ebooks: 'Yüklediğiniz e-kitaplar (PDF, Word, TXT, EPUB). Kitaba dokunup 📖 Oku ile okumaya başlayın.',
   };
@@ -130,13 +136,13 @@ export function renderListTab(key) {
   }
   if (!total) {
     h += `<div class="empty"><div class="e">${LISTS[key].e}</div><h3>${esc(LISTS[key].l)} listesi boş</h3>
-      ${key === 'ebooks' ? '<a class="btn primary" href="#/new-book?list=ebooks">📱 E-kitap yükle</a>' : key === 'reading' || key === 'fav' ? '' : `<a class="btn primary" href="#/new-book?list=${key}&scan=1">📷 Barkodla ekle</a> <a class="btn" href="#/new-book?list=${key}">✍️ Elle ekle</a>`}</div>`;
+      ${key === 'ebooks' ? '<a class="btn primary" href="#/new-book?list=ebooks">📱 E-kitap yükle</a>' : key === 'reading' || key === 'read' ? '' : `<a class="btn primary" href="#/new-book?list=${key}&scan=1">📷 Barkodla ekle</a> <a class="btn" href="#/new-book?list=${key}">✍️ Elle ekle</a>`}</div>`;
   } else if (!list.length) h += `<p class="muted">Bu süzgeçte kitap yok.</p>`;
   else if (group) {
     const groups = [...topics.map((t) => ({ t, items: list.filter((b) => (b.topics || []).includes(t.id)) })), { t: { name: 'Konusuz', emoji: '📂' }, items: list.filter((b) => !(b.topics || []).some((id) => DB.getTopic(id))) }].filter((g) => g.items.length);
     groups.forEach((g) => { h += `<div class="group-head">${esc(g.t.emoji || '🏷️')} ${esc(g.t.name)} <span class="count">${g.items.length}</span></div>${g.items.map((b, i) => listCard(b, key, i)).join('')}`; });
   } else h += list.map((b, i) => listCard(b, key, i)).join('');
-  if (['toread', 'library', 'wish', 'private', 'ebooks'].includes(key)) h += `<a class="fab" href="#/new-book?list=${key}">＋ Ekle</a>`;
+  if (['toread', 'library', 'wish', 'private', 'ebooks', 'fav'].includes(key)) h += `<a class="fab" href="#/new-book?list=${key}">${key === 'ebooks' ? '📱 Yükle' : '＋ Ekle'}</a>`;
   return h;
 }
 export function bindListTab(key) {
@@ -280,7 +286,7 @@ export const LIST_ACTIONS = {
   'list-move': async (el) => { await moveInList(el.dataset.id, parseInt(el.dataset.d, 10)); rerender(); },
   'toggle-read': async (el) => {
     const b = DB.getBook(el.dataset.id); if (!b) return;
-    if (isRead(b)) { b.status = b.owned ? 'okunacak' : 'okunacak'; b.endDate = ''; }
+    if (isRead(b)) { b.status = 'none'; b.endDate = ''; }
     else { b.status = 'bitti'; b.endDate = b.endDate || today(); if (b.pages) b.currentPage = b.pages; }
     await DB.saveBook(b); toast(isRead(b) ? 'Okudum olarak işaretlendi ✅' : 'Okumadım olarak işaretlendi'); rerender();
   },

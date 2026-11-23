@@ -629,3 +629,15 @@ mark.hl.flash, .flash { animation: flash 1.8s; }
 .pe-body { min-height: 260px; outline: none; padding: 6px 2px; }
 .pe-body:empty::before { content: attr(data-ph); color: var(--muted); }
 .pe-cover-img { width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; margin-bottom: 6px; }
+
+/* ---------- 3.1: Ayrı kitap bölümleri ---------- */
+.sec-links { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 0 0 14px; }
+.sec-link { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px 8px; background: var(--card); border-radius: 16px; box-shadow: var(--shadow); text-decoration: none; color: var(--ink); text-align: center; }
+.sec-link span { font-size: 22px; line-height: 1; }
+.sec-link b { font-size: 11px; line-height: 1.15; }
+.sec-link small { font-size: 11.5px; font-weight: 800; color: var(--violet); }
+.sec-link.s-library { border-top: 4px solid var(--teal); } .sec-link.s-wish { border-top: 4px solid var(--sun); } .sec-link.s-fav { border-top: 4px solid var(--sky); }
+.sec-link.s-private { border-top: 4px solid var(--coral); } .sec-link.s-ebooks { border-top: 4px solid var(--violet); }
+@media (max-width: 360px) { .sec-links { grid-template-columns: repeat(3, 1fr); } }
+.see-all { margin-left: auto; font-size: 13px; font-weight: 800; text-decoration: none; }
+.st-none { background: var(--bg2); color: var(--muted); }

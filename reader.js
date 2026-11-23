@@ -4,8 +4,8 @@
 // - PDF "orijinal görünüm": pdf.js ile sayfa sayfa çizilir; zemin rengi ve yakınlaştırma; sayfa numarası kitapla aynı.
 // - Metni seçip "Notlarıma kaydet": kitabın Alıntılar bölümüne, renkli vurguyla.
 // - Sayfaya "tekrar oku" işareti ve sayfa yorumu; kaldığı yerden devam.
-import * as DB from './db.js?v=3.0';
-import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, go, fmtDateTime } from './ui.js?v=3.0';
+import * as DB from './db.js?v=3.1';
+import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, go, fmtDateTime } from './ui.js?v=3.1';
 
 export const hooks = { openQuoteEditor: null };
 
@@ -457,7 +457,7 @@ async function savePos() {
   b.readPos = posNow();
   b.lastReadAt = new Date().toISOString();
   if (R.mode === 'orig') { b.currentPage = R.page + 1; b.pages = b.pages || R.pages; }
-  if ((b.status || 'okunacak') === 'okunacak') { b.status = 'okunuyor'; b.startDate = b.startDate || new Date().toISOString().slice(0, 10); }
+  if (['okunacak', 'none'].includes(b.status || 'okunacak')) { b.status = 'okunuyor'; b.startDate = b.startDate || new Date().toISOString().slice(0, 10); }
   await DB.saveBook(b);
 }
 
