@@ -410,10 +410,35 @@ function drawPdfHighlights(pageNo) {
   });
 }
 
+// ----- Okuma süresi kaydı (Raporlar için) -----
+// Sayfa çevirdikçe son etkinlikten bu yana geçen süre (en fazla 5 dk) okuma süresine eklenir.
+let lastTick = 0, pendingMin = 0, pendingPages = 0, logTimer = null, logBookId = null;
+function tickReading(pagesForward = 0) {
+  if (R) logBookId = R.book.id;
+  const now = Date.now();
+  if (lastTick) pendingMin += Math.min(5, (now - lastTick) / 60000);
+  lastTick = now;
+  pendingPages += Math.max(0, pagesForward);
+  clearTimeout(logTimer);
+  logTimer = setTimeout(flushReading, 4000);
+}
+async function flushReading() {
+  if (!logBookId || (pendingMin < 0.05 && !pendingPages)) return;
+  const d = new Date(); const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const id = `${date}_${logBookId}`;
+  const cur = DB.S.readlog.get(id);
+  const rec = cur && !cur.deleted ? { ...cur } : { id, date, bookId: logBookId, minutes: 0, pages: 0 };
+  rec.minutes = Math.round((rec.minutes + pendingMin) * 10) / 10;
+  rec.pages += pendingPages;
+  pendingMin = 0; pendingPages = 0;
+  await DB.save('readlog', rec);
+}
+
 // ----- Sayfa değiştirme -----
 let saveTimer = null;
 async function gotoPage(n, animate = true, dir = 0) {
   n = Math.max(0, Math.min(R.pages - 1, n));
+  tickReading(n > R.page ? n - R.page : 0);
   const book = R.prefs.turn === 'book' && animate;
   const v = R.viewEl;
   if (book && v) { v.classList.remove('flip-next', 'flip-prev'); void v.offsetWidth; v.classList.add(dir < 0 ? 'flip-prev' : 'flip-next'); }
@@ -668,7 +693,9 @@ function bindReader() {
   let rt = null;
   const onResize = () => { clearTimeout(rt); rt = setTimeout(() => { if (!R) return; if (R.mode === 'orig') renderPdfPage(R.page); else { const frac = R.pages > 1 ? R.page / (R.pages - 1) : 0; layoutFlow(); gotoPage(Math.round(frac * Math.max(0, R.pages - 1)), false); } }, 250); };
   window.addEventListener('resize', onResize);
+  lastTick = Date.now();
   R.cleanup = () => {
+    tickReading(0); flushReading();
     document.removeEventListener('keydown', onKey); document.removeEventListener('selectionchange', onSel); window.removeEventListener('resize', onResize);
     document.body.classList.remove('reading');
     if (R.mode !== 'orig') savePos();

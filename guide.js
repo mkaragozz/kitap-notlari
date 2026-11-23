@@ -37,6 +37,24 @@ export const GUIDE = [
       <p>İçindekiler sekmesine bölüm başlıklarını yazarsanız, sayfa numarası yazdığınızda alıntının bölümü kendiliğinden dolar.</p>`,
   },
   {
+    id: 'anasayfa', e: '🏠', t: 'Ana sayfa ve kitapları taşımak',
+    h: `<p>Ana sayfada üstte <b>📖 Okuyorum · 🕮 Okuyacağım · ✅ Okudum</b> sayıları, altında bu kitapların rafları durur. Kütüphanenizde olan kitaplarda köşede <b>🏠</b> simgesi görünür.</p>
+      <ul><li>Kitabın köşesindeki <b>⋯</b> düğmesine dokunup <b>taşıyın</b>: Okuyorum, Okuyacağım, Okudum, <b>Kütüphaneme taşı</b>, Seçkin, Satın Alınacaklar ya da <b>Ana sayfadan kaldır</b>.</li>
+      <li>Taşıdığınız ya da kaldırdığınız kitap ana sayfayı kalabalıklaştırmaz; silinmez ve “okundu” bilgisi istatistiklerde kalır. Taşımadıkça ana sayfada durur.</li>
+      <li>Kütüphanem'de “Okudum” olarak işaretlediğiniz kitaplar ana sayfaya düşmez.</li></ul>`,
+  },
+  {
+    id: 'raporlar', e: '📊', t: 'Raporlar ve istatistikler',
+    h: `<p>☰ Diğer → <b>📊 Raporlar</b>. Bölüm varsayılan olarak PIN ile kilitlidir (Ayarlar → Kilit'ten değiştirilebilir).</p>
+      <ul><li>Üstten dönem seçin: <b>Bu hafta, Bu ay, Bu yıl, Son 12 ay, Tümü</b> ya da <b>Tarih seç</b> ile istediğiniz aralık.</li>
+      <li><b>Okuma:</b> bitirilen kitap, e-kitap ve makale sayısı; ayda ortalama kaç eser; her eserin kaç günde okunduğu; okuma hızı (sayfa/gün); okunan sayfa; uygulamanın okuyucusunda geçen süre; kaydedilen alıntılar.</li>
+      <li><b>Pareto (80/20) grafikleri:</b> okuduklarınızın %80'inin hangi kategoriler ve yazarlar üzerinde toplandığı, alıntılarınızın hangi kitaplarda yoğunlaştığı. Koyu çubuklar %80'e ulaşan grubu, çizgi birikimli yüzdeyi gösterir.</li>
+      <li><b>Yazma:</b> Günlük yazıları ve yazılan gün sayısı, ruh hâli dağılımı, yeni düşünceler ve eklemeler, blog yazıları, yazılan kelime; dönem dönem yazma etkinliği grafiği.</li>
+      <li>Grafiklerdeki çubuğa dokununca ya da üzerine gelince değeri görünür. Altta bitirilen eserlerin tablosu vardır.</li>
+      <li><b>🖨️ PDF</b> ile raporu PDF olarak kaydedin ya da yazdırın.</li></ul>
+      <p class="muted">Günlerin doğru hesaplanması için kitabın başlama ve bitiş tarihleri gerekir; Bilgiler sekmesinden düzeltebilirsiniz. Okuma süresi, uygulamanın içinde okuduğunuz e-kitap ve makaleler için tutulur.</p>`,
+  },
+  {
     id: 'listeler', e: '🗂️', t: 'Kitap listeleri (Kütüphanem, Okunacak, Satın Alınacak, Seçkin, Özel)',
     h: `<p>Kitaplar sayfasının üstündeki sekmeler: <b>Tümü · Okuyorum · Okunacak · Kütüphanem · Satın Alınacak · Seçkin · E-kitaplar · 🔒 Özel</b>. Bir kitabı bir kez kaydedersiniz; hangi listelerde olacağını işaretler belirler (kitap ekleme ekranındaki <b>📚 Listeler ve konular</b> kutusu ya da kitabın Bilgiler sekmesi).</p>
       <ul><li><b>🕮 Okunacak:</b> Okumak istediğiniz kitaplar. ↑↓ ile <b>okuma sıranızı</b> (1, 2, 3…) belirleyin, ⭐ ile önem verin; yıldıza, ada ya da yazara göre de sıralayabilirsiniz. “📖 Okumaya başla” kitabı Okuyorum'a taşır.</li>

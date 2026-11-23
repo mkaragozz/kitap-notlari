@@ -293,7 +293,7 @@ export const LIST_ACTIONS = {
   'toggle-read': async (el) => {
     const b = DB.getBook(el.dataset.id); if (!b) return;
     if (isRead(b)) { b.status = 'none'; b.endDate = ''; }
-    else { b.status = 'bitti'; b.endDate = b.endDate || today(); if (b.pages) b.currentPage = b.pages; }
+    else { b.status = 'bitti'; b.endDate = b.endDate || today(); if (b.pages) b.currentPage = b.pages; if (b.owned) b.hideHome = true; }
     await DB.saveBook(b); toast(isRead(b) ? 'Okudum olarak işaretlendi ✅' : 'Okumadım olarak işaretlendi'); rerender();
   },
   bought: async (el) => {
@@ -303,7 +303,7 @@ export const LIST_ACTIONS = {
   },
   'start-reading': async (el) => {
     const b = DB.getBook(el.dataset.id); if (!b) return;
-    b.status = 'okunuyor'; b.startDate = b.startDate || today();
+    b.status = 'okunuyor'; b.startDate = b.startDate || today(); b.hideHome = false;
     await DB.saveBook(b); toast('İyi okumalar! 📖'); go('#/book/' + b.id);
   },
   'topic-filter': (el) => { state.topic[el.dataset.k] = el.dataset.t; rerender(); },
