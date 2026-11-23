@@ -18,7 +18,20 @@
 - `9786051982656`: *Yaşamak İçin Nedenler* (978-605-198-265-6), bandrollü
 - `9786254106200`: Pegasus Yayınları, Shane Parrish (978-625-410-620-0), bandrollü
 
-Yeni kaynak eklenirken önce bu iki ISBN ile denenecek.
+Yeni kaynak eklenirken önce bu ISBN'lerle denenecek.
+
+**Araştırma sonucu (23.11.2026):**
+- **Open Library:** Üç ISBN'in hiçbiri yok.
+- **Google Books:** Denenemedi (test ortamında kota hatası). Kullanıcının telefonunda da bulamadı.
+- **Wikidata:** Erişim hatası verdi; zaten Türkçe kitap kapsamı çok dar.
+- **Kitapyurdu:** Cloudflare bot korumalı (otomatik sorguya "insan mısın" sayfası döndürüyor). Tarayıcıdan da doğrudan sorgulanamıyor (CORS yok).
+- **D&R ve İdefix:** Sayfalar yönlendirme yapıyor ya da JavaScript ile yükleniyor; doğrudan sorgulanamıyor (CORS yok).
+- **Sonuç:** Türk kitap sitelerinden otomatik bilgi çekmek, ara sunucuyla bile güvenilir değil (bot koruması) ve kullanım koşulları açısından sorunlu. Kültür Bakanlığı ISBN sisteminin herkese açık bir API'si yok.
+
+**Önerilen uygulanabilir çözüm (kullanıcı onayı bekliyor):**
+1. **Tek dokunuşla internette ara:** Kitap bulunamazsa "🔎 Kitapyurdu'nda ara" ve "🔎 Google'da ara" düğmeleri çıksın; ISBN ile arama sayfası açılsın. Kullanıcı bilgileri görüp forma yazsın.
+2. **Kendi kayıtlarından doldurma:** Daha önce elle girilmiş bir ISBN tekrar okutulursa (silinmiş kitap ya da başka cihazdan gelen yedek dahil) bilgiler oradan dolsun.
+3. **İsteğe bağlı, ücretli:** ISBNdb gibi bir servis (aylık ücret + anahtar). Türkçe kapsamı önce bu üç ISBN ile denenmeli.
 
 ## 2. Play Store'a yükleme
 Teknik hazırlık yapıldı (gizlilik sayfası, simgeler, manifest). Kalan: geliştirici hesabı, PWABuilder ile paket,
