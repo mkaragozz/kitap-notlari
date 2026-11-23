@@ -1,23 +1,23 @@
-import * as DB from './db.js?v=3.1';
-import * as EX from './export.js?v=3.1';
-import * as Lock from './lock.js?v=3.1';
-import * as Scan from './scanner.js?v=3.1';
+import * as DB from './db.js?v=3.2';
+import * as EX from './export.js?v=3.2';
+import * as Lock from './lock.js?v=3.2';
+import * as Scan from './scanner.js?v=3.2';
 import { $, $$, esc, view, nav, toast, openSheet, closeSheet, confirmDialog, modal, today, fmtDate, norm, highlight,
-  pickFiles, fileToDataUrl, copyText, starPickerHtml, bindStarPicker, longDate, fmtTime } from './ui.js?v=3.1';
+  pickFiles, fileToDataUrl, copyText, starPickerHtml, bindStarPicker, longDate, fmtTime } from './ui.js?v=3.2';
 import { pageNum, sortQuotes, allTags, quoteCard, thoughtCard, thoughtText, openRelated, starFilterHtml, applyStarFilter,
-  tagInputHtml, bindTagInput } from './cards.js?v=3.1';
-import { renderThoughts, renderThought, THOUGHT_ACTIONS } from './thoughts.js?v=3.1';
-import { renderJournal, renderJournalCal, JOURNAL_ACTIONS, getPrompt, managePrompts } from './journal.js?v=3.1';
-import { renderNotes, renderNotebook, renderShopping, noteCard, nbIsOpen, NOTE_ACTIONS, openNbookEditor, openShopcatEditor, moveOrder, lockKey } from './notes.js?v=3.1';
-import { manageNotebooks as manageThoughtNotebooks } from './thoughts.js?v=3.1';
-import { GUIDE } from './guide.js?v=3.1';
-import { renderReports, REPORT_ACTIONS } from './reports.js?v=3.1';
-import { LISTS, SECTION_ROUTES, PRIVATE_LOCK, privateLockOf, listHref, inList, renderListTab, bindListTab, LIST_ACTIONS, topicChips, topicPickerHtml, bindTopicPicker, openTopicEditor } from './lists.js?v=3.1';
-import { renderReader, leaveReader, readerRefresh, hooks as readerHooks, readMeta, fileKind, KIND_LABEL, HL_COLORS, HL_NAMES, BG_PRESETS, FONTS, readerPrefs, autoFg } from './reader.js?v=3.1';
-import { renderArticles, renderArticleForm, ARTICLE_ACTIONS } from './articles.js?v=3.1';
-import { renderBlog, renderPost, renderPostEditor, BLOG_ACTIONS, postPlain } from './blog.js?v=3.1';
+  tagInputHtml, bindTagInput } from './cards.js?v=3.2';
+import { renderThoughts, renderThought, THOUGHT_ACTIONS } from './thoughts.js?v=3.2';
+import { renderJournal, renderJournalCal, JOURNAL_ACTIONS, getPrompt, managePrompts } from './journal.js?v=3.2';
+import { renderNotes, renderNotebook, renderShopping, noteCard, nbIsOpen, NOTE_ACTIONS, openNbookEditor, openShopcatEditor, moveOrder, lockKey } from './notes.js?v=3.2';
+import { manageNotebooks as manageThoughtNotebooks } from './thoughts.js?v=3.2';
+import { GUIDE } from './guide.js?v=3.2';
+import { renderReports, REPORT_ACTIONS } from './reports.js?v=3.2';
+import { LISTS, SECTION_ROUTES, PRIVATE_LOCK, privateLockOf, listHref, inList, renderListTab, bindListTab, LIST_ACTIONS, topicChips, topicPickerHtml, bindTopicPicker, openTopicEditor } from './lists.js?v=3.2';
+import { renderReader, leaveReader, readerRefresh, hooks as readerHooks, readMeta, fileKind, KIND_LABEL, HL_COLORS, HL_NAMES, BG_PRESETS, FONTS, readerPrefs, autoFg } from './reader.js?v=3.2';
+import { renderArticles, renderArticleForm, ARTICLE_ACTIONS } from './articles.js?v=3.2';
+import { renderBlog, renderPost, renderPostEditor, BLOG_ACTIONS, postPlain } from './blog.js?v=3.2';
 
-const APP_VERSION = '3.1';
+const APP_VERSION = '3.2';
 window.__knStarted = true; // index.html'deki güvenlik ağı için: modüller sorunsuz yüklendi
 const COLORS = [['#7C5CFF', '#FF5DA2'], ['#FF6B57', '#FFB020'], ['#10B8A6', '#2F9BFF'], ['#FF5DA2', '#FFB020'], ['#2F9BFF', '#7C5CFF'], ['#10B8A6', '#7CD957'], ['#FF8A3D', '#FF5D7A']];
 const TAG_COLORS = ['#7C5CFF', '#FF5DA2', '#10B8A6', '#FF6B57', '#2F9BFF', '#FFB020', '#8E5CF7', '#13A88F'];
@@ -207,7 +207,7 @@ function sectionLinksHtml() {
     const locked = k === 'private' && Lock.enabled() && !Lock.isOpen('privateBooks');
     const n = locked ? '🔒' : all.filter((b) => inList(b, k)).length;
     return `<a class="sec-link s-${k}" href="${listHref(k)}"><span>${LISTS[k].e}</span><b>${LISTS[k].l}</b><small>${n}</small></a>`;
-  }).join('')}</div>`;
+  }).join('')}<a class="sec-link s-articles" href="#/articles"><span>📄</span><b>Makalelerim</b><small>${DB.articles().filter((a) => !a.private).length}</small></a></div>`;
 }
 function renderHome(tab = 'all') {
   if (tab !== 'all') {
@@ -231,8 +231,7 @@ function renderHome(tab = 'all') {
   const qs = DB.allQuotes();
   const s = DB.getSettings();
   let h = `<section class="hero slim"><h1>📚 Kitap & Notlarım</h1>
-    <form class="searchbar" id="home-search"><input name="q" placeholder="Kitap, alıntı, not, fikir ara…" autocomplete="off" enterkeyhint="search"><button>Ara</button></form></section>
-    <div class="qa-row"><a href="#/new-book?scan=1">📷 Barkodla ekle</a><a href="#/thoughts">💡 Düşünce</a><a href="#/journal">📔 Günlük</a><a href="#/notes">📝 Not</a></div>
+    <form class="searchbar" id="home-search"><input name="q" placeholder="Kitap, alıntı, not, fikir ara…" autocomplete="off" enterkeyhint="search"><button>Ara</button><a class="scan-btn" href="#/new-book?scan=1" title="Barkod okut, kitap ekle" aria-label="Barkod okut">📷</a></form></section>
     ${sectionLinksHtml()}`;
   if (!all0.length) {
     h += `<div class="empty"><div class="e">📖</div><h3>Henüz kitap yok</h3><p>İlk kitabınızı ekleyin. Arka kapaktaki barkodu okutursanız kitap bilgileri kendiliğinden dolar.</p>
@@ -868,12 +867,12 @@ function renderMore() {
   const vis = navOrder();
   const hidden = Object.keys(NAV_ITEMS).filter((k) => !vis.includes(k));
   const books = DB.books();
-  const cnt = (k) => { if (!LISTS[k]) return ''; if (k === 'private' && Lock.enabled() && !Lock.isOpen('privateBooks')) return '🔒'; return books.filter((b) => inList(b, k)).length; };
+  const cnt = (k) => { if (k === 'articles') return DB.articles().filter((a) => !a.private).length; if (!LISTS[k]) return ''; if (k === 'private' && Lock.enabled() && !Lock.isOpen('privateBooks')) return '🔒'; return books.filter((b) => inList(b, k)).length; };
   const row = (k) => `<a href="${NAV_ITEMS[k].h}"><span>${NAV_ITEMS[k].e}</span><b>${NAV_ITEMS[k].full}</b>${k === 'reread' && n ? `<i class="nav-badge" style="position:static">${n}</i>` : `<small class="cnt">${cnt(k)}</small>`}<em>›</em></a>`;
-  const bookKeys = hidden.filter((k) => LISTS[k]);
-  const otherKeys = hidden.filter((k) => !LISTS[k]);
+  const bookKeys = hidden.filter((k) => LISTS[k] || k === 'articles');
+  const otherKeys = hidden.filter((k) => !bookKeys.includes(k));
   view.innerHTML = `<div class="topbar"><h1>☰ Diğer</h1></div>
-    ${bookKeys.length ? `<div class="set-group">Kitaplarım</div><div class="more-list tight">${bookKeys.map(row).join('')}</div>` : ''}
+    ${bookKeys.length ? `<div class="set-group">Kitaplarım &amp; Makalelerim</div><div class="more-list tight">${bookKeys.map(row).join('')}</div>` : ''}
     ${otherKeys.length ? `<div class="set-group">Bölümler</div><div class="more-list tight">${otherKeys.map(row).join('')}</div>` : ''}
     <div class="set-group">Uygulama</div><div class="more-list tight">
       <a href="#/settings"><span>⚙️</span><b>Ayarlar</b><em>›</em></a>
@@ -954,7 +953,7 @@ async function renderSettings(sub = '') {
   } else if (sub === 'menu') {
     const vis = navOrder();
     const all = [...vis, ...Object.keys(NAV_ITEMS).filter((k) => !vis.includes(k))];
-    h += `<p class="hint">Alt menüde <b>📚 Kitaplar</b> ve <b>☰ Diğer</b> her zaman vardır. Aşağıdan diğer bölümleri seçin ve sıralayın; işaretli olmayanlar <b>☰ Diğer</b> sayfasında durur. Telefonda en fazla 4 bölüm rahat sığar.</p>
+    h += `<p class="hint">Alt menüde <b>📚 Kitaplar</b> ve <b>☰ Diğer</b> her zaman vardır. Aşağıdan diğer bölümleri seçin ve sıralayın; işaretli olmayanlar <b>☰ Diğer</b> sayfasında durur. Telefonda en fazla 5 bölüm rahat sığar.</p>
       <div class="card">${all.map((k) => {
         const on = vis.includes(k), i = vis.indexOf(k);
         return `<div class="order-row"><label class="check" style="flex:1"><input type="checkbox" data-navk="${k}" ${on ? 'checked' : ''}> ${NAV_ITEMS[k].e} ${NAV_ITEMS[k].full}</label>
@@ -1217,6 +1216,11 @@ async function start() {
   if (!st0.locksV3) DB.setSettings({ locksV3: true, locks: [...new Set([...(st0.locks || []), 'privateBooks'])] });
   if (!st0.locks33) DB.setSettings({ locks33: true, locks: [...new Set([...(DB.getSettings().locks || []), 'reports'])] });
   if (!st0.locks32) DB.setSettings({ locks32: true, locks: [...new Set([...(DB.getSettings().locks || []), 'privateEbooks', 'privateArticles'])] });
+  if (!st0.nav32) {
+    const nv = DB.getSettings().nav || [];
+    if (!nv.includes('blog')) { const i = nv.indexOf('search'); nv.splice(i < 0 ? nv.length : i, 0, 'blog'); }
+    DB.setSettings({ nav32: true, nav: nv });
+  }
   if (!st0.lists31) {
     // 3.1: Satın alınacak (henüz okunmaya başlanmamış) kitaplar okuma listesinden çıkar; yalnızca kendi bölümünde görünür
     for (const b of DB.books()) if (b.wish && (b.status || 'okunacak') === 'okunacak' && !b.startDate) { b.status = 'none'; await DB.saveBook(b); }

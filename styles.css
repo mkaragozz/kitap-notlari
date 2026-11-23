@@ -783,3 +783,9 @@ mark.hl.flash, .flash { animation: flash 1.8s; }
 
 .lc-acts { display: flex; flex: none; }
 .lc-acts .lc-act { min-width: 50px; padding-left: 2px; padding-right: 8px; }
+
+/* ---------- 3.2: Ana sayfa sadeleştirme ---------- */
+.searchbar .scan-btn { flex: none; display: grid; place-items: center; width: 40px; height: 38px; border-radius: 10px; background: var(--violet); color: #fff; text-decoration: none; font-size: 20px; }
+.sec-links { grid-template-columns: repeat(6, 1fr); }
+.sec-link.s-articles { border-top: 4px solid #8a94a6; }
+@media (max-width: 600px) { .sec-links { grid-template-columns: repeat(3, 1fr); } }
