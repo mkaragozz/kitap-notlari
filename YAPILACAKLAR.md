@@ -35,21 +35,27 @@ Uygulama adı "Kitap & Notlarım" olarak değiştirildi.
 3. **Kendi kayıtlarından doldurma:** Elle girilmiş bir ISBN tekrar okutulunca bilgiler kendiliğinden dolsun.
 
 ## B. E-kitap okuyucu (PDF, Word, TXT, EPUB)
-4. Kitap ekle bölümünden PDF / Word (.docx) / metin (.txt) / EPUB dosyası yükleme.
-5. Okuma ayarları: zemin rengi (istenen renk), yazı boyutu, yazı tipi. Varsayılan: en rahat okunan yazı tipi.
-6. Metni seçip "Notlarıma kaydet": önem derecesi, etiket, yorum, tekrar oku seçenekleriyle; her alıntıya ayrı renk tonu.
+4. **Kitap ekle** bölümünden PDF / Word (.docx) / metin (.txt) / EPUB dosyası yükleme (giriş noktası Kitap ekle ekranı).
+5. Okuma ayarları: **zemin rengi** (hazır gözü yormayan tonlar + istenen herhangi bir renk için renk seçici), yazı boyutu,
+   yazı tipi (istenen yazı stiline değiştirilebilir). **Varsayılan: en rahat okunan yazı tipi** gelir.
+6. Metni seçip **"Notlarıma kaydet"**: önem derecesi, etiket, yorum, tekrar oku seçeneklerinin **hepsi** kayıt ekranında gelsin;
+   her alıntıya **ayrı renk tonu** seçilebilsin. Seçilen renk okurken metnin üzerinde **fosforlu kalem gibi** görünsün.
 7. Sayfalara "Tekrar oku" işareti; notlara ve sayfalara yorum ekleme.
-8. Sayfa çevirme: kitap gibi çevirme ya da başparmakla sağa/sola kaydırma.
-9. Altta sayfa numarası; sayfa numarası yazınca o sayfaya gitme; kalınan sayfadan devam etme.
+8. Sayfa çevirme: **kitap gibi çevirme** (sayfa çevirme efekti) ya da **başparmakla sağa/sola kaydırma**.
+9. Altta **kaçıncı sayfada olunduğu** yazsın; sayfa kısmına numara yazınca o sayfaya gitsin; kitaba tekrar
+   gelince **kalınan sayfadan** devam etsin.
 
 ## C. Kitap listeleri
-10. **Özel Kitaplar:** Herkesin görmesini istemediğiniz kitaplar; PIN ile kilitli (günlük gibi).
+10. **Özel Kitaplar** sekmesi: Herkesin ulaşmasını istemediğiniz kitaplar; PIN ile kilitli (günlük gibi).
+    Kilitliyken bu kitaplar ve alıntıları Kitaplar listesinde, aramada, etiketlerde ve Tekrar Oku'da da görünmesin.
 11. **Seçkin Kitaplar:** En çok beğenilen, "hayatıma dokundu" denilen kitaplar.
-12. **Okunacak Kitaplar:** Yıldız (okuma/önem derecesi), 1'den başlayan sıralama, konulara göre tasnif, yeni konu başlığı ekleme.
-13. **Kütüphanem:** Evdeki kitaplar; barkod / ISBN / elle ekleme; konulara göre tasnif; "okudum" işareti;
-    konu başlıkları altında, okundu bilgisiyle **kütüphane kataloğu PDF/çıktı**.
-14. **Satın Almak İstediğim Kitaplar:** Yıldız, sıralama, konuya göre tasnif, "önce almak istediklerim";
-    **alış listesi PDF/çıktı**.
+12. **Okunacak Kitaplar** sekmesi: Okumak istenen kitapların listesi. Yıldız (okuma/önem derecesi); sıralama **yıldıza göre**
+    ya da **"ilk okumak istediğim" 1'den başlayan sıra numarasına göre**; konulara göre tasnif; yeni konu başlığı ekleme.
+13. **Kütüphanem:** Evdeki kitaplar; barkod / ISBN / elle ekleme (bulunamayan ISBN elle girilince sonra tanınsın: yapıldı);
+    konulara göre tasnif; **"okudum" işareti**; **okuduklarım / okumadıklarım** ayrı görülebilsin (süzgeç ve sayılar);
+    konu başlıkları altında, okundu bilgisiyle **kütüphane kataloğu**: PDF olarak kaydetme ve **yazıcıdan çıktı**.
+14. **Satın Almak İstediğim Kitaplar:** Diğer listeler gibi yıldız ve sıralama; konu başlığına göre tasnif;
+    **"ilk önce almak istediklerim"** sırası; **alış listesi**: PDF ve yazıcıdan çıktı. Alınan kitap tek dokunuşla Kütüphanem'e geçer.
 
 ## D. Not Defteri
 15. Menüde **Not Defteri** (Kitaplar ile Düşüncelerim arasında). İçinde **Genel Notlar** ve **Özel Notlar**; "＋ Not Defteri" ile yeni defter ekleme ve adlandırma.
@@ -63,6 +69,7 @@ Uygulama adı "Kitap & Notlarım" olarak değiştirildi.
     - **🏷️ Konu başlıkları:** Kitap konularını ekleme, yeniden adlandırma, silme, sıralama.
     - **📝 Not defterleri:** Ekleme, adlandırma, sıralama, silme; Alışveriş kategorileri.
     - **📔 Günlük başlıkları:** Ekleme, emoji, gizleme (şu an Günlük sayfasında; Ayarlar'a da konacak).
+    - **🏷️ Konu başlıkları** (kitap listeleri için ortak): ekleme, adlandırma, sıralama, silme.
     - **📖 Okuma görünümü:** Varsayılan zemin rengi, yazı tipi, yazı boyutu, satır aralığı, sayfa çevirme biçimi (kaydırma ya da kitap gibi çevirme).
     - **📷 Barkod:** Bulunamazsa hangi arama düğmeleri görünsün (Kitapyurdu, Google), titreşim açık/kapalı.
     - **🧭 Menü:** Alt menüde hangi bölümlerin görüneceği ve sırası (6 bölüm sığmazsa diye).
@@ -71,7 +78,7 @@ Uygulama adı "Kitap & Notlarım" olarak değiştirildi.
     e-kitap dosyaları, kamera, fotoğraflar, kilit/PIN, yedek dosyaları, internet bağlantıları (ISBN arama,
     Kitapyurdu/Google arama düğmeleri, yazı tipleri), çerezler, çocuklar, veri silme, haklar (KVKK/GDPR
     çerçevesinde), değişiklikler, iletişim (mkaraggoz@gmail.com). Hem uygulama içinde hem `privacy.html`.
-21. **Kullanım kılavuzu Ayarlar'da:** Ayarlar → "📘 Kullanım kılavuzu" bölümü; konulara ayrılmış, aranabilir,
+21. (Yapıldı; 2. ve 3. aşamada yeni bölümler kılavuza ve gizlilik politikasına eklenecek.) **Kullanım kılavuzu Ayarlar'da:** Ayarlar → "📘 Kullanım kılavuzu" bölümü; konulara ayrılmış, aranabilir,
     adım adım anlatım (kitap ekleme, barkod, alıntı, okuyucu, listeler, not defteri, düşünceler, günlük, kilit,
     yedekleme, dışa aktarma, kurulum ve güncelleme, sık sorulan sorular).
 
