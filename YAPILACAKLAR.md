@@ -49,8 +49,26 @@ Durum: **Not alındı, uygulanmadı.** Kullanıcı "uygula" diyene kadar kodda d
 17. Her notun kaydedildiği tarih ve saat görünsün.
 18. Not defteri içinde **Alışveriş Listem**; kendi alışveriş kategorilerini ekleyip adlandırma.
 
-## E. Ertelenenler
-19. **Play Store'a yükleme:** Kullanıcı karar verince konuşulacak. (Teknik hazırlık zaten yapıldı.)
+## E. Ayarlar, gizlilik, kılavuz
+19. **Ayarlar'dan yönetim:** Yeni eklenen her özelliğin ayarı Ayarlar'dan rahatça yapılabilsin. Önerilen bölümler:
+    - **🔒 Kilit:** PIN aç/kapat/değiştir; hangi bölümler kilitli (Günlük, Düşüncelerim, Özel Notlar, Özel Kitaplar, kendi defterleri); kurtarma kodu yenileme.
+    - **🏷️ Konu başlıkları:** Kitap konularını ekleme, yeniden adlandırma, silme, sıralama.
+    - **📝 Not defterleri:** Ekleme, adlandırma, sıralama, silme; Alışveriş kategorileri.
+    - **📔 Günlük başlıkları:** Ekleme, emoji, gizleme (şu an Günlük sayfasında; Ayarlar'a da konacak).
+    - **📖 Okuma görünümü:** Varsayılan zemin rengi, yazı tipi, yazı boyutu, satır aralığı, sayfa çevirme biçimi (kaydırma ya da kitap gibi çevirme).
+    - **📷 Barkod:** Bulunamazsa hangi arama düğmeleri görünsün (Kitapyurdu, Google), titreşim açık/kapalı.
+    - **🧭 Menü:** Alt menüde hangi bölümlerin görüneceği ve sırası (6 bölüm sığmazsa diye).
+    - Var olanlar: Yedekleme, dışa aktarma, yükleme/paylaşma, verileri silme.
+20. **Kapsamlı gizlilik politikası:** Bütün yeni özellikleri kapsayacak şekilde yeniden yazılacak: yüklenen
+    e-kitap dosyaları, kamera, fotoğraflar, kilit/PIN, yedek dosyaları, internet bağlantıları (ISBN arama,
+    Kitapyurdu/Google arama düğmeleri, yazı tipleri), çerezler, çocuklar, veri silme, haklar (KVKK/GDPR
+    çerçevesinde), iletişim, değişiklikler. Hem uygulama içinde hem `privacy.html`.
+21. **Kullanım kılavuzu Ayarlar'da:** Ayarlar → "📘 Kullanım kılavuzu" bölümü; konulara ayrılmış, aranabilir,
+    adım adım anlatım (kitap ekleme, barkod, alıntı, okuyucu, listeler, not defteri, düşünceler, günlük, kilit,
+    yedekleme, dışa aktarma, kurulum ve güncelleme, sık sorulan sorular).
+
+## F. Ertelenenler
+22. **Play Store'a yükleme:** Kullanıcı karar verince konuşulacak. (Teknik hazırlık zaten yapıldı.)
 
 ---
 
