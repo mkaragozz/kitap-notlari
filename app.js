@@ -602,8 +602,8 @@ function openQuoteEditor(qid, bookId, preset = null, onSaved = null) {
   const book = DB.getBook(q.bookId);
   if (!book) return;
   const s = openSheet({
-    title: existing ? 'Alıntıyı düzenle' : `✍️ Yeni alıntı · ${book.title}`,
-    body: `<label class="field"><span>Alıntı metni</span><textarea class="serif" rows="6" id="q-text" placeholder="Kitaptan almak istediğiniz cümleyi yazın">${esc(q.text)}</textarea></label>
+    title: existing ? 'Alıntıyı düzenle' : q.src ? `📥 Alıntılarıma aktar` : `✍️ Yeni alıntı · ${book.title}`,
+    body: `${q.src ? `<div class="src-box"><b>📎 Kaynak / dipnot</b><span>${esc(EX.sourceText(book, q))}</span><button type="button" class="btn sm ghost" data-x="copy-src">📋</button></div>` : ''}<label class="field"><span>Alıntı metni</span><textarea class="serif" rows="6" id="q-text" placeholder="Kitaptan almak istediğiniz cümleyi yazın">${esc(q.text)}</textarea></label>
       <div class="grid2"><label class="field"><span>Sayfa</span><input id="q-page" inputmode="numeric" value="${esc(q.page)}" placeholder="45"></label>
       <label class="field"><span>Bitiş sayfası (isteğe bağlı)</span><input id="q-page2" inputmode="numeric" value="${esc(q.pageEnd)}" placeholder="47"></label></div>
       <label class="field"><span>💭 Yorumum</span><textarea id="q-comment" rows="3" placeholder="Bu alıntı bana ne düşündürdü? (Alıntı yazmadan yalnızca yorum da yazabilirsiniz)">${esc(q.comment)}</textarea></label>
@@ -619,6 +619,8 @@ function openQuoteEditor(qid, bookId, preset = null, onSaved = null) {
   const tags = bindTagInput(s, q.tags || []);
   const stars = bindStarPicker(s);
   let color = q.color || '';
+  const cs = $('[data-x="copy-src"]', s);
+  if (cs) cs.onclick = () => copyText(EX.sourceText(book, q));
   $('#q-color', s).onclick = (e) => { const b = e.target.closest('[data-c]'); if (!b) return; color = b.dataset.c; $('#q-color', s).querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); };
   const pageIn = $('#q-page', s), chIn = $('#q-chapter', s);
   let autoCh = !q.chapter;
@@ -1145,7 +1147,7 @@ const ACTIONS = {
   'copy-quote': (el) => {
     const q = DB.getQuote(el.dataset.id); const b = DB.getBook(q.bookId);
     const body = q.text ? `“${q.text}”` : q.comment;
-    copyText(`${body}\n— ${EX.citationText(b, EX.pageLabel(q))}${q.text && q.comment ? `\n\n💭 ${q.comment}` : ''}`);
+    copyText(`${body}\n— ${q.src ? EX.sourceText(b, q) : EX.citationText(b, EX.pageLabel(q))}${q.text && q.comment ? `\n\n💭 ${q.comment}` : ''}`);
   },
   'export-book': (el) => openExport(el.dataset.book),
   'export-all': () => openExport(null),

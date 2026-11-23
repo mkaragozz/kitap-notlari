@@ -52,6 +52,13 @@ export function citation(book, page) {
 export const citationText = (book, page) => citation(book, page).map((p) => p.t).join('');
 export const citationHtml = (book, page) => citation(book, page).map((p) => (p.i ? `<i>${esc(p.t)}</i>` : esc(p.t))).join('');
 
+/** Alıntının kaynak / dipnot satırı: "Yazar, Kitap, PDF s. 45 (dosya: kitap.pdf)" */
+export function sourceText(book, q) {
+  if (!q || !q.src) return '';
+  const head = [book && book.author, book && book.title].filter(Boolean).join(', ');
+  return `${head}${q.src.where ? ', ' + q.src.where : ''}${q.src.file ? ` (dosya: ${q.src.file})` : ''}`;
+}
+
 export function pageLabel(q) {
   if (!q.page) return '';
   return q.pageEnd && q.pageEnd !== q.page ? `${q.page}–${q.pageEnd}` : String(q.page);
@@ -124,6 +131,7 @@ export function buildPrintHtml(book, toc, quotes, opt) {
       h += `<div class="pd-q">`;
       if (q.text) h += `<blockquote>${esc(q.text).replace(/\n/g, '<br>')}</blockquote>`;
       h += `<p class="pd-ref"><sup>${i + 1}</sup> ${pl ? `s. ${esc(pl)}` : ''}${q.chapter ? ` — ${esc(q.chapter)}` : ''}${q.stars ? ` <span class="pd-stars">${STAR_TXT[q.stars]}</span>` : ''}</p>`;
+      if (q.src) h += `<p class="pd-ref">📎 Kaynak: ${esc(sourceText(book, q))}</p>`;
       if (opt.comments && q.comment) h += `<p class="pd-comment"><b>💭 Yorumum:</b> ${esc(q.comment).replace(/\n/g, '<br>')}</p>`;
       if (opt.tags && q.tags && q.tags.length) h += `<p class="pd-tags">${q.tags.map((t) => '#' + esc(t)).join(' ')}</p>`;
       h += `</div>`;
@@ -216,7 +224,7 @@ export async function buildDocx(sections, opt) {
         if (q.text) {
           const runs = textRuns(D, q.text);
           if (opt.footnotes) {
-            footnotes[fn] = { children: [new D.Paragraph({ children: runsFromCitation(D, citation(book, pl)) })] };
+            footnotes[fn] = { children: [new D.Paragraph({ children: q.src ? [new D.TextRun(sourceText(book, q))] : runsFromCitation(D, citation(book, pl)) })] };
             runs.push(new D.FootnoteReferenceRun(fn));
             fn++;
           }
@@ -232,6 +240,7 @@ export async function buildDocx(sections, opt) {
         if (q.chapter) refRuns.push(new D.TextRun({ text: ` — ${q.chapter}`, size: 18, color: '555555' }));
         if (q.stars) refRuns.push(new D.TextRun({ text: `  ${STAR_TXT[q.stars]}`, size: 18, color: 'B7791F' }));
         children.push(new D.Paragraph({ children: refRuns, indent: { left: 360 }, spacing: { before: q.text ? 0 : 200, after: 80 } }));
+        if (q.src) children.push(new D.Paragraph({ indent: { left: 360 }, children: [new D.TextRun({ text: '📎 Kaynak: ' + sourceText(book, q), size: 18, color: '555555' })] }));
         if (opt.comments && q.comment) children.push(new D.Paragraph({ indent: { left: 360 }, children: [new D.TextRun({ text: '💭 Yorumum: ', bold: true, size: 20 }), ...textRuns(D, q.comment, { italics: true, size: 20 })] }));
         if (opt.tags && q.tags && q.tags.length) children.push(new D.Paragraph({ indent: { left: 360 }, children: [new D.TextRun({ text: q.tags.map((t) => '#' + t).join('  '), size: 18, color: '0FB9A8' })] }));
       });
