@@ -37,6 +37,24 @@ export const GUIDE = [
       <p>İçindekiler sekmesine bölüm başlıklarını yazarsanız, sayfa numarası yazdığınızda alıntının bölümü kendiliğinden dolar.</p>`,
   },
   {
+    id: 'anasayfa', e: '🏠', t: 'Ana sayfa ve kitapları taşımak',
+    h: `<p>Ana sayfada üstte <b>📖 Okuyorum · 🕮 Okuyacağım · ✅ Okudum</b> sayıları, altında bu kitapların rafları durur. Kütüphanenizde olan kitaplarda köşede <b>🏠</b> simgesi görünür.</p>
+      <ul><li>Kitabın köşesindeki <b>⋯</b> düğmesine dokunup <b>taşıyın</b>: Okuyorum, Okuyacağım, Okudum, <b>Kütüphaneme taşı</b>, Seçkin, Satın Alınacaklar ya da <b>Ana sayfadan kaldır</b>.</li>
+      <li>Taşıdığınız ya da kaldırdığınız kitap ana sayfayı kalabalıklaştırmaz; silinmez ve “okundu” bilgisi istatistiklerde kalır. Taşımadıkça ana sayfada durur.</li>
+      <li>Kütüphanem'de “Okudum” olarak işaretlediğiniz kitaplar ana sayfaya düşmez.</li></ul>`,
+  },
+  {
+    id: 'raporlar', e: '📊', t: 'Raporlar ve istatistikler',
+    h: `<p>☰ Diğer → <b>📊 Raporlar</b>. Bölüm varsayılan olarak PIN ile kilitlidir (Ayarlar → Kilit'ten değiştirilebilir).</p>
+      <ul><li>Üstten dönem seçin: <b>Bu hafta, Bu ay, Bu yıl, Son 12 ay, Tümü</b> ya da <b>Tarih seç</b> ile istediğiniz aralık.</li>
+      <li><b>Okuma:</b> bitirilen kitap, e-kitap ve makale sayısı; ayda ortalama kaç eser; her eserin kaç günde okunduğu; okuma hızı (sayfa/gün); okunan sayfa; uygulamanın okuyucusunda geçen süre; kaydedilen alıntılar.</li>
+      <li><b>Pareto (80/20) grafikleri:</b> okuduklarınızın %80'inin hangi kategoriler ve yazarlar üzerinde toplandığı, alıntılarınızın hangi kitaplarda yoğunlaştığı. Koyu çubuklar %80'e ulaşan grubu, çizgi birikimli yüzdeyi gösterir.</li>
+      <li><b>Yazma:</b> Günlük yazıları ve yazılan gün sayısı, ruh hâli dağılımı, yeni düşünceler ve eklemeler, blog yazıları, yazılan kelime; dönem dönem yazma etkinliği grafiği.</li>
+      <li>Grafiklerdeki çubuğa dokununca ya da üzerine gelince değeri görünür. Altta bitirilen eserlerin tablosu vardır.</li>
+      <li><b>🖨️ PDF</b> ile raporu PDF olarak kaydedin ya da yazdırın.</li></ul>
+      <p class="muted">Günlerin doğru hesaplanması için kitabın başlama ve bitiş tarihleri gerekir; Bilgiler sekmesinden düzeltebilirsiniz. Okuma süresi, uygulamanın içinde okuduğunuz e-kitap ve makaleler için tutulur.</p>`,
+  },
+  {
     id: 'listeler', e: '🗂️', t: 'Kitap listeleri (Kütüphanem, Okunacak, Satın Alınacak, Seçkin, Özel)',
     h: `<p>Kitaplar sayfasının üstündeki sekmeler: <b>Tümü · Okuyorum · Okunacak · Kütüphanem · Satın Alınacak · Seçkin · E-kitaplar · 🔒 Özel</b>. Bir kitabı bir kez kaydedersiniz; hangi listelerde olacağını işaretler belirler (kitap ekleme ekranındaki <b>📚 Listeler ve konular</b> kutusu ya da kitabın Bilgiler sekmesi).</p>
       <ul><li><b>🕮 Okunacak:</b> Okumak istediğiniz kitaplar. ↑↓ ile <b>okuma sıranızı</b> (1, 2, 3…) belirleyin, ⭐ ile önem verin; yıldıza, ada ya da yazara göre de sıralayabilirsiniz. “📖 Okumaya başla” kitabı Okuyorum'a taşır.</li>
@@ -44,7 +62,8 @@ export const GUIDE = [
       <li><b>🛒 Satın Alınacak:</b> Almak istediğiniz kitaplar. ↑↓ ile “önce almak istediklerim” sırası, ⭐ önem. <b>🛒 Aldım</b>'a basınca kitap Kütüphanem'e geçer. <b>🖨️ Alış listesi</b> ile işaretlemeli bir liste yazdırın.</li>
       <li><b>💎 Seçkin:</b> “Hayatıma dokundu” dediğiniz kitaplar.</li>
       <li><b>🔒 Özel:</b> Herkesin görmesini istemediğiniz kitaplar. PIN kilidi açıkken bu kitaplar ve alıntıları kilit açılana kadar hiçbir listede, aramada ve etiketlerde görünmez.</li>
-      <li><b>🏷️ Konu başlıkları:</b> “＋ Konu” ile ekleyin; kitaplar ve makalelerde ortaktır. “🗂️ Konulara ayır” listeyi başlıklar altında gösterir. Yönetmek için: Ayarlar → 🏷️ Konu başlıkları.</li></ul>`,
+      <li><b>🏷️ Kategoriler:</b> Her bölümün üstündeki “＋ Kategori” ile ekleyin (ör. Felsefe, Tarih, Roman); bütün bölümlerde ve makalelerde ortaktır, yanında o bölümdeki kitap sayısı yazar. “🗂️ Kategoriler” listeyi kategoriler altında gösterir. Yönetmek için: Ayarlar → 🏷️ Kategoriler.</li>
+      <li><b>📱 E-kitaplar</b> bölümünde iki sekme vardır: <b>E-kitaplarım</b> ve PIN ile kilitli <b>🔒 Özel E-kitaplarım</b>. E-kitap yüklerken “🔒 Özel” kutusunu işaretlerseniz kitap Özel E-kitaplarım'a gider.</li></ul>`,
   },
   {
     id: 'okuyucu', e: '📱', t: 'E-kitap okuyucu (PDF, Word, TXT, EPUB)',
@@ -65,7 +84,8 @@ export const GUIDE = [
       <li><b>DOI</b> numarasını yazıp <b>🔍 Bul</b>'a basın: başlık, yazarlar, dergi, yıl, cilt, sayı ve sayfalar kendiliğinden dolar.</li>
       <li>İsterseniz PDF ya da Word dosyasını ekleyin. Dosyası olmayan (yalnızca bağlantısı olan ya da kâğıt) makaleleri de kaydedebilirsiniz.</li></ol>
       <ul><li>Makaleler kitap okuyucusuyla okunur; alıntı, renk, yıldız, etiket, yorum, tekrar oku, sayfaya yorum ve kaldığı yerden devam <b>kitaplardaki gibidir</b>.</li>
-      <li><b>📋 Okuyacaklarım / ✅ Okuduklarım</b> sekmeleriyle ayrı görün; “Okudum” düğmesiyle işaretleyin. Konu başlıkları kitaplarla ortaktır.</li></ul>`,
+      <li><b>📋 Okuyacaklarım / ✅ Okuduklarım</b> ile ayrı görün; “Okudum” ile işaretleyin. Kategoriler kitaplarla ortaktır.</li>
+      <li><b>🔒 Özel Makalelerim:</b> Makale eklerken “🔒 Özel makale”yi işaretleyin; PIN ile kilitli sekmede durur, kilitliyken aramada da görünmez.</li></ul>`,
   },
   {
     id: 'blog', e: '✍️', t: 'Blog',
@@ -121,7 +141,7 @@ export const GUIDE = [
     id: 'kilit', e: '🔒', t: 'PIN kilidi',
     h: `<ol><li>Ayarlar → <b>🔒 Kilit</b> → <b>PIN kilidini aç</b>. 4 haneli PIN'i iki kez girin.</li>
       <li>Size bir <b>kurtarma kodu</b> gösterilir (ör. K7M4-9QX2). <b>Mutlaka bir yere yazın</b>; bir daha gösterilmez.</li>
-      <li>Aynı sayfadan hangi bölümlerin kilitli olacağını seçin: Günlük, Düşüncelerim, Özel Notlar, kendi defterleriniz, Alışveriş Listem.</li></ol>
+      <li>Aynı sayfadan hangi bölümlerin kilitli olacağını seçin: Günlük, Düşüncelerim, Özel Kitaplar, Özel E-kitaplarım, Özel Makalelerim, Blog, Özel Notlar, kendi defterleriniz, Alışveriş Listem.</li></ol>
       <ul><li>Tüm kilitler için <b>tek PIN ve tek kurtarma kodu</b> vardır; kilidi bir kez açınca tüm kilitli bölümler açılır.</li>
       <li>Belirlediğiniz süre (varsayılan 5 dakika) kullanmazsanız ya da uygulamayı kapatırsanız kilit yeniden devreye girer. 🔒 düğmesiyle hemen kilitleyebilirsiniz.</li>
       <li><b>PIN'i unuttuysanız:</b> kilit ekranında <b>PIN'i unuttum</b> → kurtarma kodunu yazın → yeni PIN belirleyin.</li>
@@ -150,7 +170,7 @@ export const GUIDE = [
       <li><b>🧭 Menü:</b> Alt menüde görünecek bölümler ve sıraları.</li>
       <li><b>📷 Barkod:</b> Titreşim, ses, kitap bulunamayınca çıkacak arama düğmeleri.</li>
       <li><b>📖 Okuma görünümü:</b> Okuyucunun zemin rengi, yazı tipi, boyutu, satır aralığı, kenar boşluğu, sayfa çevirme biçimi.</li>
-      <li><b>🏷️ Konu başlıkları:</b> Kitap ve makale konularını ekleme, adlandırma, sıralama, silme.</li>
+      <li><b>🏷️ Kategoriler:</b> Kitap ve makale kategorilerini ekleme, adlandırma, sıralama, silme.</li>
       <li><b>📝 Not defterleri:</b> Defterleri ve alışveriş kategorilerini ekleme, adlandırma, sıralama, silme.</li>
       <li><b>💡 Düşünce defterleri</b> ve <b>📔 Günlük başlıkları</b>.</li>
       <li><b>💾 Yedekleme</b>, <b>⬇️ Dışa aktarma</b>, <b>📲 Yükle ve paylaş</b>, <b>🔐 Gizlilik</b>, <b>⚠️ Verileri sil</b>.</li></ul>`,

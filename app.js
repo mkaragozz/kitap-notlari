@@ -1,26 +1,27 @@
-import * as DB from './db.js?v=3.0';
-import * as EX from './export.js?v=3.0';
-import * as Lock from './lock.js?v=3.0';
-import * as Scan from './scanner.js?v=3.0';
+import * as DB from './db.js?v=3.1';
+import * as EX from './export.js?v=3.1';
+import * as Lock from './lock.js?v=3.1';
+import * as Scan from './scanner.js?v=3.1';
 import { $, $$, esc, view, nav, toast, openSheet, closeSheet, confirmDialog, modal, today, fmtDate, norm, highlight,
-  pickFiles, fileToDataUrl, copyText, starPickerHtml, bindStarPicker, longDate, fmtTime } from './ui.js?v=3.0';
+  pickFiles, fileToDataUrl, copyText, starPickerHtml, bindStarPicker, longDate, fmtTime } from './ui.js?v=3.1';
 import { pageNum, sortQuotes, allTags, quoteCard, thoughtCard, thoughtText, openRelated, starFilterHtml, applyStarFilter,
-  tagInputHtml, bindTagInput } from './cards.js?v=3.0';
-import { renderThoughts, renderThought, THOUGHT_ACTIONS } from './thoughts.js?v=3.0';
-import { renderJournal, renderJournalCal, JOURNAL_ACTIONS, getPrompt, managePrompts } from './journal.js?v=3.0';
-import { renderNotes, renderNotebook, renderShopping, noteCard, nbIsOpen, NOTE_ACTIONS, openNbookEditor, openShopcatEditor, moveOrder, lockKey } from './notes.js?v=3.0';
-import { manageNotebooks as manageThoughtNotebooks } from './thoughts.js?v=3.0';
-import { GUIDE } from './guide.js?v=3.0';
-import { LISTS, inList, renderListTab, bindListTab, LIST_ACTIONS, topicChips, topicPickerHtml, bindTopicPicker, openTopicEditor } from './lists.js?v=3.0';
-import { renderReader, leaveReader, readerRefresh, hooks as readerHooks, readMeta, fileKind, KIND_LABEL, HL_COLORS, HL_NAMES, BG_PRESETS, FONTS, readerPrefs, autoFg } from './reader.js?v=3.0';
-import { renderArticles, renderArticleForm, ARTICLE_ACTIONS } from './articles.js?v=3.0';
-import { renderBlog, renderPost, renderPostEditor, BLOG_ACTIONS, postPlain } from './blog.js?v=3.0';
+  tagInputHtml, bindTagInput } from './cards.js?v=3.1';
+import { renderThoughts, renderThought, THOUGHT_ACTIONS } from './thoughts.js?v=3.1';
+import { renderJournal, renderJournalCal, JOURNAL_ACTIONS, getPrompt, managePrompts } from './journal.js?v=3.1';
+import { renderNotes, renderNotebook, renderShopping, noteCard, nbIsOpen, NOTE_ACTIONS, openNbookEditor, openShopcatEditor, moveOrder, lockKey } from './notes.js?v=3.1';
+import { manageNotebooks as manageThoughtNotebooks } from './thoughts.js?v=3.1';
+import { GUIDE } from './guide.js?v=3.1';
+import { renderReports, REPORT_ACTIONS } from './reports.js?v=3.1';
+import { LISTS, SECTION_ROUTES, PRIVATE_LOCK, privateLockOf, listHref, inList, renderListTab, bindListTab, LIST_ACTIONS, topicChips, topicPickerHtml, bindTopicPicker, openTopicEditor } from './lists.js?v=3.1';
+import { renderReader, leaveReader, readerRefresh, hooks as readerHooks, readMeta, fileKind, KIND_LABEL, HL_COLORS, HL_NAMES, BG_PRESETS, FONTS, readerPrefs, autoFg } from './reader.js?v=3.1';
+import { renderArticles, renderArticleForm, ARTICLE_ACTIONS } from './articles.js?v=3.1';
+import { renderBlog, renderPost, renderPostEditor, BLOG_ACTIONS, postPlain } from './blog.js?v=3.1';
 
-const APP_VERSION = '3.0';
+const APP_VERSION = '3.1';
 window.__knStarted = true; // index.html'deki güvenlik ağı için: modüller sorunsuz yüklendi
 const COLORS = [['#7C5CFF', '#FF5DA2'], ['#FF6B57', '#FFB020'], ['#10B8A6', '#2F9BFF'], ['#FF5DA2', '#FFB020'], ['#2F9BFF', '#7C5CFF'], ['#10B8A6', '#7CD957'], ['#FF8A3D', '#FF5D7A']];
 const TAG_COLORS = ['#7C5CFF', '#FF5DA2', '#10B8A6', '#FF6B57', '#2F9BFF', '#FFB020', '#8E5CF7', '#13A88F'];
-const STATUS = { okunuyor: '📖 Okunuyor', okunacak: '🕮 Okunacak', bitti: '✅ Bitti' };
+const STATUS = { okunuyor: '📖 Okunuyor', okunacak: '🕮 Okunacak', bitti: '✅ Okudum', none: '— Listede değil' };
 
 function hashStr(s) { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h); }
 function coverHtml(b) {
@@ -65,10 +66,15 @@ function parseHash() {
   const [path, qs] = h.split('?');
   return { parts: path.split('/').filter(Boolean).map(decodeURIComponent), params: new URLSearchParams(qs || ''), path };
 }
-const NAV_OF = { book: 'home', books: 'home', read: 'home', 'new-book': 'home', articles: 'articles', 'new-article': 'articles', blog: 'blog', post: 'blog', 'new-post': 'blog', notes: 'notes', shopping: 'notes', thoughts: 'thoughts', thought: 'thoughts', journal: 'journal', 'journal-cal': 'journal', search: 'search', reread: 'reread', tags: 'tags', tag: 'tags', settings: 'settings', more: 'more', privacy: 'more' };
+const NAV_OF = { reports: 'reports', library: 'library', wish: 'wish', favorites: 'fav', private: 'private', ebooks: 'ebooks', book: 'home', books: 'home', read: 'home', 'new-book': 'home', articles: 'articles', 'new-article': 'articles', blog: 'blog', post: 'blog', 'new-post': 'blog', notes: 'notes', shopping: 'notes', thoughts: 'thoughts', thought: 'thoughts', journal: 'journal', 'journal-cal': 'journal', search: 'search', reread: 'reread', tags: 'tags', tag: 'tags', settings: 'settings', more: 'more', privacy: 'more' };
 
 // ---- Menü: Ayarlar'dan seçilen bölümler ve sıraları ----
 const NAV_ITEMS = {
+  library: { e: '🏠', l: 'Kütüphanem', full: 'Kütüphanem', h: '#/library' },
+  wish: { e: '🛒', l: 'Alınacak', full: 'Satın Alınacaklar', h: '#/wish' },
+  fav: { e: '💎', l: 'Seçkin', full: 'Seçkin Kitaplar', h: '#/favorites' },
+  private: { e: '🔒', l: 'Özel', full: 'Özel Kitaplar', h: '#/private' },
+  ebooks: { e: '📱', l: 'E-kitaplar', full: 'E-kitaplar', h: '#/ebooks' },
   notes: { e: '📝', l: 'Notlar', full: 'Not Defteri', h: '#/notes' },
   thoughts: { e: '💡', l: 'Düşünceler', full: 'Düşüncelerim', h: '#/thoughts' },
   journal: { e: '📔', l: 'Günlük', full: 'Günlük', h: '#/journal' },
@@ -76,6 +82,7 @@ const NAV_ITEMS = {
   reread: { e: '🔖', l: 'Tekrar Oku', full: 'Tekrar Oku', h: '#/reread' },
   tags: { e: '🏷️', l: 'Etiketler', full: 'Etiketler', h: '#/tags' },
   articles: { e: '📄', l: 'Makaleler', full: 'Makaleler', h: '#/articles' },
+  reports: { e: '📊', l: 'Raporlar', full: 'Raporlar', h: '#/reports' },
   blog: { e: '✍️', l: 'Blog', full: 'Blog', h: '#/blog' },
 };
 function navOrder() { return (DB.getSettings().nav || []).filter((k) => NAV_ITEMS[k]); }
@@ -99,10 +106,13 @@ function route() {
   if (parts[0] !== 'read') leaveReader();
   try {
     if (!parts.length) renderHome('all');
-    else if (parts[0] === 'books') { homeTab = LISTS[parts[1]] ? parts[1] : 'all'; renderHome(homeTab); }
+    else if (parts[0] === 'books') renderHome(LISTS[parts[1]] ? parts[1] : 'all');
+    else if (parts[0] === 'ebooks' && parts[1] === 'private') renderHome('privateEbooks');
+    else if (Object.values(SECTION_ROUTES).includes(parts[0])) renderHome(Object.keys(SECTION_ROUTES).find((k) => SECTION_ROUTES[k] === parts[0]));
     else if (parts[0] === 'read') renderReader(parts[1], params);
     else if (parts[0] === 'articles') renderArticles();
-    else if (parts[0] === 'new-article') renderArticleForm(null);
+    else if (parts[0] === 'reports') renderReports();
+    else if (parts[0] === 'new-article') renderArticleForm(null, params.get('private') === '1');
     else if (parts[0] === 'blog') renderBlog();
     else if (parts[0] === 'new-post') renderPostEditor(null);
     else if (parts[0] === 'post' && parts[2] === 'edit') renderPostEditor(parts[1]);
@@ -142,6 +152,45 @@ function updateBadge() {
 }
 
 // ================= Ana sayfa =================
+function shelfCard(b) {
+  const pct = b.pages && b.currentPage ? Math.min(100, Math.round((b.currentPage / b.pages) * 100)) : 0;
+  return `<div class="shelf-item"><a href="${b.fileId && b.status === 'okunuyor' ? '#/read/' + b.id : '#/book/' + b.id}">${coverHtml(b)}
+    <b>${esc(b.title)}</b><small>${esc(b.author || '')}</small>${b.status === 'okunuyor' && pct ? `<div class="progress"><i style="width:${pct}%"></i></div>` : ''}</a>
+    ${b.owned ? '<span class="own-badge" title="Kütüphanemde var">🏠</span>' : ''}
+    <button class="move-btn" data-act="move-book" data-id="${b.id}" aria-label="Taşı" title="Taşı">⋯</button></div>`;
+}
+/** Ana sayfadaki kitabı başka bir yere taşı */
+function openMoveSheet(id) {
+  const b = DB.getBook(id); if (!b) return;
+  const opts = [
+    ['reading', '📖', 'Okuyorum', 'Okumakta olduklarım rafına'],
+    ['toread', '🕮', 'Okuyacağım', 'Okuyacaklarım rafına'],
+    ['read', '✅', 'Okudum', 'Okuduklarım rafına; bitiş tarihi bugün'],
+    ['library', '🏠', 'Kütüphaneme taşı', 'Kütüphanem\'de durur, ana sayfadan kalkar'],
+    ['fav', '💎', 'Seçkin Kitaplar\'a taşı', 'Seçkin\'de durur, ana sayfadan kalkar'],
+    ['wish', '🛒', 'Satın Alınacaklar\'a taşı', 'Henüz almadığım kitap'],
+    ['hide', '🙈', 'Ana sayfadan kaldır', 'Kitap silinmez; okundu bilgisi istatistiklerde kalır'],
+  ];
+  const s = openSheet({
+    title: `Taşı: ${b.title}`,
+    body: `<div class="move-list">${opts.map(([k, e, l, d]) => `<button data-mv="${k}"><span>${e}</span><b>${l}</b><small>${d}</small></button>`).join('')}</div>
+      <a class="btn block mt" href="#/book/${b.id}">📘 Kitabı aç</a>`,
+  });
+  s.addEventListener('click', async (e) => {
+    const x = e.target.closest('[data-mv]'); if (!x) return;
+    const k = x.dataset.mv;
+    if (k === 'reading') { b.status = 'okunuyor'; b.startDate = b.startDate || today(); b.hideHome = false; }
+    if (k === 'toread') { b.status = 'okunacak'; b.hideHome = false; }
+    if (k === 'read') { b.status = 'bitti'; b.endDate = b.endDate || today(); if (b.pages) b.currentPage = b.pages; b.hideHome = false; }
+    if (k === 'library') { b.owned = true; b.wish = false; b.hideHome = true; }
+    if (k === 'fav') { b.favorite = true; b.hideHome = true; }
+    if (k === 'wish') { b.wish = true; b.owned = false; b.hideHome = true; if (b.status !== 'bitti') b.status = 'none'; }
+    if (k === 'hide') b.hideHome = true;
+    await DB.saveBook(b); await closeSheet();
+    const msg = { reading: 'Okuyorum rafına taşındı 📖', toread: 'Okuyacaklarım rafına taşındı', read: 'Okudum olarak işaretlendi ✅', library: 'Kütüphanem\'e taşındı 🏠', fav: 'Seçkin Kitaplar\'a taşındı 💎', wish: 'Satın Alınacaklar\'a taşındı 🛒', hide: 'Ana sayfadan kaldırıldı' };
+    toast(msg[k]); rerender();
+  });
+}
 function bookCard(b) {
   const qn = DB.quotesOf(b.id).length;
   const pct = b.pages && b.currentPage ? Math.min(100, Math.round((b.currentPage / b.pages) * 100)) : 0;
@@ -151,29 +200,41 @@ function bookCard(b) {
     <div class="bc-foot"><span>✍️ ${qn}</span>${b.rating ? `<span>${'⭐'.repeat(b.rating)}</span>` : b.status === 'okunuyor' && pct ? `<span>%${pct}</span>` : ''}</div></div></a>`;
 }
 
-let homeTab = 'all';
-function listTabsHtml(active) {
+/** Ana sayfadaki bölüm kısayolları: Kütüphanem, Satın Alınacaklar, Seçkin, Özel Kitaplar, E-kitaplar */
+function sectionLinksHtml() {
   const all = DB.books();
-  return `<div class="list-tabs">${Object.entries(LISTS).map(([k, v]) => {
-    const n = k === 'private' ? (Lock.enabled() && !Lock.isOpen('privateBooks') ? '' : all.filter((b) => inList(b, k)).length) : all.filter((b) => inList(b, k)).length;
-    if (k === 'ebooks' && !n && active !== k) return '';
-    return `<a class="list-tab ${active === k ? 'on' : ''}" href="#/books/${k}">${v.e} ${v.l}${n !== '' ? ` <small>${n}</small>` : ''}</a>`;
+  return `<div class="sec-links">${Object.keys(SECTION_ROUTES).map((k) => {
+    const locked = k === 'private' && Lock.enabled() && !Lock.isOpen('privateBooks');
+    const n = locked ? '🔒' : all.filter((b) => inList(b, k)).length;
+    return `<a class="sec-link s-${k}" href="${listHref(k)}"><span>${LISTS[k].e}</span><b>${LISTS[k].l}</b><small>${n}</small></a>`;
   }).join('')}</div>`;
 }
 function renderHome(tab = 'all') {
   if (tab !== 'all') {
-    view.innerHTML = `<div class="topbar"><h1>${LISTS[tab].e} ${LISTS[tab].l}</h1></div>${listTabsHtml(tab)}${renderListTab(tab)}`;
+    const sec = !!SECTION_ROUTES[tab];
+    const cnt = DB.books().filter((b) => inList(b, tab)).length;
+    const locked = PRIVATE_LOCK[tab] && Lock.enabled() && !Lock.isOpen(PRIVATE_LOCK[tab]);
+    const isEb = tab === 'ebooks' || tab === 'privateEbooks';
+    const title = isEb ? LISTS.ebooks : LISTS[tab];
+    const ebTabs = isEb ? (() => {
+      const all = DB.books();
+      const pl = Lock.enabled() && !Lock.isOpen('privateEbooks');
+      return `<div class="sub-tabs"><a class="${tab === 'ebooks' ? 'on' : ''}" href="#/ebooks">📱 E-kitaplarım <small>${all.filter((b) => inList(b, 'ebooks')).length}</small></a><a class="${tab === 'privateEbooks' ? 'on' : ''}" href="#/ebooks/private">🔒 Özel E-kitaplarım${pl ? '' : ` <small>${all.filter((b) => inList(b, 'privateEbooks')).length}</small>`}</a></div>`;
+    })() : '';
+    view.innerHTML = `<div class="topbar"><button class="back${sec || isEb ? ' mob-only' : ''}" data-act="back" aria-label="Geri">‹</button><h1>${title.e} ${title.l}${cnt && !locked && !isEb ? ` <span class="h-count">${cnt}</span>` : ''}</h1>${tab === 'library' || tab === 'wish' ? `<a class="btn sm" href="#/new-book?list=${tab}&scan=1" title="Barkodla ekle">📷</a>` : ''}</div>${ebTabs}${renderListTab(tab)}`;
     bindListTab(tab);
     return;
   }
-  const bs = DB.books().filter((b) => !b.private);
+  const all0 = DB.books().filter((b) => !b.private);
+  // Ana sayfa yalnızca okuma listeleri: Okuyorum, Okumak istediklerim, (son 3 ayda) Okuduklarım
+  const bs = all0.filter((b) => ['okunuyor', 'okunacak', 'bitti'].includes(b.status || 'okunacak'));
   const qs = DB.allQuotes();
   const s = DB.getSettings();
-  let h = `<section class="hero"><h1>📚 Kitap & Notlarım</h1><p>Aklınıza gelen bir fikri yazın; hangi kitabın hangi sayfasında olduğunu bulalım.</p>
-    <form class="searchbar" id="home-search"><input name="q" placeholder="Konu, cümle, yazar…" autocomplete="off" enterkeyhint="search"><button>Ara</button></form></section>
-    <div class="quick-links"><a href="#/thoughts" class="ql c5">💡<span>Düşünce yaz</span></a><a href="#/journal" class="ql c3">📔<span>Bugünün günlüğü</span></a><a href="#/new-book?scan=1" class="ql c4">📷<span>Barkodla kitap ekle</span></a></div>
-    ${listTabsHtml('all')}`;
-  if (!bs.length) {
+  let h = `<section class="hero slim"><h1>📚 Kitap & Notlarım</h1>
+    <form class="searchbar" id="home-search"><input name="q" placeholder="Kitap, alıntı, not, fikir ara…" autocomplete="off" enterkeyhint="search"><button>Ara</button></form></section>
+    <div class="qa-row"><a href="#/new-book?scan=1">📷 Barkodla ekle</a><a href="#/thoughts">💡 Düşünce</a><a href="#/journal">📔 Günlük</a><a href="#/notes">📝 Not</a></div>
+    ${sectionLinksHtml()}`;
+  if (!all0.length) {
     h += `<div class="empty"><div class="e">📖</div><h3>Henüz kitap yok</h3><p>İlk kitabınızı ekleyin. Arka kapaktaki barkodu okutursanız kitap bilgileri kendiliğinden dolar.</p>
       <a class="btn primary" href="#/new-book?scan=1">📷 Barkodla ilk kitabı ekle</a> <a class="btn" href="#/new-book">✍️ Elle ekle</a></div>
       <div class="card small"><b>Nasıl çalışır?</b><ol class="muted" style="padding-left:18px;margin:6px 0 0">
@@ -185,7 +246,6 @@ function renderHome(tab = 'all') {
     bindHomeSearch();
     return;
   }
-  h += `<div class="stats"><div class="stat"><b>${bs.length}</b><span>Kitap</span></div><div class="stat"><b>${qs.length}</b><span>Alıntı</span></div><div class="stat"><b>${bs.filter((b) => b.status === 'okunuyor').length}</b><span>Okunuyor</span></div></div>`;
   const due = dueCount();
   if (due) h += `<a class="banner coral" href="#/reread" style="text-decoration:none;color:inherit"><span style="font-size:22px">🔖</span><span class="grow">Bugün tekrar okumanız gereken <b>${due}</b> bölüm var.</span><span>›</span></a>`;
   const total = qs.length + DB.thoughts().length + DB.moments().length;
@@ -195,11 +255,24 @@ function renderHome(tab = 'all') {
   }
   const lastRead = bs.filter((b) => b.fileId && b.lastReadAt).sort((a, b) => b.lastReadAt.localeCompare(a.lastReadAt))[0];
   if (lastRead) h += `<a class="banner teal" href="#/read/${lastRead.id}" style="text-decoration:none;color:inherit"><span style="font-size:22px">📖</span><span class="grow">Okumaya devam et: <b>${esc(lastRead.title)}</b>${lastRead.readPos && lastRead.readPos.page ? ` · s. ${lastRead.readPos.pdfPage || lastRead.readPos.page}` : ''}</span><span>›</span></a>`;
-  for (const st of ['okunuyor', 'okunacak', 'bitti']) {
-    const list = bs.filter((b) => (b.status || 'okunacak') === st).sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
-    if (!list.length) continue;
-    h += `<div class="section-title">${STATUS[st]} <span class="count">${list.length}</span></div><div class="book-grid">${list.map(bookCard).join('')}</div>`;
-  }
+  // Sayaçlar: bütün kitaplar (ana sayfadan kaldırılanlar dahil); raflar: ana sayfada duranlar
+  const cntReading = all0.filter((b) => b.status === 'okunuyor').length;
+  const cntToread = all0.filter((b) => (b.status || 'okunacak') === 'okunacak').length;
+  const cntRead = all0.filter((b) => b.status === 'bitti').length;
+  h += `<div class="counters"><a href="#/books/reading"><b>${cntReading}</b><span>📖 Okuyorum</span></a><a href="#/books/toread"><b>${cntToread}</b><span>🕮 Okuyacağım</span></a><a href="#/books/read"><b>${cntRead}</b><span>✅ Okudum</span></a></div>`;
+  const onHome = bs.filter((b) => !b.hideHome);
+  const groups = [
+    ['reading', '📖 Okumakta olduklarım', onHome.filter((b) => b.status === 'okunuyor').sort((a, b) => (b.lastReadAt || b.updatedAt || '').localeCompare(a.lastReadAt || a.updatedAt || ''))],
+    ['toread', '🕮 Okuyacaklarım', onHome.filter((b) => (b.status || 'okunacak') === 'okunacak').sort((a, b) => (a.toReadOrder ?? 1e9) - (b.toReadOrder ?? 1e9) || (b.updatedAt || '').localeCompare(a.updatedAt || ''))],
+    ['read', '✅ Okuduklarım', onHome.filter((b) => b.status === 'bitti').sort((a, b) => (b.endDate || '').localeCompare(a.endDate || ''))],
+  ];
+  if (!onHome.length) h += `<div class="empty small"><div class="e">📖</div><h3>Ana sayfanız boş</h3><p>Bir kitabı <b>Okunacak</b> ya da <b>Okunuyor</b> olarak işaretleyince burada görünür.</p></div>`;
+  groups.forEach(([k, title, list]) => {
+    if (!list.length) return;
+    h += `<div class="section-title">${title} <span class="count">${list.length}</span><a class="see-all" href="#/books/${k}">Tümü ›</a></div>`;
+    h += `<div class="shelf">${list.map(shelfCard).join('')}</div>`;
+  });
+  if (onHome.length) h += `<p class="hint" style="text-align:center">Kitabın köşesindeki <b>⋯</b> ile başka bir yere taşıyabilir ya da ana sayfadan kaldırabilirsiniz.</p>`;
   h += `<a class="fab" href="#/new-book">＋ Kitap</a>`;
   view.innerHTML = h;
   bindHomeSearch();
@@ -217,7 +290,7 @@ const quoteSort = {};
 function renderBook(id) {
   const b = DB.getBook(id);
   const raw = DB.getBookRaw(id);
-  if (!b && raw && raw.private) { Lock.renderLockScreen(view, 'Özel Kitaplar'); return; }
+  if (!b && raw && raw.private) { const lk = privateLockOf(raw); Lock.renderLockScreen(view, lk === 'privateArticles' ? 'Özel Makalelerim' : lk === 'privateEbooks' ? 'Özel E-kitaplarım' : 'Özel Kitaplar'); return; }
   if (!b) { view.innerHTML = `<div class="empty"><div class="e">🔍</div><h3>Kitap bulunamadı</h3><a class="btn" href="#/">Kitaplara dön</a></div>`; return; }
   const qs = DB.quotesOf(id);
   const tab = bookTab[id] || 'quotes';
@@ -229,6 +302,7 @@ function renderBook(id) {
       <div class="meta">${esc((b.kind === 'article' ? [b.journal, b.year, b.volume && 'C. ' + b.volume, b.issue && 'S. ' + b.issue] : [b.publisher, b.year, b.edition && b.edition + '. baskı']).filter(Boolean).join(' · '))}</div>
       <span class="status-pill st-${b.status || 'okunacak'}">${b.kind === 'article' ? '📄 Makale · ' : ''}${STATUS[b.status || 'okunacak']}</span>
       <div class="flag-row">${b.owned ? '<span class="chip own">🏠 Kütüphanemde</span>' : ''}${b.wish ? '<span class="chip">🛒 Alınacak</span>' : ''}${b.favorite ? '<span class="chip">💎 Seçkin</span>' : ''}${b.private ? '<span class="chip">🔒 Özel</span>' : ''}${topicChips(b)}</div>
+      <div class="row-actions" style="margin:8px 0 0">${b.status === 'none' ? `<button class="btn sm" data-act="start-reading" data-id="${b.id}">📖 Okumaya başla</button>` : ''}</div>
       ${b.fileId ? `<a class="btn primary sm mt" href="#/read/${b.id}">📖 ${b.readPos ? 'Okumaya devam et' : 'Oku'}${b.readPos && (b.readPos.pdfPage || b.readPos.page) ? ` · s. ${b.readPos.pdfPage || b.readPos.page}` : ''}</a>` : ''}
       ${b.pages ? `<div class="progress"><i style="width:${pct}%"></i></div><div class="small muted">${b.currentPage || 0} / ${b.pages} sayfa</div>` : ''}
     </div></div>
@@ -311,7 +385,7 @@ function bookInfoTab(b) {
       ${b.notes ? `<p class="mt">${esc(b.notes)}</p>` : ''}</div>
     ${b.kind !== 'article' ? `<div class="card"><b>📚 Listeler</b><p class="hint">Kitabın hangi listelerde görüneceğini seçin.</p>
       ${[['owned', '🏠 Kütüphanemde var'], ['wish', '🛒 Satın almak istiyorum'], ['favorite', '💎 Seçkin (hayatıma dokundu)'], ['private', '🔒 Özel kitap (PIN ile kilitli bölümde)']].map(([k, l]) => `<label class="check"><input type="checkbox" data-flag="${k}" ${b[k] ? 'checked' : ''}> ${l}</label>`).join('')}
-      <div class="mt">${topicChips(b) || '<span class="small muted">Konu başlığı yok</span>'} <a class="btn sm ghost" href="#/book/${b.id}/edit">Konuları düzenle</a></div></div>` : ''}
+      <div class="mt">${topicChips(b) || '<span class="small muted">Kategori yok</span>'} <a class="btn sm ghost" href="#/book/${b.id}/edit">Kategorileri düzenle</a></div></div>` : ''}
     ${b.fileId ? `<div class="card"><b>📱 Dosya</b><p class="small">${esc(b.fileName || '')} · ${esc(KIND_LABEL[b.fileType] || '')}${b.fileSize ? ` · ${(b.fileSize / 1048576).toFixed(1)} MB` : ''}</p><a class="btn block" href="#/read/${b.id}">📖 Oku</a></div>` : ''}
     <button class="btn danger block" data-act="del-book" data-book="${b.id}">🗑️ ${b.kind === 'article' ? 'Makaleyi' : 'Kitabı'} sil</button>`;
 }
@@ -331,6 +405,7 @@ function bindInfoTab(b) {
   seg.onclick = async (e) => {
     const btn = e.target.closest('[data-st]'); if (!btn) return;
     b.status = btn.dataset.st;
+    if (['okunuyor', 'okunacak'].includes(b.status)) b.hideHome = false;
     if (b.status === 'okunuyor' && !b.startDate) b.startDate = today();
     if (b.status === 'bitti') { if (!b.endDate) b.endDate = today(); if (b.pages) b.currentPage = b.pages; }
     await DB.saveBook(b); rerender();
@@ -355,11 +430,13 @@ function bindInfoTab(b) {
 const BOOK_FIELDS = ['title', 'subtitle', 'author', 'translator', 'publisher', 'city', 'year', 'edition', 'pages', 'isbn', 'categories', 'description'];
 
 function renderBookForm(id, autoScan = false, listKey = '') {
-  const b = id ? DB.getBook(id) : { status: 'okunacak', isNovel: false, owned: listKey === 'library', wish: listKey === 'wish', favorite: listKey === 'fav', private: listKey === 'private' };
+  const sectionAdd = ['library', 'wish', 'fav', 'private', 'ebooks', 'privateEbooks'].includes(listKey);
+  const b = id ? DB.getBook(id) : { status: sectionAdd ? 'none' : listKey === 'reading' ? 'okunuyor' : 'okunacak', isNovel: false, owned: listKey === 'library', wish: listKey === 'wish', favorite: listKey === 'fav', private: listKey === 'private' || listKey === 'privateEbooks' };
   let newFile = null;
   if (!b) { go('#/'); return; }
   const v = (k) => esc(b[k] || '');
-  view.innerHTML = `<div class="topbar"><button class="back" data-act="back" aria-label="Geri">‹</button><h1>${id ? 'Kitabı düzenle' : 'Yeni kitap'}</h1></div>
+  const formTitle = id ? 'Kitabı düzenle' : listKey && LISTS[listKey] && SECTION_ROUTES[listKey] ? `${LISTS[listKey].e} ${listKey === 'ebooks' ? 'E-kitap yükle' : LISTS[listKey].l + ': kitap ekle'}` : 'Yeni kitap';
+  view.innerHTML = `<div class="topbar"><button class="back" data-act="back" aria-label="Geri">‹</button><h1>${esc(formTitle)}</h1></div>
   <form id="book-form" autocomplete="off">
     <div class="card scan-card">
       <b>📷 Barkodla hızlı doldur</b><p class="hint">Kitabın arka kapağındaki barkodu okutun; adı, yazarı, yayınevi, yılı, sayfa sayısı ve kapağı kendiliğinden dolsun.</p>
@@ -378,7 +455,7 @@ function renderBookForm(id, autoScan = false, listKey = '') {
       <div class="grid3"><label class="field"><span>Basım yılı</span><input name="year" inputmode="numeric" value="${v('year')}"></label>
       <label class="field"><span>Baskı</span><input name="edition" inputmode="numeric" value="${v('edition')}" placeholder="ör. 5"></label>
       <label class="field"><span>Sayfa sayısı</span><input name="pages" inputmode="numeric" value="${v('pages')}"></label></div>
-      <label class="field"><span>Konu / tür</span><input name="categories" value="${v('categories')}" placeholder="ör. Felsefe, Tarih"></label>
+      <label class="field"><span>Tür (yayın bilgisi)</span><input name="categories" value="${v('categories')}" placeholder="ör. Roman, Deneme"></label>
       <label class="field"><span>Tanıtım yazısı</span><textarea name="description" rows="3">${v('description')}</textarea></label>
       <label class="check"><input type="checkbox" name="isNovel" ${b.isNovel ? 'checked' : ''}> Roman / öykü (içindekiler gerekmez)</label>
     </div>
@@ -391,9 +468,9 @@ function renderBookForm(id, autoScan = false, listKey = '') {
       <div><button type="button" class="btn sm" data-act="cover-pick">🖼️ Kapak görseli</button> <button type="button" class="btn sm ghost" data-act="cover-remove" ${b.cover ? '' : 'hidden'}>Kaldır</button></div></div>
       <label class="field mt"><span>Kitap hakkında notum</span><textarea name="notes" rows="2">${v('notes')}</textarea></label>
     </div>
-    <div class="card"><b>📚 Listeler ve konular</b>
-      ${[['owned', '🏠 Kütüphanemde var'], ['wish', '🛒 Satın almak istiyorum'], ['favorite', '💎 Seçkin (hayatıma dokundu)'], ['private', '🔒 Özel kitap (PIN ile kilitli bölümde)']].map(([k, l]) => `<label class="check"><input type="checkbox" name="${k}" ${b[k] ? 'checked' : ''}> ${l}</label>`).join('')}
-      <div class="field mt"><span>Konu başlıkları</span>${topicPickerHtml(b.topics || [])}</div></div>
+    <div class="card"><b>📚 Bölümler ve kategoriler</b>
+      ${[['owned', '🏠 Kütüphanemde var'], ['wish', '🛒 Satın almak istiyorum'], ['favorite', '💎 Seçkin (hayatıma dokundu)'], ['private', '🔒 Özel (PIN ile kilitli; e-kitapsa “Özel E-kitaplarım”da)']].map(([k, l]) => `<label class="check"><input type="checkbox" name="${k}" ${b[k] ? 'checked' : ''}> ${l}</label>`).join('')}
+      <div class="field mt"><span>Kategoriler</span>${topicPickerHtml(b.topics || [])}</div></div>
     <div class="card ${listKey === 'ebooks' ? 'hl-card' : ''}"><b>📱 E-kitap dosyası</b><p class="hint">PDF, Word (.docx), metin (.txt) ya da EPUB yükleyin; uygulamanın içinde okuyun, metni seçip alıntı olarak kaydedin. Dosya yalnızca bu cihazda saklanır.</p>
       <div id="ebook-file">${b.fileId ? `<div class="file-pill">📄 ${esc(b.fileName || 'Dosya')} <small>${esc(KIND_LABEL[b.fileType] || '')}</small></div>` : ''}</div>
       <div class="row-actions"><button type="button" class="btn ${listKey === 'ebooks' ? 'primary' : ''}" data-act="ebook-pick" style="flex:1">${b.fileId ? '🔁 Dosyayı değiştir' : '📎 Dosya seç'}</button>${b.fileId ? '<button type="button" class="btn ghost" data-act="ebook-remove">Kaldır</button>' : ''}</div></div>
@@ -405,8 +482,18 @@ function renderBookForm(id, autoScan = false, listKey = '') {
   let removeFile = false;
   let status = b.status || 'okunacak';
   let cover = b.cover || '';
+  let statusTouched = !!id;
+  const setStatus = (st) => { status = st; form.querySelectorAll('#form-st button').forEach((x) => x.classList.toggle('on', x.dataset.st === st)); };
+  // Yeni kitapta bir bölüm kutusu işaretlenince (ya da dosya seçilince) kitap okuma listesine düşmesin: Durum "Listede değil"
+  const autoStatus = () => {
+    if (statusTouched) return;
+    const anySection = ['owned', 'wish', 'favorite', 'private'].some((k) => form[k] && form[k].checked) || !!newFile;
+    setStatus(anySection ? 'none' : 'okunacak');
+  };
+  ['owned', 'wish', 'favorite', 'private'].forEach((k) => { if (form[k]) form[k].addEventListener('change', autoStatus); });
   $('#form-st').onclick = (e) => {
     const btn = e.target.closest('[data-st]'); if (!btn) return;
+    statusTouched = true;
     status = btn.dataset.st;
     $$('#form-st button').forEach((x) => x.classList.toggle('on', x === btn));
     if (status === 'okunuyor' && !form.startDate.value) form.startDate.value = today();
@@ -467,7 +554,7 @@ function renderBookForm(id, autoScan = false, listKey = '') {
       if (!f) return;
       const kind = fileKind(f.name, f.type);
       if (!kind || kind === 'doc') { toast(kind === 'doc' ? 'Eski .doc biçimi desteklenmiyor; Word\'de “.docx” olarak kaydedin.' : 'PDF, Word (.docx), TXT ya da EPUB seçin.', 4500); return; }
-      newFile = f; removeFile = false;
+      newFile = f; removeFile = false; autoStatus();
       $('#ebook-file').innerHTML = `<div class="file-pill">📄 ${esc(f.name)} <small>${KIND_LABEL[kind]} · ${(f.size / 1048576).toFixed(1)} MB</small></div><div class="small muted">Bilgiler okunuyor…</div>`;
       const meta = await readMeta(f);
       const n = fill(meta);
@@ -498,7 +585,10 @@ function renderBookForm(id, autoScan = false, listKey = '') {
     await DB.saveBook(b);
     Scan.rememberBook(b).catch(() => {});
     toast(isNew ? 'Kitap eklendi ✓' : 'Kaydedildi ✓');
-    if (isNew) location.replace('#/book/' + b.id); else go('#/book/' + b.id);
+    // Yeni kitap: işaretlenen bölüm açılsın (öncelik: Özel, Satın Alınacaklar, Kütüphanem, E-kitaplar, Seçkin)
+    const dest = (sectionAdd && !(listKey === 'ebooks' && b.private)) ? (listKey === 'private' && b.fileId ? 'privateEbooks' : listKey) : b.private && b.fileId ? 'privateEbooks' : b.private ? 'private' : b.wish ? 'wish' : b.owned ? 'library' : b.fileId ? 'ebooks' : b.favorite ? 'fav' : '';
+    if (isNew && dest) { location.replace(listHref(dest)); setTimeout(() => toast(`Kitap “${LISTS[dest].l}” bölümüne eklendi ✓`), 50); }
+    else if (isNew) location.replace('#/book/' + b.id); else go('#/book/' + b.id);
   };
   if (autoScan && !id) setTimeout(doScan, 200);
   if (listKey === 'ebooks' && !id) setTimeout(() => { const btn = form.querySelector('[data-act="ebook-pick"]'); if (btn) btn.scrollIntoView({ block: 'center' }); }, 150);
@@ -512,8 +602,8 @@ function openQuoteEditor(qid, bookId, preset = null, onSaved = null) {
   const book = DB.getBook(q.bookId);
   if (!book) return;
   const s = openSheet({
-    title: existing ? 'Alıntıyı düzenle' : `✍️ Yeni alıntı · ${book.title}`,
-    body: `<label class="field"><span>Alıntı metni</span><textarea class="serif" rows="6" id="q-text" placeholder="Kitaptan almak istediğiniz cümleyi yazın">${esc(q.text)}</textarea></label>
+    title: existing ? 'Alıntıyı düzenle' : q.src ? `📥 Alıntılarıma aktar` : `✍️ Yeni alıntı · ${book.title}`,
+    body: `${q.src ? `<div class="src-box"><b>📎 Kaynak / dipnot</b><span>${esc(EX.sourceText(book, q))}</span><button type="button" class="btn sm ghost" data-x="copy-src">📋</button></div>` : ''}<label class="field"><span>Alıntı metni</span><textarea class="serif" rows="6" id="q-text" placeholder="Kitaptan almak istediğiniz cümleyi yazın">${esc(q.text)}</textarea></label>
       <div class="grid2"><label class="field"><span>Sayfa</span><input id="q-page" inputmode="numeric" value="${esc(q.page)}" placeholder="45"></label>
       <label class="field"><span>Bitiş sayfası (isteğe bağlı)</span><input id="q-page2" inputmode="numeric" value="${esc(q.pageEnd)}" placeholder="47"></label></div>
       <label class="field"><span>💭 Yorumum</span><textarea id="q-comment" rows="3" placeholder="Bu alıntı bana ne düşündürdü? (Alıntı yazmadan yalnızca yorum da yazabilirsiniz)">${esc(q.comment)}</textarea></label>
@@ -529,6 +619,8 @@ function openQuoteEditor(qid, bookId, preset = null, onSaved = null) {
   const tags = bindTagInput(s, q.tags || []);
   const stars = bindStarPicker(s);
   let color = q.color || '';
+  const cs = $('[data-x="copy-src"]', s);
+  if (cs) cs.onclick = () => copyText(EX.sourceText(book, q));
   $('#q-color', s).onclick = (e) => { const b = e.target.closest('[data-c]'); if (!b) return; color = b.dataset.c; $('#q-color', s).querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); };
   const pageIn = $('#q-page', s), chIn = $('#q-chapter', s);
   let autoCh = !q.chapter;
@@ -775,10 +867,16 @@ function renderMore() {
   const n = dueCount();
   const vis = navOrder();
   const hidden = Object.keys(NAV_ITEMS).filter((k) => !vis.includes(k));
+  const books = DB.books();
+  const cnt = (k) => { if (!LISTS[k]) return ''; if (k === 'private' && Lock.enabled() && !Lock.isOpen('privateBooks')) return '🔒'; return books.filter((b) => inList(b, k)).length; };
+  const row = (k) => `<a href="${NAV_ITEMS[k].h}"><span>${NAV_ITEMS[k].e}</span><b>${NAV_ITEMS[k].full}</b>${k === 'reread' && n ? `<i class="nav-badge" style="position:static">${n}</i>` : `<small class="cnt">${cnt(k)}</small>`}<em>›</em></a>`;
+  const bookKeys = hidden.filter((k) => LISTS[k]);
+  const otherKeys = hidden.filter((k) => !LISTS[k]);
   view.innerHTML = `<div class="topbar"><h1>☰ Diğer</h1></div>
-    <div class="more-list">
-      ${hidden.map((k) => `<a href="${NAV_ITEMS[k].h}"><span>${NAV_ITEMS[k].e}</span><b>${NAV_ITEMS[k].full}</b>${k === 'reread' && n ? `<i class="nav-badge" style="position:static">${n}</i>` : ''}<em>›</em></a>`).join('')}
-      <a href="#/settings"><span>⚙️</span><b>Ayarlar</b><small>Kilit, menü, defterler, yedekleme…</small><em>›</em></a>
+    ${bookKeys.length ? `<div class="set-group">Kitaplarım</div><div class="more-list tight">${bookKeys.map(row).join('')}</div>` : ''}
+    ${otherKeys.length ? `<div class="set-group">Bölümler</div><div class="more-list tight">${otherKeys.map(row).join('')}</div>` : ''}
+    <div class="set-group">Uygulama</div><div class="more-list tight">
+      <a href="#/settings"><span>⚙️</span><b>Ayarlar</b><em>›</em></a>
       <a href="#/settings/guide"><span>📘</span><b>Kullanım kılavuzu</b><em>›</em></a>
       <button data-act="share-app"><span>📤</span><b>Uygulamayı paylaş</b><em>›</em></button>
       <a href="#/privacy"><span>🔐</span><b>Gizlilik politikası</b><em>›</em></a>
@@ -811,7 +909,7 @@ const SETTINGS_PAGES = [
     ['reader', '📖', 'Okuma görünümü', 'Zemin rengi, yazı tipi, boyut, sayfa çevirme'],
   ]],
   ['İçerik', [
-    ['topics', '🏷️', 'Konu başlıkları', 'Kitap ve makale konuları'],
+    ['topics', '🏷️', 'Kategoriler', 'Kitap ve makale kategorileri'],
     ['notebooks', '📝', 'Not defterleri', 'Defterler ve alışveriş kategorileri'],
     ['@thought-nbs', '💡', 'Düşünce defterleri', 'Ekle, adlandır, sil'],
     ['@journal-prompts', '📔', 'Günlük başlıkları', 'Ekle, emoji, gizle'],
@@ -844,7 +942,7 @@ async function renderSettings(sub = '') {
   let h = top(SETTINGS_TITLES[sub] || '⚙️ Ayarlar');
   if (sub === 'lock') {
     const pinOn = Lock.enabled();
-    const sections = [['journal', '📔 Günlük'], ['thoughts', '💡 Düşüncelerim'], ['privateBooks', '🔒 Özel Kitaplar'], ['blog', '✍️ Blog'], ...DB.nbooks().map((n) => [lockKey(n.id), `${n.emoji || '📓'} ${n.name}`]), ['shopping', '🛒 Alışveriş Listem']];
+    const sections = [['journal', '📔 Günlük'], ['thoughts', '💡 Düşüncelerim'], ['reports', '📊 Raporlar'], ['privateBooks', '🔒 Özel Kitaplar'], ['privateEbooks', '🔒 Özel E-kitaplarım'], ['privateArticles', '🔒 Özel Makalelerim'], ['blog', '✍️ Blog'], ...DB.nbooks().map((n) => [lockKey(n.id), `${n.emoji || '📓'} ${n.name}`]), ['shopping', '🛒 Alışveriş Listem']];
     h += `<div class="card"><b>PIN</b>
       <p class="hint">Tüm kilitli bölümler için <b>tek PIN</b> ve <b>tek kurtarma kodu</b> kullanılır. Kilidi bir kez açınca tüm kilitli bölümler açılır.</p>
       ${pinOn ? `<p class="small">Durum: <b style="color:var(--teal)">Açık</b></p><div class="row-actions"><button class="btn" data-act="pin-change" style="flex:1">🔁 PIN'i değiştir</button><button class="btn" data-act="pin-regen" style="flex:1">🔑 Kurtarma kodunu yenile</button></div><button class="btn danger block" data-act="pin-off">Kilidi tamamen kapat</button>`
@@ -885,11 +983,11 @@ async function renderSettings(sub = '') {
         <button class="btn block mt" data-act="set-shopcat-new">＋ Kategori</button></div>`;
   } else if (sub === 'topics') {
     const ts = DB.topics();
-    h += `<p class="hint">Konu başlıkları Kütüphanem, Okunacaklar, Satın Alınacaklar, Seçkin, Özel Kitaplar ve Makalelerde ortaktır. Katalog ve alış listesi bu başlıklara göre ayrılır.</p>
+    h += `<p class="hint">Kategoriler Kütüphanem, Okunacaklar, Satın Alınacaklar, Seçkin, Özel Kitaplar, E-kitaplar ve Makalelerde ortaktır. Her bölümdeki “＋ Kategori” düğmesiyle de eklenir. Katalog ve alış listesi kategorilere göre ayrılır.</p>
       <div class="card">${ts.length ? ts.map((t, i) => `<div class="order-row"><span style="flex:1">${esc(t.emoji || '🏷️')} ${esc(t.name)} <small class="muted">${DB.books().concat(DB.articles()).filter((b) => (b.topics || []).includes(t.id)).length} kayıt</small></span>
         <button class="btn sm" data-act="topic-move" data-id="${t.id}" data-d="-1" ${i === 0 ? 'disabled' : ''}>↑</button><button class="btn sm" data-act="topic-move" data-id="${t.id}" data-d="1" ${i === ts.length - 1 ? 'disabled' : ''}>↓</button>
-        <button class="btn sm" data-act="set-topic-edit" data-id="${t.id}">✏️</button></div>`).join('') : '<p class="hint">Henüz konu başlığı yok.</p>'}
-        <button class="btn primary block mt" data-act="set-topic-new">＋ Konu başlığı</button></div>`;
+        <button class="btn sm" data-act="set-topic-edit" data-id="${t.id}">✏️</button></div>`).join('') : '<p class="hint">Henüz kategori yok.</p>'}
+        <button class="btn primary block mt" data-act="set-topic-new">＋ Kategori</button></div>`;
   } else if (sub === 'reader') {
     const p = readerPrefs();
     h += `<div class="card"><div class="field"><span>Zemin rengi</span><div class="bg-row">${BG_PRESETS.map(([bg, fg, l]) => `<button type="button" class="bg-sw ${p.bg.toLowerCase() === bg.toLowerCase() ? 'on' : ''}" data-setbg="${bg}" data-fg="${fg}" style="background:${bg};color:${fg}" title="${l}">Aa</button>`).join('')}
@@ -1015,6 +1113,8 @@ const ACTIONS = {
   ...LIST_ACTIONS,
   ...ARTICLE_ACTIONS,
   ...BLOG_ACTIONS,
+  ...REPORT_ACTIONS,
+  'move-book': (el, e) => { if (e) e.preventDefault(); openMoveSheet(el.dataset.id); },
   'pm-done': async (el) => { const m = DB.S.pagemarks.get(el.dataset.id); if (!m) return; m.done = true; m.doneAt = new Date().toISOString(); await DB.save('pagemarks', m); toast('Harika! ✅'); rerender(); },
   'topic-move': async (el) => { await moveOrder('topics', DB.topics(), el.dataset.id, parseInt(el.dataset.d, 10)); rerender(); },
   'set-topic-edit': (el) => openTopicEditor(el.dataset.id, () => rerender()),
@@ -1047,7 +1147,7 @@ const ACTIONS = {
   'copy-quote': (el) => {
     const q = DB.getQuote(el.dataset.id); const b = DB.getBook(q.bookId);
     const body = q.text ? `“${q.text}”` : q.comment;
-    copyText(`${body}\n— ${EX.citationText(b, EX.pageLabel(q))}${q.text && q.comment ? `\n\n💭 ${q.comment}` : ''}`);
+    copyText(`${body}\n— ${q.src ? EX.sourceText(b, q) : EX.citationText(b, EX.pageLabel(q))}${q.text && q.comment ? `\n\n💭 ${q.comment}` : ''}`);
   },
   'export-book': (el) => openExport(el.dataset.book),
   'export-all': () => openExport(null),
@@ -1112,9 +1212,16 @@ async function start() {
     return;
   }
   // Özel Kitaplar kilitliyken her yerde gizlensin; eski kurulumlarda bu kilidi varsayılan olarak ekle
-  DB.visibility.hidePrivate = () => Lock.enabled() && !Lock.isOpen('privateBooks');
+  DB.visibility.hidePrivate = (b) => Lock.enabled() && !Lock.isOpen(privateLockOf(b));
   const st0 = DB.getSettings();
   if (!st0.locksV3) DB.setSettings({ locksV3: true, locks: [...new Set([...(st0.locks || []), 'privateBooks'])] });
+  if (!st0.locks33) DB.setSettings({ locks33: true, locks: [...new Set([...(DB.getSettings().locks || []), 'reports'])] });
+  if (!st0.locks32) DB.setSettings({ locks32: true, locks: [...new Set([...(DB.getSettings().locks || []), 'privateEbooks', 'privateArticles'])] });
+  if (!st0.lists31) {
+    // 3.1: Satın alınacak (henüz okunmaya başlanmamış) kitaplar okuma listesinden çıkar; yalnızca kendi bölümünde görünür
+    for (const b of DB.books()) if (b.wish && (b.status || 'okunacak') === 'okunacak' && !b.startDate) { b.status = 'none'; await DB.saveBook(b); }
+    DB.setSettings({ lists31: true });
+  }
   readerHooks.openQuoteEditor = openQuoteEditor;
   window.addEventListener('hashchange', route);
   buildNav();

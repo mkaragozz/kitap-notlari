@@ -1,9 +1,9 @@
 // Alıntı ve düşünce kartları, etiket bağlantıları, ortak liste yardımcıları.
-import * as DB from './db.js?v=3.0';
-import * as Lock from './lock.js?v=3.0';
-import { pageLabel } from './export.js?v=3.0';
-import { HL_COLORS } from './reader.js?v=3.0';
-import { $, $$, esc, norm, highlight, fmtDate, fmtDateTime, openSheet, starsBadge } from './ui.js?v=3.0';
+import * as DB from './db.js?v=3.1';
+import * as Lock from './lock.js?v=3.1';
+import { pageLabel, sourceText } from './export.js?v=3.1';
+import { HL_COLORS } from './reader.js?v=3.1';
+import { $, $$, esc, norm, highlight, fmtDate, fmtDateTime, openSheet, starsBadge } from './ui.js?v=3.1';
 
 export function pageNum(p) { const n = parseInt(p, 10); return isNaN(n) ? null : n; }
 
@@ -38,6 +38,7 @@ export function quoteCard(q, { showBook = false, terms = null, shared = null } =
   const long = (q.text || '').length > 420;
   return `<article class="q-card s${q.stars || 0}"${q.color && HL_COLORS[q.color] ? ` style="border-left-color:${HL_COLORS[q.color]}"` : ''}>
     ${q.text ? `<div class="q-text ${long ? 'clamp' : ''}" data-act="expand">${highlight(q.text, terms)}</div>` : ''}
+    ${q.src && b ? `<a class="q-src" href="#/read/${b.id}?q=${q.id}" title="Orijinal dosyada yerini aç">📎 ${esc(q.src.where || 'Kaynak')}${q.src.file ? ` · ${esc(q.src.file)}` : ''}</a>` : ''}
     ${q.comment ? `<div class="q-comment ${q.text ? '' : 'solo'}"><b>💭 Yorumum</b> ${highlight(q.comment, terms)}</div>` : ''}
     <div class="q-ref">
       ${showBook && b ? `<a class="q-book" href="#/book/${b.id}">📘 ${esc(b.title)}</a>` : ''}

@@ -1,49 +1,58 @@
 // 📄 Makaleler: PDF / Word makale ekleme, kitap okuyucusuyla okuma, alıntı-not-fikir (kitaplarla aynı özellikler).
 // Makaleler "books" deposunda kind === 'article' olarak durur; böylece alıntılar, etiketler, dışa aktarma ve okuyucu ortaktır.
-import * as DB from './db.js?v=3.0';
-import { $, esc, view, toast, rerender, go, norm, today, pickFiles } from './ui.js?v=3.0';
-import { topicChips, topicPickerHtml, bindTopicPicker } from './lists.js?v=3.0';
-import { readMeta, fileKind, KIND_LABEL } from './reader.js?v=3.0';
+import * as DB from './db.js?v=3.1';
+import * as Lock from './lock.js?v=3.1';
+import { $, esc, view, toast, rerender, go, norm, today, pickFiles } from './ui.js?v=3.1';
+import { topicChips, topicPickerHtml, bindTopicPicker } from './lists.js?v=3.1';
+import { readMeta, fileKind, KIND_LABEL } from './reader.js?v=3.1';
 
 const state = { tab: 'toread', topic: 'all', q: '' };
 export const isArticleRead = (a) => a.status === 'bitti';
 
 function articleCard(a) {
-  const meta = [a.journal, a.year, a.volume && `C. ${a.volume}`, a.issue && `S. ${a.issue}`, a.pagesRange && `ss. ${a.pagesRange}`].filter(Boolean).join(' · ');
-  const qn = DB.quotesOf(a.id).length;
-  return `<article class="list-card art">
+  const meta = [a.journal, a.year].filter(Boolean).join(' · ');
+  const read = isArticleRead(a);
+  const chk = `<button class="lc-act chk ${read ? 'on' : ''}" data-act="art-read" data-id="${a.id}">${read ? '✓' : ''}<small>${read ? 'Okudum' : 'Okumadım'}</small></button>`;
+  const act = a.fileId ? `<div class="lc-acts"><a class="lc-act" href="#/read/${a.id}" title="Oku">📖<small>Oku</small></a>${chk}</div>` : chk;
+  return `<article class="list-card c">
     <a class="lc-main" href="#/book/${a.id}"><div class="thumb art-thumb"><span>📄</span></div><div class="lc-body">
-      <div class="lc-title">${esc(a.title)}${a.fileId ? ` <span class="chip filek">${esc(KIND_LABEL[a.fileType] || 'Dosya')}</span>` : ''}</div>
-      <div class="lc-sub">${esc(a.author || '—')}</div>
-      ${meta ? `<div class="lc-sub small">${esc(meta)}</div>` : ''}
-      <div class="lc-tags">${topicChips(a)}${qn ? `<span class="chip">✍️ ${qn}</span>` : ''}${a.status === 'okunuyor' ? '<span class="chip own">📖 Okunuyor</span>' : ''}</div>
-    </div></a>
-    <div class="lc-foot"><span style="flex:1"></span>
-      ${a.fileId ? `<a class="btn sm primary" href="#/read/${a.id}">📖 Oku</a>` : a.url ? `<a class="btn sm" href="${esc(a.url)}" target="_blank" rel="noopener">🔗 Bağlantı</a>` : ''}
-      <button class="btn sm ${isArticleRead(a) ? 'teal' : ''}" data-act="art-read" data-id="${a.id}">${isArticleRead(a) ? '✅ Okudum' : '○ Okumadım'}</button></div>
+      <div class="lc-title">${esc(a.title)}</div>
+      <div class="lc-sub">${esc(a.author || '—')}${meta ? ' · ' + esc(meta) : ''}</div>
+      <div class="lc-tags">${a.fileId ? `<span class="chip filek">${esc(KIND_LABEL[a.fileType] || 'Dosya')}</span>` : ''}${read && a.fileId ? '<span class="chip readc">✓ Okundu</span>' : ''}${a.status === 'okunuyor' ? '<span class="chip own">📖 Okunuyor</span>' : ''}${topicChips(a)}</div>
+    </div></a>${act}
   </article>`;
 }
 
 export function renderArticles() {
-  const all = DB.articles();
+  const all0 = DB.articles();
+  const all = all0.filter((a) => !a.private); // özel makaleler yalnızca kendi sekmesinde
+  const priv = all0.filter((a) => a.private);
+  const privLocked = Lock.enabled() && !Lock.isOpen('privateArticles');
   const toread = all.filter((a) => !isArticleRead(a)), read = all.filter(isArticleRead);
-  let list = state.tab === 'read' ? read : state.tab === 'all' ? all : toread;
+  let list = state.tab === 'read' ? read : state.tab === 'all' ? all : state.tab === 'private' ? priv : toread;
   if (state.topic === 'none') list = list.filter((a) => !(a.topics || []).some((id) => DB.getTopic(id)));
   else if (state.topic !== 'all') list = list.filter((a) => (a.topics || []).includes(state.topic));
   const terms = norm(state.q).split(/\s+/).filter(Boolean);
   if (terms.length) list = list.filter((a) => { const h = norm([a.title, a.author, a.journal, a.year, a.doi].join(' ')); return terms.every((t) => h.includes(t)); });
   list = [...list].sort((a, b) => (b.lastReadAt || b.updatedAt || '').localeCompare(a.lastReadAt || a.updatedAt || ''));
   const topics = DB.topics();
+  const isPriv = state.tab === 'private';
   let h = `<div class="topbar"><button class="back mob-only" data-act="back" aria-label="Geri">‹</button><h1>📄 Makaleler</h1></div>
-    <div class="seg read-seg">${[['toread', `📋 Okuyacaklarım (${toread.length})`], ['read', `✅ Okuduklarım (${read.length})`], ['all', `Tümü (${all.length})`]].map(([k, l]) => `<button class="${state.tab === k ? 'on' : ''}" data-act="art-tab" data-t="${k}">${l}</button>`).join('')}</div>`;
-  if (all.length) {
+    <div class="sub-tabs"><a href="#" class="${isPriv ? '' : 'on'}" data-act="art-tab" data-t="${isPriv ? 'toread' : state.tab}">📄 Makalelerim <small>${all.length}</small></a><a href="#" class="${isPriv ? 'on' : ''}" data-act="art-tab" data-t="private">🔒 Özel Makalelerim${privLocked ? '' : ` <small>${priv.length}</small>`}</a></div>
+    ${isPriv ? '' : `<div class="pill-row">${[['toread', `📋 Okuyacaklarım ${toread.length}`], ['read', `✅ Okuduklarım ${read.length}`], ['all', `Tümü ${all.length}`]].map(([k, l]) => `<button class="pill ${state.tab === k ? 'on' : ''}" data-act="art-tab" data-t="${k}">${l}</button>`).join('')}</div>`}`;
+  if (state.tab === 'private' && privLocked) { view.innerHTML = h + '<div id="art-lock"></div>'; Lock.renderLockScreen($('#art-lock'), 'Özel Makalelerim'); return; }
+  if (state.tab === 'private' && !Lock.enabled()) h += `<div class="banner sun small">🔒 Bu bölümü kilitlemek için <a href="#/settings/lock">Ayarlar → Kilit</a>'ten PIN belirleyin.</div>`;
+  if (all.length || (state.tab === 'private' && priv.length)) {
     h += `<input class="input" id="art-q" placeholder="Makalelerde ara (başlık, yazar, dergi, DOI)…" value="${esc(state.q)}" style="margin:10px 0">`;
-    if (topics.length) h += `<div class="nb-row">${[['all', 'Tüm konular'], ...topics.map((t) => [t.id, `${t.emoji || '🏷️'} ${t.name}`]), ['none', 'Konusuz']].map(([k, l]) => `<button class="nb-chip ${state.topic === k ? 'on' : ''}" data-act="art-topic" data-t="${k}">${esc(l)}</button>`).join('')}</div>`;
+    const base = state.tab === 'private' ? priv : all;
+    const tc = (id) => base.filter((a) => (a.topics || []).includes(id)).length;
+    h += `<div class="pill-row">${topics.length ? [['all', 'Tüm kategoriler', ''], ...[...topics].sort((a, c) => tc(c.id) - tc(a.id)).map((t) => [t.id, `${t.emoji || '🏷️'} ${t.name}`, tc(t.id)]), ['none', 'Kategorisiz', base.filter((a) => !(a.topics || []).some((id) => DB.getTopic(id))).length]].map(([k, l, n]) => `<button class="pill t ${state.topic === k ? 'on' : ''} ${n === 0 ? 'dim' : ''}" data-act="art-topic" data-t="${k}">${esc(l)}${n !== '' ? ` <small>${n}</small>` : ''}</button>`).join('') : ''}<button class="pill add" data-act="topic-new">＋ Kategori</button></div>`;
   }
-  if (!all.length) h += `<div class="empty"><div class="e">📄</div><h3>Henüz makale yok</h3><p>PDF ya da Word makale yükleyin, DOI numarasıyla bilgilerini doldurun. Okurken metni seçip alıntı ve not olarak kaydedin.</p><a class="btn primary" href="#/new-article">＋ Makale ekle</a></div>`;
+  if (state.tab === 'private' && !priv.length) h += `<div class="empty"><div class="e">🔒</div><h3>Özel makale yok</h3><p>Makale eklerken “🔒 Özel makale” kutusunu işaretleyin; burada kilitli olarak durur.</p><a class="btn primary" href="#/new-article?private=1">＋ Özel makale ekle</a></div>`;
+  else if (!all.length && state.tab !== 'private') h += `<div class="empty"><div class="e">📄</div><h3>Henüz makale yok</h3><p>PDF ya da Word makale yükleyin, DOI numarasıyla bilgilerini doldurun. Okurken metni seçip alıntı ve not olarak kaydedin.</p><a class="btn primary" href="#/new-article">＋ Makale ekle</a></div>`;
   else if (!list.length) h += `<p class="muted">Bu bölümde makale yok.</p>`;
-  else h += list.map(articleCard).join('');
-  h += `<a class="fab" href="#/new-article">＋ Makale</a>`;
+  else h += `<div class="lc-list">${list.map(articleCard).join('')}</div>`;
+  h += `<a class="fab" href="#/new-article${state.tab === 'private' ? '?private=1' : ''}">＋ Makale</a>`;
   view.innerHTML = h;
   const q = $('#art-q');
   if (q) q.oninput = () => { state.q = q.value; const p = q.selectionStart; renderArticles(); const g = $('#art-q'); g.focus(); g.setSelectionRange(p, p); };
@@ -71,8 +80,8 @@ export async function lookupDoi(doi) {
 
 // ---------- Makale formu ----------
 const FIELDS = ['title', 'author', 'journal', 'year', 'volume', 'issue', 'pagesRange', 'doi', 'url', 'description', 'notes'];
-export function renderArticleForm(id) {
-  const a = id ? DB.getBook(id) : { kind: 'article', status: 'okunacak' };
+export function renderArticleForm(id, priv = false) {
+  const a = id ? DB.getBook(id) : { kind: 'article', status: 'okunacak', private: !!priv };
   if (!a) { go('#/articles'); return; }
   const v = (k) => esc(a[k] || '');
   let file = null; // yeni seçilen dosya
@@ -95,7 +104,8 @@ export function renderArticleForm(id) {
       <label class="field"><span>Sayfalar</span><input name="pagesRange" value="${v('pagesRange')}" placeholder="ör. 45-67"></label>
       <label class="field"><span>Bağlantı (URL)</span><input name="url" type="url" value="${v('url')}" placeholder="https://…"></label>
       <label class="field"><span>Özet (abstract)</span><textarea name="description" rows="3">${v('description')}</textarea></label>
-      <div class="field"><span>Konu başlıkları</span>${topicPickerHtml(a.topics || [])}</div>
+      <div class="field"><span>Kategoriler</span>${topicPickerHtml(a.topics || [])}</div>
+      <label class="check"><input type="checkbox" name="private" ${a.private ? 'checked' : ''}> 🔒 Özel makale (PIN ile kilitli “Özel Makalelerim” bölümünde)</label>
       <div class="field"><span>Durum</span><div class="seg" id="art-st">${[['okunacak', '📋 Okuyacağım'], ['okunuyor', '📖 Okuyorum'], ['bitti', '✅ Okudum']].map(([k, l]) => `<button type="button" class="${(a.status || 'okunacak') === k ? 'on' : ''}" data-st="${k}">${l}</button>`).join('')}</div></div>
       <label class="field"><span>Makale hakkında notum</span><textarea name="notes" rows="2">${v('notes')}</textarea></label>
     </div>
@@ -135,7 +145,7 @@ export function renderArticleForm(id) {
     FIELDS.forEach((k) => { a[k] = String(fd.get(k) || '').trim(); });
     a.doi = cleanDoi(a.doi);
     if (!a.title) { toast('Makale başlığı gerekli'); form.title.focus(); return; }
-    a.kind = 'article'; a.status = status; a.topics = tp.get();
+    a.kind = 'article'; a.status = status; a.topics = tp.get(); a.private = !!fd.get('private');
     if (status === 'bitti' && !a.endDate) a.endDate = today();
     if (file) {
       if (a.fileId) await DB.deleteFile(a.fileId);
@@ -145,12 +155,12 @@ export function renderArticleForm(id) {
     const isNew = !a.id;
     await DB.saveBook(a);
     toast(isNew ? 'Makale eklendi ✓' : 'Kaydedildi ✓');
-    if (isNew) location.replace('#/book/' + a.id); else go('#/book/' + a.id);
+    if (isNew && a.private) { state.tab = 'private'; location.replace('#/articles'); } else if (isNew) location.replace('#/book/' + a.id); else go('#/book/' + a.id);
   };
 }
 
 export const ARTICLE_ACTIONS = {
-  'art-tab': (el) => { state.tab = el.dataset.t; rerender(); },
+  'art-tab': (el, e) => { if (e) e.preventDefault(); state.tab = el.dataset.t; rerender(); },
   'art-topic': (el) => { state.topic = el.dataset.t; rerender(); },
   'art-read': async (el) => {
     const a = DB.getBook(el.dataset.id); if (!a) return;

@@ -2,10 +2,11 @@
 // - Akışkan metin (EPUB, Word, TXT ve PDF "metin görünümü"): CSS sütunlarıyla sayfalara bölünür; yazı tipi,
 //   boyut, satır aralığı, kenar boşluğu, zemin rengi değiştirilebilir. Sayfa numarası ekrana göre hesaplanır.
 // - PDF "orijinal görünüm": pdf.js ile sayfa sayfa çizilir; zemin rengi ve yakınlaştırma; sayfa numarası kitapla aynı.
-// - Metni seçip "Notlarıma kaydet": kitabın Alıntılar bölümüne, renkli vurguyla.
+// - Metni seçip "Alıntılarıma aktar": kitabın Alıntılar bölümüne, renkli vurguyla; orijinal dosyadaki yeri
+//   (PDF/Word/TXT/EPUB, sayfa ya da konum) kaynak/dipnot olarak alıntıya yazılır.
 // - Sayfaya "tekrar oku" işareti ve sayfa yorumu; kaldığı yerden devam.
-import * as DB from './db.js?v=3.0';
-import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, go, fmtDateTime } from './ui.js?v=3.0';
+import * as DB from './db.js?v=3.1';
+import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, go, fmtDateTime } from './ui.js?v=3.1';
 
 export const hooks = { openQuoteEditor: null };
 
@@ -250,7 +251,7 @@ export async function renderReader(bookId, params) {
       <button class="rd-ic" data-r="prefs" title="Okuma ayarları">Aa</button>
     </div>
     <div class="rd-stage" id="rd-stage"><div class="loading-box"><div class="spinner"></div><div id="rd-load">Kitap açılıyor…</div></div></div>
-    <div class="rd-sel" id="rd-sel" hidden><button class="btn primary" data-r="save-sel">✍️ Notlarıma kaydet</button></div>
+    <div class="rd-sel" id="rd-sel" hidden><button class="btn primary" data-r="save-sel">📥 Alıntılarıma aktar</button></div>
     <div class="rd-bottom">
       <button class="rd-ic" data-r="prev" aria-label="Önceki sayfa">‹</button>
       <button class="rd-page" data-r="goto" id="rd-page">…</button>
@@ -410,10 +411,35 @@ function drawPdfHighlights(pageNo) {
   });
 }
 
+// ----- Okuma süresi kaydı (Raporlar için) -----
+// Sayfa çevirdikçe son etkinlikten bu yana geçen süre (en fazla 5 dk) okuma süresine eklenir.
+let lastTick = 0, pendingMin = 0, pendingPages = 0, logTimer = null, logBookId = null;
+function tickReading(pagesForward = 0) {
+  if (R) logBookId = R.book.id;
+  const now = Date.now();
+  if (lastTick) pendingMin += Math.min(5, (now - lastTick) / 60000);
+  lastTick = now;
+  pendingPages += Math.max(0, pagesForward);
+  clearTimeout(logTimer);
+  logTimer = setTimeout(flushReading, 4000);
+}
+async function flushReading() {
+  if (!logBookId || (pendingMin < 0.05 && !pendingPages)) return;
+  const d = new Date(); const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const id = `${date}_${logBookId}`;
+  const cur = DB.S.readlog.get(id);
+  const rec = cur && !cur.deleted ? { ...cur } : { id, date, bookId: logBookId, minutes: 0, pages: 0 };
+  rec.minutes = Math.round((rec.minutes + pendingMin) * 10) / 10;
+  rec.pages += pendingPages;
+  pendingMin = 0; pendingPages = 0;
+  await DB.save('readlog', rec);
+}
+
 // ----- Sayfa değiştirme -----
 let saveTimer = null;
 async function gotoPage(n, animate = true, dir = 0) {
   n = Math.max(0, Math.min(R.pages - 1, n));
+  tickReading(n > R.page ? n - R.page : 0);
   const book = R.prefs.turn === 'book' && animate;
   const v = R.viewEl;
   if (book && v) { v.classList.remove('flip-next', 'flip-prev'); void v.offsetWidth; v.classList.add(dir < 0 ? 'flip-prev' : 'flip-next'); }
@@ -457,7 +483,7 @@ async function savePos() {
   b.readPos = posNow();
   b.lastReadAt = new Date().toISOString();
   if (R.mode === 'orig') { b.currentPage = R.page + 1; b.pages = b.pages || R.pages; }
-  if ((b.status || 'okunacak') === 'okunacak') { b.status = 'okunuyor'; b.startDate = b.startDate || new Date().toISOString().slice(0, 10); }
+  if (['okunacak', 'none'].includes(b.status || 'okunacak')) { b.status = 'okunuyor'; b.startDate = b.startDate || new Date().toISOString().slice(0, 10); }
   await DB.saveBook(b);
 }
 
@@ -495,7 +521,12 @@ function saveSelection() {
   window.getSelection().removeAllRanges();
   $('#rd-sel').hidden = true;
   if (!hooks.openQuoteEditor) return;
-  hooks.openQuoteEditor(null, R.book.id, { text: s.text, page: s.page, anchor: s.anchor, color: 'yellow', fromReader: true }, () => refreshMarks());
+  // Kaynak / dipnot: orijinal dosyanın türü ve içindeki yer
+  const kind = R.book.fileType || fileKind(R.book.fileName || '', '');
+  const where = kind === 'pdf' ? `PDF s. ${s.anchor.kind === 'pdf' ? s.anchor.page : s.page}`
+    : `${KIND_LABEL[kind] || 'Dosya'} ${R.pages > 1 ? `ekran s. ${s.page} / ${R.pages} (%${Math.round(((parseInt(s.page, 10) || 1) - 1) / Math.max(1, R.pages - 1) * 100)})` : ''}`.trim();
+  const src = { kind, where, file: R.book.fileName || '', at: new Date().toISOString() };
+  hooks.openQuoteEditor(null, R.book.id, { text: s.text, page: s.page, anchor: s.anchor, color: 'yellow', src, fromReader: true }, () => refreshMarks());
 }
 function refreshMarks() {
   if (!R) return;
@@ -550,7 +581,7 @@ function openMarks() {
   const pms = DB.pagemarksOf(R.book.id).sort((a, b) => (a.pos?.frac || 0) - (b.pos?.frac || 0));
   const s = openSheet({
     title: '📑 İşaretler ve alıntılar',
-    body: `${!qs.length && !pms.length ? '<p class="muted">Henüz işaret yok. Metin seçip “Notlarıma kaydet”e basın; 🔖 ile sayfa işaretleyin; 💬 ile sayfaya yorum yazın.</p>' : ''}
+    body: `${!qs.length && !pms.length ? '<p class="muted">Henüz işaret yok. Metin seçip “Alıntılarıma aktar”a basın; 🔖 ile sayfa işaretleyin; 💬 ile sayfaya yorum yazın.</p>' : ''}
       ${qs.length ? `<div class="group-head">✍️ Alıntılar <span class="count">${qs.length}</span></div>${qs.map((q) => `<div class="mk-item" data-q="${q.id}"><span class="mk-dot" style="background:${HL_COLORS[q.color] || HL_COLORS.yellow}"></span><div><div class="mk-text">${esc((q.text || q.comment || '').slice(0, 160))}</div><small class="muted">s. ${esc(q.page || '?')}${q.stars ? ' · ' + '⭐'.repeat(q.stars) : ''}${q.comment && q.text ? ' · 💭' : ''}</small></div></div>`).join('')}` : ''}
       ${pms.length ? `<div class="group-head">📌 Sayfa işaretleri <span class="count">${pms.length}</span></div>${pms.map((m) => `<div class="mk-item" data-pm="${m.id}"><span>${m.kind === 'reread' ? (m.done ? '✅' : '🔖') : '💬'}</span><div><div class="mk-text">${m.kind === 'reread' ? 'Tekrar okunacak sayfa' : esc(m.text.slice(0, 160))}</div><small class="muted">s. ${esc(m.pos?.pdfPage || m.pos?.page || '?')} · ${esc(fmtDateTime(m.createdAt))}</small></div></div>`).join('')}` : ''}`,
   });
@@ -668,7 +699,9 @@ function bindReader() {
   let rt = null;
   const onResize = () => { clearTimeout(rt); rt = setTimeout(() => { if (!R) return; if (R.mode === 'orig') renderPdfPage(R.page); else { const frac = R.pages > 1 ? R.page / (R.pages - 1) : 0; layoutFlow(); gotoPage(Math.round(frac * Math.max(0, R.pages - 1)), false); } }, 250); };
   window.addEventListener('resize', onResize);
+  lastTick = Date.now();
   R.cleanup = () => {
+    tickReading(0); flushReading();
     document.removeEventListener('keydown', onKey); document.removeEventListener('selectionchange', onSel); window.removeEventListener('resize', onResize);
     document.body.classList.remove('reading');
     if (R.mode !== 'orig') savePos();

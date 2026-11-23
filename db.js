@@ -18,6 +18,7 @@
 //   topics    : kitap ve makalelerde ortak konu başlıkları
 //   pagemarks : okuyucuda sayfa işaretleri ("tekrar oku") ve sayfa yorumları
 //   posts     : blog yazıları
+//   readlog   : okuyucuda geçirilen süre ve çevrilen sayfa (gün + kitap başına), Raporlar için
 //   files     : e-kitap / makale dosyaları (PDF, Word, TXT, EPUB). Büyük olduğu için belleğe alınmaz,
 //               normal yedeğe girmez (Ayarlar'da "E-kitapları da yedekle" seçeneği vardır).
 //
@@ -26,8 +27,8 @@
 // status (okunuyor / okunacak / bitti = okudum), topics [konu id], toReadOrder, wishOrder, listStars.
 
 const DB_NAME = 'kitap-notlari';
-const DB_VERSION = 5;
-export const STORES = ['books', 'quotes', 'thoughts', 'notebooks', 'moments', 'days', 'prompts', 'nbooks', 'notes', 'shopcats', 'shopitems', 'isbnmemo', 'topics', 'pagemarks', 'posts'];
+const DB_VERSION = 6;
+export const STORES = ['books', 'quotes', 'thoughts', 'notebooks', 'moments', 'days', 'prompts', 'nbooks', 'notes', 'shopcats', 'shopitems', 'isbnmemo', 'topics', 'pagemarks', 'posts', 'readlog'];
 const FILE_STORE = 'files';
 let dbPromise = null;
 
@@ -134,8 +135,8 @@ async function ensureSeeds() {
 const live = (store) => [...S[store].values()].filter((x) => !x.deleted);
 
 // ---- Görünürlük: Özel Kitaplar kilitliyken gizlenir (app.js bağlar) ----
-export const visibility = { hidePrivate: () => false };
-const visible = (b) => b && !b.deleted && !(b.private && visibility.hidePrivate());
+export const visibility = { hidePrivate: (b) => false }; // eslint-disable-line no-unused-vars
+const visible = (b) => b && !b.deleted && !(b.private && visibility.hidePrivate(b));
 
 // ---- Kitaplar, makaleler ve alıntılar ----
 /** Görünür kitaplar (makaleler hariç) */
@@ -172,6 +173,8 @@ export function getTopic(id) { const t = S.topics.get(id); return t && !t.delete
 export function pagemarksOf(bookId) { return live('pagemarks').filter((m) => m.bookId === bookId); }
 export function allPagemarks() { return live('pagemarks').filter((m) => getBook(m.bookId)); }
 export function posts() { return live('posts'); }
+/** Okuma süresi kaydı: { id: 'YYYY-MM-DD_kitapId', date, bookId, minutes, pages } */
+export function readlog() { return live('readlog'); }
 export function getPost(id) { const p = S.posts.get(id); return p && !p.deleted ? p : null; }
 export function getDay(date) { const d = S.days.get(date); return d && !d.deleted ? d : null; }
 
