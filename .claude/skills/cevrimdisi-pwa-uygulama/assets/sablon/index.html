@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Uygulamam</title>
+  <meta name="description" content="Verileriniz yalnızca cihazınızda kalır; internetsiz çalışır.">
+  <meta name="theme-color" content="#7C5CFF">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="stylesheet" href="styles.css?v=1.0">
+</head>
+<body>
+  <div class="layout">
+    <nav class="nav" id="nav" aria-label="Menü"></nav>
+    <main id="view" tabindex="-1"></main>
+  </div>
+  <div id="modal-root"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="print-area"></div>
+  <script type="module" src="app.js?v=1.0"></script>
+  <script>
+    // Açılış bekçisi: uygulama 6 sn içinde açılamazsa (ör. eski/yeni dosyalar karıştıysa) onarma düğmesi göster.
+    // Onar düğmesi yalnızca uygulama dosyalarını (service worker + önbellek) siler; veriler (IndexedDB) kalır.
+    (function () {
+      var errs = [];
+      window.__appRepair = function () {
+        var p = [];
+        if ('serviceWorker' in navigator) p.push(navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }));
+        if (window.caches) p.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }));
+        Promise.all(p).catch(function () {}).then(function () { location.replace(location.pathname + '?r=' + Date.now() + location.hash); });
+      };
+      window.addEventListener('error', function (e) { errs.push(e.message || (e.target && (e.target.src || e.target.href)) || 'hata'); }, true);
+      window.addEventListener('unhandledrejection', function (e) { errs.push(String(e.reason && (e.reason.message || e.reason))); });
+      setTimeout(function () {
+        if (window.__appStarted) return;
+        document.getElementById('view').innerHTML = '<div class="empty"><div class="e">🛠️</div><h3>Uygulama açılamadı</h3>' +
+          '<p>Telefondaki eski dosyalar yenileriyle karışmış olabilir. Bu düğme yalnızca uygulama dosyalarını yeniden indirir; <b>verileriniz silinmez</b>.</p>' +
+          '<button class="btn primary" id="app-repair">🔄 Onar ve yeniden aç</button>' +
+          (errs.length ? '<p class="small muted">Ayrıntı: ' + errs.slice(0, 3).join(' · ').replace(/</g, '&lt;') + '</p>' : '') + '</div>';
+        document.getElementById('app-repair').onclick = window.__appRepair;
+      }, 6000);
+    })();
+  </script>
+</body>
+</html>
