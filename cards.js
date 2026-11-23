@@ -1,8 +1,9 @@
 // Alıntı ve düşünce kartları, etiket bağlantıları, ortak liste yardımcıları.
-import * as DB from './db.js?v=2.3';
-import * as Lock from './lock.js?v=2.3';
-import { pageLabel } from './export.js?v=2.3';
-import { $, $$, esc, norm, highlight, fmtDate, fmtDateTime, openSheet, starsBadge } from './ui.js?v=2.3';
+import * as DB from './db.js?v=3.0';
+import * as Lock from './lock.js?v=3.0';
+import { pageLabel } from './export.js?v=3.0';
+import { HL_COLORS } from './reader.js?v=3.0';
+import { $, $$, esc, norm, highlight, fmtDate, fmtDateTime, openSheet, starsBadge } from './ui.js?v=3.0';
 
 export function pageNum(p) { const n = parseInt(p, 10); return isNaN(n) ? null : n; }
 
@@ -35,7 +36,7 @@ export function quoteCard(q, { showBook = false, terms = null, shared = null } =
   const b = DB.getBook(q.bookId);
   const pl = pageLabel(q);
   const long = (q.text || '').length > 420;
-  return `<article class="q-card s${q.stars || 0}">
+  return `<article class="q-card s${q.stars || 0}"${q.color && HL_COLORS[q.color] ? ` style="border-left-color:${HL_COLORS[q.color]}"` : ''}>
     ${q.text ? `<div class="q-text ${long ? 'clamp' : ''}" data-act="expand">${highlight(q.text, terms)}</div>` : ''}
     ${q.comment ? `<div class="q-comment ${q.text ? '' : 'solo'}"><b>💭 Yorumum</b> ${highlight(q.comment, terms)}</div>` : ''}
     <div class="q-ref">
@@ -47,6 +48,7 @@ export function quoteCard(q, { showBook = false, terms = null, shared = null } =
     ${q.tags && q.tags.length ? `<div class="q-ref">${q.tags.map((t) => `<a class="chip ${shared && shared.includes(t) ? 'sel' : ''}" href="#/tag/${encodeURIComponent(t)}">#${highlight(t, terms)}</a>`).join('')}</div>` : ''}
     ${q.reread && !q.reread.done ? `<div class="q-ref"><span class="badge kind-tekrar">🔖 Tekrar oku${q.reread.due ? ' · ' + fmtDate(q.reread.due) : ''}</span></div>` : ''}
     <div class="q-actions">
+      ${q.anchor && b && b.fileId ? `<a class="qa-link" href="#/read/${b.id}?q=${q.id}" title="Kitapta yerini göster">📖</a>` : ''}
       <button data-act="related" data-kind="quote" data-id="${q.id}" title="Aynı etiketi taşıyan kayıtlar">🔗 Bağlantılar</button>
       <button data-act="copy-quote" data-id="${q.id}" title="Kaynakla birlikte kopyala">📋</button>
       <button data-act="edit-quote" data-id="${q.id}">✏️ Düzenle</button>

@@ -1,6 +1,6 @@
 # Yapılacaklar
 
-Durum: **1. aşama (A, D, E) sürüm 2.3'te uygulandı.** Sırada: 2. aşama (C, kitap listeleri), 3. aşama (B, e-kitap okuyucu).
+Durum: **Tüm aşamalar tamamlandı (sürüm 3.0).** Bekleyen tek konu: Play Store (ertelendi).
 Uygulama adı "Kitap & Notlarım" olarak değiştirildi.
 
 ## Verilen kararlar (23.11.2026)
@@ -22,7 +22,25 @@ Uygulama adı "Kitap & Notlarım" olarak değiştirildi.
 - **Uygulama sırası:** 1) A (barkod) + D (Not Defteri) + E (ayarlar, gizlilik, kılavuz), 2) C (kitap listeleri), 3) B (e-kitap okuyucu).
 - **Gizlilik iletişimi:** Gizlilik politikasına iletişim adresi olarak **mkaraggoz@gmail.com** yazılacak (kullanıcı yazılışı teyit etti).
 
-## A. Kitap ekleme ve bilgi bulma
+## Açık sorular → hepsi "önerildiği gibi" yanıtlandı (23.11.2026)
+Tüm aşamalar bitince tek seferde **sürüm 3.0** olarak yayınlanacak.
+
+1. Okuyucuda seçilen metin nereye kaydedilsin? Öneri: o kitabın **Alıntılar** bölümüne, sayfa numarasıyla.
+2. Mevcut "Okunuyor / Okunacak / Bitti" durumları ile yeni listeler: Öneri "Okunacak" durumu = Okunacak Kitaplar,
+   "Bitti" = Kütüphanem'deki "okudum". Kitaplar sayfasında sekmeler: Tümü · Okuyorum · Okunacak · Kütüphanem · Satın Alınacak · Seçkin · 🔒 Özel.
+3. Yüklenen e-kitaplar Kütüphanem'de mi dursun? Öneri: 📱 işaretiyle ayrı; katalog PDF'ine isteğe bağlı dahil.
+4. E-kitap dosyaları yedeğe girsin mi? Öneri: normal yedekte yalnızca notlar/alıntılar/kalınan sayfa; Ayarlar'da ayrı "E-kitapları da yedekle".
+5. Makale bilgileri: başlık, yazar, dergi, yıl, cilt/sayı, sayfa, DOI, bağlantı. DOI yazınca bilgiler otomatik dolsun mu (Crossref, ücretsiz)?
+   Dosyası olmayan makale (yalnızca bağlantı ya da kâğıt) de eklenebilsin mi?
+6. Makale konuları: kitaplarla ortak konu başlıkları mı, ayrı mı?
+7. Blog: yalnızca kişisel arşiv mi (internette yayınlanmaz), yoksa bir sitede yayınlama da mı isteniyor?
+   Öneri: kişisel arşiv + yazıyı kopyalama / Word-PDF'e aktarma (istediğiniz platformda yayınlamak için).
+8. Blog yazısı özellikleri: başlık, kalın/italik/başlık/liste biçimlendirme, kapak fotoğrafı, kategori ve etiket, taslak/tamamlandı durumu,
+   oluşturma ve düzenleme tarihi, ay/yıl arşivi. Eksik ya da fazla var mı?
+9. Menü: Makaleler ve Blog nerede dursun? Öneri: "☰ Diğer"de; isteyen Ayarlar → Menü'den alt menüye alır.
+10. Blog hangi aşamada? Öneri: 2. aşamaya (kitap listeleri) eklensin, çünkü okuyucuya bağlı değil.
+
+## A. Kitap ekleme ve bilgi bulma (✅ 2.3'te yapıldı)
 1. **Tam ekran barkod okuyucu:** Kamera tam ekran açılsın, kendiliğinden ve sürekli odaklansın; barkodu
    küçük bir çerçeveye getirmek gerekmesin, görüntünün her yerinde algılasın.
    **Hassasiyet:** Kamera barkodu görür görmez anında algılasın. Yapılacaklar:
@@ -34,35 +52,42 @@ Uygulama adı "Kitap & Notlarım" olarak değiştirildi.
 2. **Kitap bulunamazsa** "🔎 Kitapyurdu'nda ara" ve "🔎 Google'da ara" düğmeleri (ISBN ile arama sayfası açılır).
 3. **Kendi kayıtlarından doldurma:** Elle girilmiş bir ISBN tekrar okutulunca bilgiler kendiliğinden dolsun.
 
-## B. E-kitap okuyucu (PDF, Word, TXT, EPUB)
-4. Kitap ekle bölümünden PDF / Word (.docx) / metin (.txt) / EPUB dosyası yükleme.
-5. Okuma ayarları: zemin rengi (istenen renk), yazı boyutu, yazı tipi. Varsayılan: en rahat okunan yazı tipi.
-6. Metni seçip "Notlarıma kaydet": önem derecesi, etiket, yorum, tekrar oku seçenekleriyle; her alıntıya ayrı renk tonu.
+## B. E-kitap okuyucu (PDF, Word, TXT, EPUB) (✅ 3.0'da yapıldı)
+4. **Kitap ekle** bölümünden PDF / Word (.docx) / metin (.txt) / EPUB dosyası yükleme (giriş noktası Kitap ekle ekranı).
+5. Okuma ayarları: **zemin rengi** (hazır gözü yormayan tonlar + istenen herhangi bir renk için renk seçici), yazı boyutu,
+   yazı tipi (istenen yazı stiline değiştirilebilir). **Varsayılan: en rahat okunan yazı tipi** gelir.
+6. Metni seçip **"Notlarıma kaydet"**: önem derecesi, etiket, yorum, tekrar oku seçeneklerinin **hepsi** kayıt ekranında gelsin;
+   her alıntıya **ayrı renk tonu** seçilebilsin. Seçilen renk okurken metnin üzerinde **fosforlu kalem gibi** görünsün.
 7. Sayfalara "Tekrar oku" işareti; notlara ve sayfalara yorum ekleme.
-8. Sayfa çevirme: kitap gibi çevirme ya da başparmakla sağa/sola kaydırma.
-9. Altta sayfa numarası; sayfa numarası yazınca o sayfaya gitme; kalınan sayfadan devam etme.
+8. Sayfa çevirme: **kitap gibi çevirme** (sayfa çevirme efekti) ya da **başparmakla sağa/sola kaydırma**.
+9. Altta **kaçıncı sayfada olunduğu** yazsın; sayfa kısmına numara yazınca o sayfaya gitsin; kitaba tekrar
+   gelince **kalınan sayfadan** devam etsin.
 
-## C. Kitap listeleri
-10. **Özel Kitaplar:** Herkesin görmesini istemediğiniz kitaplar; PIN ile kilitli (günlük gibi).
+## C. Kitap listeleri (✅ 3.0'da yapıldı)
+10. **Özel Kitaplar** sekmesi: Herkesin ulaşmasını istemediğiniz kitaplar; PIN ile kilitli (günlük gibi).
+    Kilitliyken bu kitaplar ve alıntıları Kitaplar listesinde, aramada, etiketlerde ve Tekrar Oku'da da görünmesin.
 11. **Seçkin Kitaplar:** En çok beğenilen, "hayatıma dokundu" denilen kitaplar.
-12. **Okunacak Kitaplar:** Yıldız (okuma/önem derecesi), 1'den başlayan sıralama, konulara göre tasnif, yeni konu başlığı ekleme.
-13. **Kütüphanem:** Evdeki kitaplar; barkod / ISBN / elle ekleme; konulara göre tasnif; "okudum" işareti;
-    konu başlıkları altında, okundu bilgisiyle **kütüphane kataloğu PDF/çıktı**.
-14. **Satın Almak İstediğim Kitaplar:** Yıldız, sıralama, konuya göre tasnif, "önce almak istediklerim";
-    **alış listesi PDF/çıktı**.
+12. **Okunacak Kitaplar** sekmesi: Okumak istenen kitapların listesi. Yıldız (okuma/önem derecesi); sıralama **yıldıza göre**
+    ya da **"ilk okumak istediğim" 1'den başlayan sıra numarasına göre**; konulara göre tasnif; yeni konu başlığı ekleme.
+13. **Kütüphanem:** Evdeki kitaplar; barkod / ISBN / elle ekleme (bulunamayan ISBN elle girilince sonra tanınsın: yapıldı);
+    konulara göre tasnif; **"okudum" işareti**; **okuduklarım / okumadıklarım** ayrı görülebilsin (süzgeç ve sayılar);
+    konu başlıkları altında, okundu bilgisiyle **kütüphane kataloğu**: PDF olarak kaydetme ve **yazıcıdan çıktı**.
+14. **Satın Almak İstediğim Kitaplar:** Diğer listeler gibi yıldız ve sıralama; konu başlığına göre tasnif;
+    **"ilk önce almak istediklerim"** sırası; **alış listesi**: PDF ve yazıcıdan çıktı. Alınan kitap tek dokunuşla Kütüphanem'e geçer.
 
-## D. Not Defteri
+## D. Not Defteri (✅ 2.3'te yapıldı)
 15. Menüde **Not Defteri** (Kitaplar ile Düşüncelerim arasında). İçinde **Genel Notlar** ve **Özel Notlar**; "＋ Not Defteri" ile yeni defter ekleme ve adlandırma.
 16. Ayarlar'dan istenen not defterine PIN kilidi; tüm kilitler için **tek kurtarma kodu**.
 17. Her notun kaydedildiği tarih ve saat görünsün.
 18. Not defteri içinde **Alışveriş Listem**; kendi alışveriş kategorilerini ekleyip adlandırma.
 
-## E. Ayarlar, gizlilik, kılavuz
+## E. Ayarlar, gizlilik, kılavuz (✅ 2.3'te yapıldı; 2. ve 3. aşamanın ayarları o aşamalarda eklenecek)
 19. **Ayarlar'dan yönetim:** Yeni eklenen her özelliğin ayarı Ayarlar'dan rahatça yapılabilsin. Önerilen bölümler:
     - **🔒 Kilit:** PIN aç/kapat/değiştir; hangi bölümler kilitli (Günlük, Düşüncelerim, Özel Notlar, Özel Kitaplar, kendi defterleri); kurtarma kodu yenileme.
     - **🏷️ Konu başlıkları:** Kitap konularını ekleme, yeniden adlandırma, silme, sıralama.
     - **📝 Not defterleri:** Ekleme, adlandırma, sıralama, silme; Alışveriş kategorileri.
     - **📔 Günlük başlıkları:** Ekleme, emoji, gizleme (şu an Günlük sayfasında; Ayarlar'a da konacak).
+    - **🏷️ Konu başlıkları** (kitap listeleri için ortak): ekleme, adlandırma, sıralama, silme.
     - **📖 Okuma görünümü:** Varsayılan zemin rengi, yazı tipi, yazı boyutu, satır aralığı, sayfa çevirme biçimi (kaydırma ya da kitap gibi çevirme).
     - **📷 Barkod:** Bulunamazsa hangi arama düğmeleri görünsün (Kitapyurdu, Google), titreşim açık/kapalı.
     - **🧭 Menü:** Alt menüde hangi bölümlerin görüneceği ve sırası (6 bölüm sığmazsa diye).
@@ -71,9 +96,18 @@ Uygulama adı "Kitap & Notlarım" olarak değiştirildi.
     e-kitap dosyaları, kamera, fotoğraflar, kilit/PIN, yedek dosyaları, internet bağlantıları (ISBN arama,
     Kitapyurdu/Google arama düğmeleri, yazı tipleri), çerezler, çocuklar, veri silme, haklar (KVKK/GDPR
     çerçevesinde), değişiklikler, iletişim (mkaraggoz@gmail.com). Hem uygulama içinde hem `privacy.html`.
-21. **Kullanım kılavuzu Ayarlar'da:** Ayarlar → "📘 Kullanım kılavuzu" bölümü; konulara ayrılmış, aranabilir,
+21. (Yapıldı; 2. ve 3. aşamada yeni bölümler kılavuza ve gizlilik politikasına eklenecek.) **Kullanım kılavuzu Ayarlar'da:** Ayarlar → "📘 Kullanım kılavuzu" bölümü; konulara ayrılmış, aranabilir,
     adım adım anlatım (kitap ekleme, barkod, alıntı, okuyucu, listeler, not defteri, düşünceler, günlük, kilit,
     yedekleme, dışa aktarma, kurulum ve güncelleme, sık sorulan sorular).
+
+## G. Makaleler (✅ 3.0'da yapıldı)
+23. **Makale bölümü:** PDF ve Word dosyası olarak makale ekleme; kitap okuyucunun aynısıyla okuma.
+    Okurken alıntı seçme, not ve fikir ekleme; yıldız, etiket, renk, tekrar oku, sayfaya yorum, kalınan sayfadan devam:
+    **kitap sayfasındaki tüm özellikler** makalelerde de olacak.
+24. **Makale arşivi:** Okuduğum ve okuyacağım makaleler ayrı görülsün (okundu / okunacak işareti), kaydedilip saklansın.
+
+## H. Blog (✅ 3.0'da yapıldı)
+25. **Blog bölümü:** Blog yazılarımı yazıp kaydetme ve arşivleme.
 
 ## F. Ertelenenler
 22. **Play Store'a yükleme:** Kullanıcı karar verince konuşulacak. (Teknik hazırlık zaten yapıldı.)
