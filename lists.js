@@ -66,7 +66,7 @@ function listCard(b, key, idx) {
   let act = '';
   if (key === 'wish') act = `<button class="lc-act buy" data-act="bought" data-id="${b.id}" title="Aldım: Kütüphanem'e taşı">🛒<small>Aldım</small></button>`;
   else if (key === 'toread') act = `<button class="lc-act" data-act="start-reading" data-id="${b.id}" title="Okumaya başla">📖<small>Başla</small></button>`;
-  else if ((key === 'ebooks' || key === 'privateEbooks') && b.fileId) act = `<a class="lc-act" href="#/read/${b.id}" title="Oku">📖<small>Oku</small></a>`;
+  else if ((key === 'ebooks' || key === 'privateEbooks') && b.fileId) act = `<div class="lc-acts"><a class="lc-act" href="#/read/${b.id}" title="Oku">📖<small>Oku</small></a><button class="lc-act chk ${read ? 'on' : ''}" data-act="toggle-read" data-id="${b.id}">${read ? '✓' : ''}<small>${read ? 'Okudum' : 'Okumadım'}</small></button></div>`;
   else if (key !== 'reading') act = `<button class="lc-act chk ${read ? 'on' : ''}" data-act="toggle-read" data-id="${b.id}" title="${read ? 'Okudum (geri almak için dokunun)' : 'Okudum olarak işaretle'}">${read ? '✓' : ''}<small>${read ? 'Okudum' : 'Okumadım'}</small></button>`;
   const tags = `${topicChips(b)}${key !== 'library' && b.owned ? '<span class="chip own">🏠</span>' : ''}${b.fileId && key !== 'ebooks' ? '<span class="chip filek">📱</span>' : ''}${b.favorite && key !== 'fav' ? '<span class="chip">💎</span>' : ''}`;
   return `<article class="list-card c">

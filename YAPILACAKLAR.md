@@ -1,6 +1,8 @@
 # Yapılacaklar
 
-Durum: **Tüm aşamalar tamamlandı (sürüm 3.0).** Bekleyen tek konu: Play Store (ertelendi).
+Durum: **Tüm aşamalar tamamlandı (sürüm 3.1).** Bekleyen tek konu: Play Store (ertelendi).
+
+3.1'de eklenenler: ayrı kitap bölümleri (Kütüphanem, Satın Alınacaklar, Seçkin, Özel Kitaplar, E-kitaplar), derli toplu görünüm, Özel E-kitaplarım ve Özel Makalelerim, her bölümde kategori ekleme, ana sayfada sayaçlar ve kitap taşıma, Raporlar (okuma, Pareto, Günlük/Düşünce/Blog istatistikleri, PDF), okuyucuda "Alıntılarıma aktar" ve otomatik kaynak/dipnot.
 Uygulama adı "Kitap & Notlarım" olarak değiştirildi.
 
 ## Verilen kararlar (23.11.2026)

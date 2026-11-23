@@ -33,6 +33,8 @@ bu düğme yalnızca uygulama dosyalarını yeniden indirir, notlarınızı silm
 ## Bölümler
 Ayrıntılı, aranabilir kılavuz uygulamanın içinde: **Ayarlar → 📘 Kullanım kılavuzu**.
 
+- **📊 Raporlar:** Haftalık/aylık/yıllık ya da seçilen aralık için okuma ve yazma istatistikleri, Pareto grafikleri, PDF çıktısı (PIN ile kilitli).
+- **🗂️ Kitap bölümleri:** Kütüphanem, Satın Alınacaklar, Seçkin, Özel Kitaplar, E-kitaplar (Özel E-kitaplarım ile) ayrı bölümler; her birinde kategori ekleme.
 - **🗂️ Kitap listeleri:** Okuyorum, Okunacak (okuma sırası ve yıldız), Kütüphanem (okudum işareti, katalog PDF), Satın Alınacak (alış listesi PDF), Seçkin, E-kitaplar ve 🔒 Özel Kitaplar; ortak konu başlıkları.
 - **📱 E-kitap okuyucu:** PDF, Word (.docx), TXT ve EPUB yükleyip okuyun; zemin rengi, yazı tipi ve boyutu; metni seçip renkli alıntı olarak kaydedin; sayfaya tekrar oku işareti ve yorum; kaldığınız yerden devam.
 - **📄 Makaleler:** DOI ile bilgi doldurma, PDF/Word makaleyi aynı okuyucuyla okuma, okuduklarım / okuyacaklarım.

@@ -12,8 +12,8 @@ export const isArticleRead = (a) => a.status === 'bitti';
 function articleCard(a) {
   const meta = [a.journal, a.year].filter(Boolean).join(' · ');
   const read = isArticleRead(a);
-  const act = a.fileId ? `<a class="lc-act" href="#/read/${a.id}" title="Oku">📖<small>Oku</small></a>`
-    : `<button class="lc-act chk ${read ? 'on' : ''}" data-act="art-read" data-id="${a.id}">${read ? '✓' : ''}<small>${read ? 'Okudum' : 'Okumadım'}</small></button>`;
+  const chk = `<button class="lc-act chk ${read ? 'on' : ''}" data-act="art-read" data-id="${a.id}">${read ? '✓' : ''}<small>${read ? 'Okudum' : 'Okumadım'}</small></button>`;
+  const act = a.fileId ? `<div class="lc-acts"><a class="lc-act" href="#/read/${a.id}" title="Oku">📖<small>Oku</small></a>${chk}</div>` : chk;
   return `<article class="list-card c">
     <a class="lc-main" href="#/book/${a.id}"><div class="thumb art-thumb"><span>📄</span></div><div class="lc-body">
       <div class="lc-title">${esc(a.title)}</div>
