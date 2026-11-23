@@ -1,7 +1,24 @@
 # Yapılacaklar
 
 Durum: **Not alındı, uygulanmadı.** Kullanıcı "uygula" diyene kadar kodda değişiklik yapılmayacak.
-Açık sorular yanıtlanınca bu dosya güncellenecek.
+
+## Verilen kararlar (23.11.2026)
+- **Seçkin Kitaplar:** En çok beğenilen, "hayatıma dokundu" denilen kitaplar.
+- **Tek kitap kaydı + işaretler:** Kitap bir kez kaydedilir; listeler işaretle çalışır (Kütüphanemde var,
+  Okunacak, Satın alınacak, Seçkin, Özel). Bir kitap birden fazla listede olabilir. "Satın alınacak"
+  kitap tek dokunuşla "Kütüphanem"e geçer. Konu başlıkları tüm listelerde ortaktır.
+- **Düşüncelerim ayrı kalır** (Not Defteri ile birleşmez).
+- **Not Defteri:** Defterlerin içindeki her nota başlık eklenebilir.
+- **Menü sırası:** Kitaplar · Not Defteri · Düşüncelerim · Günlük · Ara · Diğer
+- **Kilit:** Bütün kilitli bölümler için tek PIN ve tek kurtarma kodu. Ayarlar'dan hangi bölümlerin
+  kilitli olacağı seçilir (Günlük, Düşünceler, Özel Notlar, Özel Kitaplar, kullanıcının defterleri…).
+- **PDF:** İki görünüm olacak, tek düğmeyle geçilecek. Orijinal görünümde sayfa aynen kalır, zemin rengi
+  ve yakınlaştırma ayarlanır. Metin görünümünde yazı tipi ve boyutu da değişir.
+- **EPUB / Word / TXT sayfa numarası:** O anki ekrana göre hesaplanır, yanında yüzde gösterilir. Kalınan yer
+  yazı boyutu değişse de korunur. Alıntıya kaydedilen sayfa numarası kaydederken düzeltilebilir.
+- **Alışveriş Listem:** Kategoriler (Market, Eczane…) altında işaretlenebilir maddeler; alınanlar ✓,
+  istenirse alınanlar silinir.
+- **Açık kalan:** Uygulama sırası (önerilen: 1) A + D, 2) C, 3) B).
 
 ## A. Kitap ekleme ve bilgi bulma
 1. **Tam ekran barkod okuyucu:** Kamera tam ekran açılsın, kendiliğinden ve sürekli odaklansın; barkodu
@@ -19,7 +36,7 @@ Açık sorular yanıtlanınca bu dosya güncellenecek.
 
 ## C. Kitap listeleri
 10. **Özel Kitaplar:** Herkesin görmesini istemediğiniz kitaplar; PIN ile kilitli (günlük gibi).
-11. **Seçkin Kitaplar** bölümü (ayrıntısı soruldu).
+11. **Seçkin Kitaplar:** En çok beğenilen, "hayatıma dokundu" denilen kitaplar.
 12. **Okunacak Kitaplar:** Yıldız (okuma/önem derecesi), 1'den başlayan sıralama, konulara göre tasnif, yeni konu başlığı ekleme.
 13. **Kütüphanem:** Evdeki kitaplar; barkod / ISBN / elle ekleme; konulara göre tasnif; "okudum" işareti;
     konu başlıkları altında, okundu bilgisiyle **kütüphane kataloğu PDF/çıktı**.
@@ -27,7 +44,7 @@ Açık sorular yanıtlanınca bu dosya güncellenecek.
     **alış listesi PDF/çıktı**.
 
 ## D. Not Defteri
-15. Menüde Günlük'ün yanında **Not Defteri**. İçinde **Genel Notlar** ve **Özel Notlar**; "＋ Not Defteri" ile yeni defter ekleme ve adlandırma.
+15. Menüde **Not Defteri** (Kitaplar ile Düşüncelerim arasında). İçinde **Genel Notlar** ve **Özel Notlar**; "＋ Not Defteri" ile yeni defter ekleme ve adlandırma.
 16. Ayarlar'dan istenen not defterine PIN kilidi; tüm kilitler için **tek kurtarma kodu**.
 17. Her notun kaydedildiği tarih ve saat görünsün.
 18. Not defteri içinde **Alışveriş Listem**; kendi alışveriş kategorilerini ekleyip adlandırma.
