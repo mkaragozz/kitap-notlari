@@ -444,3 +444,65 @@ mark { background: #FFE27A; color: inherit; border-radius: 3px; padding: 0 1px; 
 .pd-toc { list-style: none; padding: 0; }
 .pd-toc li { display: flex; justify-content: space-between; border-bottom: 1px dotted #bbb; padding: 2pt 0; }
 .pd-foot { margin-top: 20pt; font-size: 9.5pt; color: #444; border-top: 1px solid #ddd; padding-top: 6pt; font-family: 'Nunito', sans-serif; }
+
+/* ---------- 2.3: Not Defteri, Alışveriş, Ayarlar, tam ekran barkod ---------- */
+.nav.n7 a { font-size: 10.5px; }
+.nav.n7 a .ni { font-size: 20px; }
+@media (max-width: 380px) { .nav a { font-size: 10px; letter-spacing: -.2px; } }
+.nb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 8px; }
+.nb-card { display: flex; flex-direction: column; gap: 4px; background: var(--card); border: 0; border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 14px; text-decoration: none; color: var(--ink); text-align: left; cursor: pointer; font: inherit; border-top: 5px solid var(--sky); }
+.nb-card .nb-e { font-size: 30px; line-height: 1; }
+.nb-card b { font-size: 15.5px; }
+.nb-card small { color: var(--muted); font-weight: 700; font-size: 12.5px; }
+.nb-card.shop { border-top-color: var(--teal); }
+.nb-card.add { background: transparent; box-shadow: none; border: 2px dashed var(--line); color: var(--muted); }
+.note-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; margin-bottom: 12px; border-left: 5px solid var(--sky); cursor: pointer; }
+.note-card:active { transform: scale(.99); }
+.shop-cat { padding: 12px 14px; }
+.shop-head { display: flex; align-items: center; gap: 8px; font-size: 16px; }
+.shop-head b { flex: 1; }
+.shop-head .count { background: var(--teal-soft); color: #077468; font-size: 12.5px; border-radius: 20px; padding: 1px 9px; font-weight: 800; }
+.shop-list { list-style: none; padding: 0; margin: 8px 0; }
+.shop-list li { display: flex; align-items: center; gap: 8px; border-bottom: 1px dashed var(--line); }
+.shop-list label { flex: 1; display: flex; align-items: center; gap: 10px; padding: 9px 2px; cursor: pointer; font-size: 15.5px; }
+.shop-list input { width: 22px; height: 22px; accent-color: var(--teal); flex: none; }
+.shop-list li.done span { text-decoration: line-through; color: var(--muted); }
+.shop-list .x { border: 0; background: none; color: var(--muted); font-size: 20px; cursor: pointer; padding: 4px 8px; }
+.shop-add { display: flex; gap: 8px; }
+.shop-add input { flex: 1; border: 2px solid var(--line); border-radius: 11px; padding: 8px 10px; font-size: 15px; outline: none; background: #fff; min-width: 0; }
+.shop-add input:focus { border-color: var(--teal); }
+.set-group { font-size: 13px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin: 18px 4px 8px; }
+.order-row { display: flex; align-items: center; gap: 6px; border-bottom: 1px dashed var(--line); padding: 4px 0; }
+.order-row:last-of-type { border-bottom: 0; }
+details.guide { padding: 0; }
+details.guide summary { padding: 14px 16px; font-weight: 800; font-size: 16px; cursor: pointer; list-style: none; display: flex; gap: 10px; align-items: center; }
+details.guide summary::-webkit-details-marker { display: none; }
+details.guide summary::after { content: '›'; margin-left: auto; color: var(--muted); font-size: 20px; transition: transform .15s; }
+details.guide[open] summary::after { transform: rotate(90deg); }
+details.guide .prose { padding: 0 16px 14px; font-size: 15px; }
+details.guide .prose ul, details.guide .prose ol { padding-left: 20px; }
+.prose table { border-collapse: collapse; width: 100%; font-size: 14px; } .prose td, .prose th { border-bottom: 1px solid var(--line); padding: 6px 4px; text-align: left; vertical-align: top; }
+.prose .box { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin: 10px 0; background: var(--bg2); }
+.prose h3 { font-size: 17px; margin: 18px 0 4px; color: var(--violet); }
+/* Tam ekran barkod */
+.modal-bg.full { align-items: stretch; background: #000; }
+.sheet.full { max-width: none; max-height: none; height: 100%; border-radius: 0; background: #000; color: #fff; padding: calc(8px + env(safe-area-inset-top)) 0 calc(10px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; animation: fade .15s; }
+.sheet.full::before { display: none; }
+.sheet.full .sheet-head { padding: 0 12px; margin-bottom: 8px; }
+.sheet.full .sheet-head h3 { color: #fff; }
+.sheet.full .sheet-head .x { background: rgba(255, 255, 255, .15); color: #fff; box-shadow: none; }
+.sheet.full .sheet-body { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.scan-stage { position: relative; flex: 1; overflow: hidden; background: #000; }
+.scan-stage video, .scan-lib video { position: absolute; inset: 0; width: 100% !important; height: 100% !important; object-fit: cover; }
+.scan-lib { position: absolute; inset: 0; }
+.scan-lib > div, .scan-lib canvas { display: none !important; }
+.scan-guide { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.scan-guide i { width: 78%; max-width: 420px; height: 26%; max-height: 190px; border: 3px solid rgba(255, 255, 255, .85); border-radius: 18px; box-shadow: 0 0 0 9999px rgba(0, 0, 0, .25); }
+.scan-guide i::after { content: ''; display: block; height: 2px; background: #ff4d4d; margin-top: 48%; opacity: .8; animation: scanline 1.6s ease-in-out infinite alternate; }
+@keyframes scanline { from { transform: translateY(-40px); } to { transform: translateY(40px); } }
+.scan-tip { position: absolute; left: 12px; right: 12px; bottom: 16px; text-align: center; background: rgba(0, 0, 0, .55); padding: 8px 12px; border-radius: 12px; font-weight: 700; font-size: 14.5px; }
+.scan-bar { display: flex; gap: 8px; padding: 10px 12px 0; }
+.scan-bar .btn { flex: 1; background: rgba(255, 255, 255, .14); color: #fff; box-shadow: none; }
+.scan-bar .btn.primary { background: var(--sun); color: var(--ink); }
+.more-list em { order: 1; }
+.more-list small { order: 2; }

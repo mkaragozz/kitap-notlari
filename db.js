@@ -10,10 +10,15 @@
 //   moments   : günlük anları (gün, saat, başlık türü, metin, fotoğraflar)
 //   days      : günlük gün bilgisi (ruh hâli). id = 'YYYY-MM-DD'
 //   prompts   : günlük başlıkları (kendi eklediğiniz başlıklar + hazır başlıklarda yaptığınız değişiklikler)
+//   nbooks    : not defterleri (Genel Notlar, Özel Notlar + kullanıcının ekledikleri)
+//   notes     : notlar (başlık, metin; oluşturma ve düzenleme tarih-saati)
+//   shopcats  : alışveriş listesi kategorileri (Market, Eczane…)
+//   shopitems : alışveriş listesi maddeleri (işaretlenebilir)
+//   isbnmemo  : elle girilen kitap bilgilerinin ISBN hafızası (aynı ISBN tekrar okutulunca doldurmak için)
 
 const DB_NAME = 'kitap-notlari';
-const DB_VERSION = 3;
-export const STORES = ['books', 'quotes', 'thoughts', 'notebooks', 'moments', 'days', 'prompts'];
+const DB_VERSION = 4;
+export const STORES = ['books', 'quotes', 'thoughts', 'notebooks', 'moments', 'days', 'prompts', 'nbooks', 'notes', 'shopcats', 'shopitems', 'isbnmemo'];
 let dbPromise = null;
 
 export const S = Object.fromEntries(STORES.map((s) => [s, new Map()]));
@@ -99,6 +104,21 @@ export async function load() {
   STORES.forEach((s, i) => { S[s] = new Map(all[i].map((x) => [x.id, x])); });
   const migrated = [...S.quotes.values()].filter((q) => migrateQuote(q));
   if (migrated.length) await putMany('quotes', migrated);
+  await ensureSeeds();
+}
+
+// Hazır not defterleri: sabit kimlikli, böylece iki cihazın yedeği birleşince çift olmazlar.
+export const NB_GENERAL = 'nb-general';
+export const NB_PRIVATE = 'nb-private';
+async function ensureSeeds() {
+  const seeds = [
+    { id: NB_GENERAL, name: 'Genel Notlar', emoji: '📒', builtin: true, order: 0 },
+    { id: NB_PRIVATE, name: 'Özel Notlar', emoji: '🔐', builtin: true, order: 1 },
+  ];
+  const put = [];
+  const old = '2000-01-01T00:00:00.000Z'; // yedekten gelen (adı değişmiş) kopya her zaman kazansın
+  seeds.forEach((x) => { if (!S.nbooks.has(x.id)) { const r = { ...x, createdAt: old, updatedAt: old }; S.nbooks.set(x.id, r); put.push(r); } });
+  await putMany('nbooks', put);
 }
 
 const live = (store) => [...S[store].values()].filter((x) => !x.deleted);
@@ -122,6 +142,15 @@ export function moments() { return live('moments'); }
 export function momentsOn(date) { return moments().filter((m) => m.date === date).sort((a, b) => (a.at || '').localeCompare(b.at || '')); }
 export function getMoment(id) { const m = S.moments.get(id); return m && !m.deleted ? m : null; }
 export function promptRecords() { return live('prompts'); }
+// ---- Not defteri ----
+export function nbooks() { return live('nbooks').sort((a, b) => (a.order ?? 99) - (b.order ?? 99) || (a.createdAt || '').localeCompare(b.createdAt || '')); }
+export function getNbook(id) { const n = S.nbooks.get(id); return n && !n.deleted ? n : null; }
+export function notesOf(nbId) { return live('notes').filter((n) => n.nbId === nbId); }
+export function allNotes() { return live('notes').filter((n) => getNbook(n.nbId)); }
+export function getNote(id) { const n = S.notes.get(id); return n && !n.deleted ? n : null; }
+export function shopcats() { return live('shopcats').sort((a, b) => (a.order ?? 99) - (b.order ?? 99) || (a.createdAt || '').localeCompare(b.createdAt || '')); }
+export function shopitems() { return live('shopitems'); }
+export function getIsbnMemo(isbn) { const m = S.isbnmemo.get(isbn); return m && !m.deleted ? m : null; }
 export function getDay(date) { const d = S.days.get(date); return d && !d.deleted ? d : null; }
 
 // ---- Genel kaydetme / silme ----
@@ -171,7 +200,7 @@ export function exportBackup() {
 // Birleştirme: aynı kayıt iki cihazda da varsa, en son güncellenen kazanır.
 export async function importBackup(data) {
   if (!data || data.app !== 'kitap-notlari' || !Array.isArray(data.books) || !Array.isArray(data.quotes)) {
-    throw new Error('Bu dosya bir Kitap Notlarım yedeği değil.');
+    throw new Error('Bu dosya bir Kitap & Notlarım yedeği değil.');
   }
   const stats = { added: 0, updated: 0 };
   const newer = (inc, cur) => !cur || (inc.updatedAt || '') > (cur.updatedAt || '');
@@ -191,6 +220,7 @@ export async function importBackup(data) {
 
 export async function wipeAll() {
   for (const s of STORES) { await clearStore(s); S[s].clear(); }
+  await ensureSeeds();
 }
 
 let persistAsked = false;
@@ -202,7 +232,16 @@ function requestPersist() {
 
 // ---- Ayarlar (cihaza özel) ----
 const SETTINGS_KEY = 'kn-settings';
-const DEFAULTS = { lastBackup: '', pin: null };
+const DEFAULTS = {
+  lastBackup: '', pin: null,
+  // Kilitli bölümler (PIN açıkken). 'nb:<id>' = not defteri, 'shopping' = alışveriş listesi
+  locks: ['journal', 'thoughts', 'nb:nb-private'],
+  lockMinutes: 5,
+  // Barkod
+  scanVibrate: true, scanBeep: true, searchLinks: ['kitapyurdu', 'google'],
+  // Alt menüde görünen bölümler ve sırası (Kitaplar ve Diğer sabit)
+  nav: ['notes', 'thoughts', 'journal', 'search'],
+};
 const REMOVED = ['apiKey', 'model', 'citeStyle'];
 export function getSettings() {
   try {

@@ -1,20 +1,34 @@
-// PIN kilidi: yalnızca Düşünceler ve Günlük bölümlerini korur.
+// PIN kilidi: Ayarlar'da seçilen bölümleri (Günlük, Düşünceler, not defterleri, alışveriş listesi) korur.
+// Tek PIN ve tek kurtarma kodu vardır; kilit bir kez açılınca tüm kilitli bölümler açılır.
 // PIN cihazda açık metin olarak değil, tuzlanmış SHA-256 özeti olarak saklanır.
 // Not: Bu bir "meraklı gözlere karşı" kilittir; veriler cihazda şifrelenmiş değildir.
-import * as DB from './db.js?v=2.2';
-import { $, $$, esc, toast, openSheet, closeSheet, rerender } from './ui.js?v=2.2';
+import * as DB from './db.js?v=2.3';
+import { $, $$, esc, toast, openSheet, closeSheet, rerender } from './ui.js?v=2.3';
 
-const IDLE_MS = 5 * 60 * 1000;
+const idleMs = () => (parseInt(DB.getSettings().lockMinutes, 10) || 5) * 60 * 1000;
 let unlocked = false;
 let lastActive = Date.now();
 let fails = 0;
 let blockedUntil = 0;
 
 export function enabled() { const p = DB.getSettings().pin; return !!(p && p.hash); }
-export function isOpen() { if (!enabled()) return true; checkIdle(); return unlocked; }
+/** Bölüm kilitli olarak işaretli mi? (PIN açık olmasa da ayar olarak) */
+export function isLockedSection(section) { return (DB.getSettings().locks || []).includes(section); }
+/** Bölüm şu an açık mı? section verilmezse: tüm kilitler açık mı */
+export function isOpen(section) {
+  if (!enabled()) return true;
+  if (section && !isLockedSection(section)) return true;
+  checkIdle();
+  return unlocked;
+}
 export function lock() { unlocked = false; }
+export function setSectionLocked(section, on) {
+  const cur = new Set(DB.getSettings().locks || []);
+  if (on) cur.add(section); else cur.delete(section);
+  DB.setSettings({ locks: [...cur] });
+}
 
-function checkIdle() { if (unlocked && Date.now() - lastActive > IDLE_MS) unlocked = false; }
+function checkIdle() { if (unlocked && Date.now() - lastActive > idleMs()) unlocked = false; }
 ['pointerdown', 'keydown', 'scroll', 'touchstart'].forEach((ev) => window.addEventListener(ev, () => { checkIdle(); lastActive = Date.now(); }, { passive: true, capture: true }));
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { const was = unlocked; checkIdle(); if (was && !unlocked) rerender(); } });
 setInterval(() => { const was = unlocked; checkIdle(); if (was && !unlocked) rerender(); }, 30000);
@@ -141,8 +155,35 @@ export function askPin(title, onOk) {
   });
 }
 
+/** Kilidi bir alt sayfada açar (ör. arama sayfasından) */
+export function unlockFlow(onOk) {
+  const s = openSheet({ title: '🔒 Kilidi aç', body: padHtml('PIN') });
+  const pad = bindPad($('.pin-box', s), async (pin) => {
+    if (Date.now() < blockedUntil) { pad.error(`Çok fazla deneme. ${Math.ceil((blockedUntil - Date.now()) / 1000)} sn bekleyin.`); return false; }
+    if (await checkPin(pin)) { unlocked = true; lastActive = Date.now(); fails = 0; await closeSheet(); if (onOk) onOk(); return true; }
+    fails++;
+    if (fails >= 5) { blockedUntil = Date.now() + 30000; fails = 0; pad.error('5 hatalı deneme. 30 saniye bekleyin.'); } else pad.error('PIN yanlış');
+    return false;
+  });
+}
 export function disablePin() {
   askPin('PIN kilidini kapat', () => { DB.setSettings({ pin: null }); unlocked = false; toast('PIN kilidi kapatıldı'); rerender(); });
+}
+/** Kurtarma kodunu yeniler (PIN sorulur), yenisini gösterir */
+export function regenCode() {
+  askPin('Kurtarma kodunu yenile', async () => {
+    const p = DB.getSettings().pin;
+    const chars = newRecoveryCode();
+    DB.setSettings({ pin: { ...p, recHash: await sha(p.salt + ':rec:' + cleanCode(chars)) } });
+    const s = openSheet({
+      title: '🔑 Yeni kurtarma kodunuz',
+      body: `<p>Eski kod artık geçersiz. <b>Bu kod bir daha gösterilmeyecek</b>, bir yere yazın.</p><div class="rec-code">${esc(chars)}</div>
+        <label class="check"><input type="checkbox" id="rec-ok"> Kodu bir yere yazdım</label>`,
+      foot: `<button class="btn primary" data-x="done" disabled>Tamam</button>`, locked: true,
+    });
+    $('#rec-ok', s).onchange = (e) => { $('[data-x="done"]', s).disabled = !e.target.checked; };
+    $('[data-x="done"]', s).onclick = () => closeSheet();
+  });
 }
 export function changePin() {
   askPin('PIN\'i değiştir', () => setPinFlow({ title: 'Yeni PIN belirleyin' }));

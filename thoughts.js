@@ -1,18 +1,18 @@
 // 💡 Düşüncelerim: kitaplardan bağımsız fikirler. Defterler, ortak etiketler, yıldız,
 // her parça tarih-saatli; eski bir düşüncenin altına sonradan ekleme yapılabilir.
-import * as DB from './db.js?v=2.2';
-import * as EX from './export.js?v=2.2';
-import * as Lock from './lock.js?v=2.2';
+import * as DB from './db.js?v=2.3';
+import * as EX from './export.js?v=2.3';
+import * as Lock from './lock.js?v=2.3';
 import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, rerender, go, fmtDateTime, today, norm,
-  starPickerHtml, bindStarPicker, starsBadge, STAR_LABELS } from './ui.js?v=2.2';
-import { thoughtCard, thoughtTitle, thoughtText, thoughtLastAt, tagInputHtml, bindTagInput, openRelated } from './cards.js?v=2.2';
+  starPickerHtml, bindStarPicker, starsBadge, STAR_LABELS } from './ui.js?v=2.3';
+import { thoughtCard, thoughtTitle, thoughtText, thoughtLastAt, tagInputHtml, bindTagInput, openRelated } from './cards.js?v=2.3';
 
 const state = { nb: 'all', sort: 'new', stars: 'all', q: '' };
 
 function lockBtn() { return Lock.enabled() ? '<button class="btn sm ghost" data-act="lock-now" title="Kilitle">🔒</button>' : ''; }
 
 export function renderThoughts() {
-  if (!Lock.isOpen()) { Lock.renderLockScreen(view, 'Düşüncelerim'); return; }
+  if (!Lock.isOpen('thoughts')) { Lock.renderLockScreen(view, 'Düşüncelerim'); return; }
   const all = DB.thoughts();
   const nbs = DB.notebooks();
   if (state.nb !== 'all' && state.nb !== 'none' && !DB.getNotebook(state.nb)) state.nb = 'all';
@@ -61,7 +61,7 @@ export function renderThoughts() {
 }
 
 export function renderThought(id) {
-  if (!Lock.isOpen()) { Lock.renderLockScreen(view, 'Düşüncelerim'); return; }
+  if (!Lock.isOpen('thoughts')) { Lock.renderLockScreen(view, 'Düşüncelerim'); return; }
   const t = DB.getThought(id);
   if (!t) { view.innerHTML = `<div class="empty"><div class="e">🔍</div><h3>Düşünce bulunamadı</h3><a class="btn" href="#/thoughts">Düşüncelere dön</a></div>`; return; }
   const nb = t.notebookId ? DB.getNotebook(t.notebookId) : null;
@@ -152,7 +152,7 @@ function openPartEditor(t, part = null) {
   setTimeout(() => $('#p-text', s).focus(), 250);
 }
 
-function manageNotebooks() {
+export function manageNotebooks() {
   const nbs = DB.notebooks();
   const s = openSheet({
     title: '📓 Defterler',

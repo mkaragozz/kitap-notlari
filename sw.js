@@ -4,9 +4,9 @@
 // SÜRÜM DEĞİŞTİRİRKEN: aşağıdaki V değerini ve tüm dosyalardaki "?v=..." eklerini birlikte değiştirin
 // (index.html, *.js içindeki import satırları). Sürüm eki her dosyaya yeni bir adres verir; böylece
 // GitHub'ın önbelleği eski dosyayı veremez ve eski/yeni dosyalar karışmaz.
-const V = '2.2';
+const V = '2.3';
 const VERSION = 'kn-v' + V;
-const MODS = ['app', 'ui', 'db', 'cards', 'lock', 'scanner', 'thoughts', 'journal', 'export'].map((m) => `${m}.js?v=${V}`);
+const MODS = ['app', 'ui', 'db', 'cards', 'lock', 'scanner', 'thoughts', 'journal', 'export', 'notes', 'guide'].map((m) => `${m}.js?v=${V}`);
 const SHELL = ['./', 'index.html', `styles.css?v=${V}`, ...MODS, 'lib/html5-qrcode.min.js?v=2.3.8',
   'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'privacy.html'];
 const CDN = /^https:\/\/(cdn\.jsdelivr\.net|cdnjs\.cloudflare\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)\//;

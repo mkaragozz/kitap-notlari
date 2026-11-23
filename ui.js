@@ -99,11 +99,11 @@ export const modal = { open: false };
 let modalOnClose = null;
 let modalLocked = false;
 
-export function openSheet({ title, body, foot = '', onClose = null, locked = false, wide = false }) {
+export function openSheet({ title, body, foot = '', onClose = null, locked = false, wide = false, full = false }) {
   if (!modal.open) { try { history.pushState({ kn: 'modal' }, ''); } catch (e) { /* yok say */ } }
   else if (modalOnClose) { const prev = modalOnClose; modalOnClose = null; prev(); }
   modal.open = true; modalOnClose = onClose; modalLocked = locked;
-  modalRoot.innerHTML = `<div class="modal-bg"><div class="sheet${wide ? ' wide' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+  modalRoot.innerHTML = `<div class="modal-bg${full ? ' full' : ''}"><div class="sheet${wide ? ' wide' : ''}${full ? ' full' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}">
     <div class="sheet-head"><h3>${esc(title)}</h3>${locked ? '' : '<button class="x" data-act="close-sheet" aria-label="Kapat">✕</button>'}</div>
     <div class="sheet-body">${body}</div>${foot ? `<div class="sheet-foot">${foot}</div>` : ''}</div></div>`;
   const sheet = $('.sheet', modalRoot);
