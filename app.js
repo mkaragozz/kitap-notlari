@@ -431,8 +431,18 @@ function renderBookForm(id, autoScan = false, listKey = '') {
   let removeFile = false;
   let status = b.status || 'okunacak';
   let cover = b.cover || '';
+  let statusTouched = !!id;
+  const setStatus = (st) => { status = st; form.querySelectorAll('#form-st button').forEach((x) => x.classList.toggle('on', x.dataset.st === st)); };
+  // Yeni kitapta bir bölüm kutusu işaretlenince (ya da dosya seçilince) kitap okuma listesine düşmesin: Durum "Listede değil"
+  const autoStatus = () => {
+    if (statusTouched) return;
+    const anySection = ['owned', 'wish', 'favorite', 'private'].some((k) => form[k] && form[k].checked) || !!newFile;
+    setStatus(anySection ? 'none' : 'okunacak');
+  };
+  ['owned', 'wish', 'favorite', 'private'].forEach((k) => { if (form[k]) form[k].addEventListener('change', autoStatus); });
   $('#form-st').onclick = (e) => {
     const btn = e.target.closest('[data-st]'); if (!btn) return;
+    statusTouched = true;
     status = btn.dataset.st;
     $$('#form-st button').forEach((x) => x.classList.toggle('on', x === btn));
     if (status === 'okunuyor' && !form.startDate.value) form.startDate.value = today();
@@ -493,7 +503,7 @@ function renderBookForm(id, autoScan = false, listKey = '') {
       if (!f) return;
       const kind = fileKind(f.name, f.type);
       if (!kind || kind === 'doc') { toast(kind === 'doc' ? 'Eski .doc biçimi desteklenmiyor; Word\'de “.docx” olarak kaydedin.' : 'PDF, Word (.docx), TXT ya da EPUB seçin.', 4500); return; }
-      newFile = f; removeFile = false;
+      newFile = f; removeFile = false; autoStatus();
       $('#ebook-file').innerHTML = `<div class="file-pill">📄 ${esc(f.name)} <small>${KIND_LABEL[kind]} · ${(f.size / 1048576).toFixed(1)} MB</small></div><div class="small muted">Bilgiler okunuyor…</div>`;
       const meta = await readMeta(f);
       const n = fill(meta);
@@ -524,7 +534,10 @@ function renderBookForm(id, autoScan = false, listKey = '') {
     await DB.saveBook(b);
     Scan.rememberBook(b).catch(() => {});
     toast(isNew ? 'Kitap eklendi ✓' : 'Kaydedildi ✓');
-    if (isNew && sectionAdd) location.replace(listHref(listKey)); else if (isNew) location.replace('#/book/' + b.id); else go('#/book/' + b.id);
+    // Yeni kitap: işaretlenen bölüm açılsın (öncelik: Özel, Satın Alınacaklar, Kütüphanem, E-kitaplar, Seçkin)
+    const dest = sectionAdd ? listKey : b.private ? 'private' : b.wish ? 'wish' : b.owned ? 'library' : b.fileId ? 'ebooks' : b.favorite ? 'fav' : '';
+    if (isNew && dest) { location.replace(listHref(dest)); setTimeout(() => toast(`Kitap “${LISTS[dest].l}” bölümüne eklendi ✓`), 50); }
+    else if (isNew) location.replace('#/book/' + b.id); else go('#/book/' + b.id);
   };
   if (autoScan && !id) setTimeout(doScan, 200);
   if (listKey === 'ebooks' && !id) setTimeout(() => { const btn = form.querySelector('[data-act="ebook-pick"]'); if (btn) btn.scrollIntoView({ block: 'center' }); }, 150);
