@@ -28,6 +28,15 @@ Uygulama adı "Kitap & Notlarım" olarak değiştirildi.
    "Bitti" = Kütüphanem'deki "okudum". Kitaplar sayfasında sekmeler: Tümü · Okuyorum · Okunacak · Kütüphanem · Satın Alınacak · Seçkin · 🔒 Özel.
 3. Yüklenen e-kitaplar Kütüphanem'de mi dursun? Öneri: 📱 işaretiyle ayrı; katalog PDF'ine isteğe bağlı dahil.
 4. E-kitap dosyaları yedeğe girsin mi? Öneri: normal yedekte yalnızca notlar/alıntılar/kalınan sayfa; Ayarlar'da ayrı "E-kitapları da yedekle".
+5. Makale bilgileri: başlık, yazar, dergi, yıl, cilt/sayı, sayfa, DOI, bağlantı. DOI yazınca bilgiler otomatik dolsun mu (Crossref, ücretsiz)?
+   Dosyası olmayan makale (yalnızca bağlantı ya da kâğıt) de eklenebilsin mi?
+6. Makale konuları: kitaplarla ortak konu başlıkları mı, ayrı mı?
+7. Blog: yalnızca kişisel arşiv mi (internette yayınlanmaz), yoksa bir sitede yayınlama da mı isteniyor?
+   Öneri: kişisel arşiv + yazıyı kopyalama / Word-PDF'e aktarma (istediğiniz platformda yayınlamak için).
+8. Blog yazısı özellikleri: başlık, kalın/italik/başlık/liste biçimlendirme, kapak fotoğrafı, kategori ve etiket, taslak/tamamlandı durumu,
+   oluşturma ve düzenleme tarihi, ay/yıl arşivi. Eksik ya da fazla var mı?
+9. Menü: Makaleler ve Blog nerede dursun? Öneri: "☰ Diğer"de; isteyen Ayarlar → Menü'den alt menüye alır.
+10. Blog hangi aşamada? Öneri: 2. aşamaya (kitap listeleri) eklensin, çünkü okuyucuya bağlı değil.
 
 ## A. Kitap ekleme ve bilgi bulma (✅ 2.3'te yapıldı)
 1. **Tam ekran barkod okuyucu:** Kamera tam ekran açılsın, kendiliğinden ve sürekli odaklansın; barkodu
@@ -88,6 +97,15 @@ Uygulama adı "Kitap & Notlarım" olarak değiştirildi.
 21. (Yapıldı; 2. ve 3. aşamada yeni bölümler kılavuza ve gizlilik politikasına eklenecek.) **Kullanım kılavuzu Ayarlar'da:** Ayarlar → "📘 Kullanım kılavuzu" bölümü; konulara ayrılmış, aranabilir,
     adım adım anlatım (kitap ekleme, barkod, alıntı, okuyucu, listeler, not defteri, düşünceler, günlük, kilit,
     yedekleme, dışa aktarma, kurulum ve güncelleme, sık sorulan sorular).
+
+## G. Makaleler (⏳ e-kitap okuyucuyla birlikte, 3. aşama)
+23. **Makale bölümü:** PDF ve Word dosyası olarak makale ekleme; kitap okuyucunun aynısıyla okuma.
+    Okurken alıntı seçme, not ve fikir ekleme; yıldız, etiket, renk, tekrar oku, sayfaya yorum, kalınan sayfadan devam:
+    **kitap sayfasındaki tüm özellikler** makalelerde de olacak.
+24. **Makale arşivi:** Okuduğum ve okuyacağım makaleler ayrı görülsün (okundu / okunacak işareti), kaydedilip saklansın.
+
+## H. Blog (⏳ yeni aşama)
+25. **Blog bölümü:** Blog yazılarımı yazıp kaydetme ve arşivleme.
 
 ## F. Ertelenenler
 22. **Play Store'a yükleme:** Kullanıcı karar verince konuşulacak. (Teknik hazırlık zaten yapıldı.)
