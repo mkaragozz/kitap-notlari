@@ -706,3 +706,11 @@ mark.hl.flash, .flash { animation: flash 1.8s; }
 .more-list .cnt { order: 0 !important; }
 .more-list em { order: 3; }
 .topbar h1 { font-size: clamp(20px, 6.2vw, 26px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- 3.1: Özel e-kitap / makale sekmeleri, kategori sayıları ---------- */
+.sub-tabs { display: flex; background: var(--bg2); border-radius: 14px; padding: 4px; gap: 4px; margin-bottom: 10px; }
+.sub-tabs a { flex: 1; text-align: center; text-decoration: none; color: var(--muted); font-weight: 800; font-size: 13.5px; padding: 9px 6px; border-radius: 11px; }
+.sub-tabs a.on { background: #fff; color: var(--violet); box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+.sub-tabs small { opacity: .7; }
+.pill small { opacity: .7; margin-left: 2px; }
+.pill.dim { opacity: .55; }

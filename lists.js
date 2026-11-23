@@ -16,10 +16,14 @@ export const LISTS = {
   fav: { e: '💎', l: 'Seçkin Kitaplar' },
   private: { e: '🔒', l: 'Özel Kitaplar' },
   ebooks: { e: '📱', l: 'E-kitaplar' },
+  privateEbooks: { e: '🔒', l: 'Özel E-kitaplarım' },
 };
+/** Özel bölümlerin kilit anahtarı (Ayarlar → Kilit) */
+export const PRIVATE_LOCK = { private: 'privateBooks', privateEbooks: 'privateEbooks' };
+export const privateLockOf = (b) => (b.kind === 'article' ? 'privateArticles' : b.fileId ? 'privateEbooks' : 'privateBooks');
 /** Ayrı bölümlerin adresleri */
 export const SECTION_ROUTES = { library: 'library', wish: 'wish', fav: 'favorites', private: 'private', ebooks: 'ebooks' };
-export const listHref = (key) => (SECTION_ROUTES[key] ? `#/${SECTION_ROUTES[key]}` : `#/books/${key}`);
+export const listHref = (key) => (key === 'privateEbooks' ? '#/ebooks/private' : SECTION_ROUTES[key] ? `#/${SECTION_ROUTES[key]}` : `#/books/${key}`);
 const COLORS = [['#7C5CFF', '#FF5DA2'], ['#FF6B57', '#FFB020'], ['#10B8A6', '#2F9BFF'], ['#FF5DA2', '#FFB020'], ['#2F9BFF', '#7C5CFF'], ['#10B8A6', '#7CD957'], ['#FF8A3D', '#FF5D7A']];
 function hashStr(s) { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h); }
 export function thumbHtml(b) {
@@ -38,7 +42,8 @@ export function inList(b, key) {
   if (key === 'wish') return !!b.wish && !b.private;
   if (key === 'fav') return !!b.favorite && !b.private;
   if (key === 'ebooks') return !!b.fileId && !b.private;
-  if (key === 'private') return !!b.private;
+  if (key === 'private') return !!b.private && !b.fileId;
+  if (key === 'privateEbooks') return !!b.private && !!b.fileId;
   return false;
 }
 export const isRead = (b) => b.status === 'bitti';
@@ -61,7 +66,7 @@ function listCard(b, key, idx) {
   let act = '';
   if (key === 'wish') act = `<button class="lc-act buy" data-act="bought" data-id="${b.id}" title="Aldım: Kütüphanem'e taşı">🛒<small>Aldım</small></button>`;
   else if (key === 'toread') act = `<button class="lc-act" data-act="start-reading" data-id="${b.id}" title="Okumaya başla">📖<small>Başla</small></button>`;
-  else if (key === 'ebooks' && b.fileId) act = `<a class="lc-act" href="#/read/${b.id}" title="Oku">📖<small>Oku</small></a>`;
+  else if ((key === 'ebooks' || key === 'privateEbooks') && b.fileId) act = `<a class="lc-act" href="#/read/${b.id}" title="Oku">📖<small>Oku</small></a>`;
   else if (key !== 'reading') act = `<button class="lc-act chk ${read ? 'on' : ''}" data-act="toggle-read" data-id="${b.id}" title="${read ? 'Okudum (geri almak için dokunun)' : 'Okudum olarak işaretle'}">${read ? '✓' : ''}<small>${read ? 'Okudum' : 'Okumadım'}</small></button>`;
   const tags = `${topicChips(b)}${key !== 'library' && b.owned ? '<span class="chip own">🏠</span>' : ''}${b.fileId && key !== 'ebooks' ? '<span class="chip filek">📱</span>' : ''}${b.favorite && key !== 'fav' ? '<span class="chip">💎</span>' : ''}`;
   return `<article class="list-card c">
@@ -89,7 +94,7 @@ function sortList(list, key) {
 
 /** Bir listenin sayfası (Kitaplar sayfasındaki sekme) */
 export function renderListTab(key) {
-  if (key === 'private' && Lock.enabled() && !Lock.isOpen('privateBooks')) { return `<div id="lock-slot"></div>`; }
+  if (PRIVATE_LOCK[key] && Lock.enabled() && !Lock.isOpen(PRIVATE_LOCK[key])) { return `<div id="lock-slot" data-name="${esc(LISTS[key].l)}"></div>`; }
   const all = DB.books();
   let list = all.filter((b) => inList(b, key));
   const total = list.length;
@@ -105,21 +110,26 @@ export function renderListTab(key) {
   const sort = state.sort[key] || sortOpts[0][0];
   const group = !!state.group[key];
   let h = '';
-  if (key === 'private' && !Lock.enabled()) h += `<div class="banner sun small">🔒 Bu bölümü kilitlemek için <a href="#/settings/lock">Ayarlar → Kilit</a>'ten PIN belirleyin.</div>`;
+  if (PRIVATE_LOCK[key] && !Lock.enabled()) h += `<div class="banner sun small">🔒 Bu bölümü kilitlemek için <a href="#/settings/lock">Ayarlar → Kilit</a>'ten PIN belirleyin.</div>`;
   if (total) {
     // Araç satırı: sıralama + konulara ayır + çıktı
     h += `<div class="lt-tools">
       <label class="lt-sort">⇅<select id="list-sort" data-k="${key}">${sortOpts.map(([k, l]) => `<option value="${k}" ${sort === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
       <span style="flex:1"></span>
-      ${topics.length ? `<button class="lt-btn ${group ? 'on' : ''}" data-act="list-group" data-k="${key}" title="Konu başlıklarına ayır">🗂️ <span>Konular</span></button>` : ''}
+      ${topics.length ? `<button class="lt-btn ${group ? 'on' : ''}" data-act="list-group" data-k="${key}" title="Kategorilere ayır">🗂️ <span>Kategoriler</span></button>` : ''}
       ${key === 'library' ? `<button class="lt-btn" data-act="catalog-pdf" title="Katalog: PDF / yazdır">🖨️ <span>Katalog</span></button>` : ''}
       ${key === 'wish' ? `<button class="lt-btn" data-act="wish-pdf" title="Alış listesi: PDF / yazdır">🖨️ <span>Liste</span></button>` : ''}
     </div>`;
     // Süzgeç şeridi: (Kütüphanem'de okundu durumu) | konular
     const r = key === 'library' ? all.filter((b) => inList(b, 'library') && isRead(b)).length : 0;
     const readChips = key === 'library' ? [['all', `Hepsi ${total}`], ['read', `✓ Okuduklarım ${r}`], ['unread', `Okumadıklarım ${total - r}`]].map(([k, l]) => `<button class="pill ${state.read === k ? 'on' : ''}" data-act="read-filter" data-f="${k}">${l}</button>`).join('') + '<i class="pill-sep"></i>' : '';
-    const topicChipsRow = topics.length ? [['all', 'Tüm konular'], ...topics.map((t) => [t.id, `${t.emoji || '🏷️'} ${t.name}`]), ['none', 'Konusuz']].map(([k, l]) => `<button class="pill t ${tf === k ? 'on' : ''}" data-act="topic-filter" data-k="${key}" data-t="${k}">${esc(l)}</button>`).join('') : '';
-    h += `<div class="pill-row">${readChips}${topicChipsRow}<button class="pill add" data-act="topic-new">＋ Konu</button></div>`;
+    // Kategoriler: bu bölümde kullanılanlar sayısıyla önde, kullanılmayanlar sonda
+    const secList = all.filter((b) => inList(b, key));
+    const tcount = (id) => secList.filter((b) => (b.topics || []).includes(id)).length;
+    const noneCount = secList.filter((b) => !(b.topics || []).some((id) => DB.getTopic(id))).length;
+    const sortedTopics = [...topics].sort((a, c) => tcount(c.id) - tcount(a.id) || (a.order ?? 99) - (c.order ?? 99));
+    const topicChipsRow = topics.length ? [['all', 'Tüm kategoriler', ''], ...sortedTopics.map((t) => [t.id, `${t.emoji || '🏷️'} ${t.name}`, tcount(t.id)]), ['none', 'Kategorisiz', noneCount]].map(([k, l, n]) => `<button class="pill t ${tf === k ? 'on' : ''} ${n === 0 ? 'dim' : ''}" data-act="topic-filter" data-k="${key}" data-t="${k}">${esc(l)}${n !== '' ? ` <small>${n}</small>` : ''}</button>`).join('') : '';
+    h += `<div class="pill-row">${readChips}${topicChipsRow}<button class="pill add" data-act="topic-new">＋ Kategori</button></div>`;
   }
   if (!total) {
     const tips = {
@@ -128,23 +138,24 @@ export function renderListTab(key) {
       fav: '“Hayatıma dokundu” dediğiniz kitaplar burada durur. Kitabın Bilgiler sekmesinden “💎 Seçkin”i işaretleyin.',
       private: 'Herkesin görmesini istemediğiniz kitaplar. Kilitliyken başka hiçbir yerde görünmez.',
       ebooks: 'PDF, Word, TXT ya da EPUB yükleyin; uygulamanın içinde okuyun.',
+      privateEbooks: 'Kimsenin görmesini istemediğiniz e-kitaplar. PIN ile kilitlidir; kilitliyken başka hiçbir yerde görünmez.',
       toread: 'Okumak istediğiniz kitaplar burada sıralanır.', reading: 'Okumaya başladığınız kitaplar burada görünür.', read: 'Bitirdiğiniz kitaplar burada görünür.',
     };
     h += `<div class="empty"><div class="e">${LISTS[key].e}</div><h3>${esc(LISTS[key].l)} boş</h3><p>${tips[key] || ''}</p>
-      ${key === 'ebooks' ? '<a class="btn primary" href="#/new-book?list=ebooks">📱 E-kitap yükle</a>' : key === 'reading' || key === 'read' ? '' : `<a class="btn primary" href="#/new-book?list=${key}&scan=1">📷 Barkodla ekle</a> <a class="btn" href="#/new-book?list=${key}">✍️ Elle ekle</a>`}</div>`;
+      ${key === 'ebooks' || key === 'privateEbooks' ? `<a class="btn primary" href="#/new-book?list=${key}">📱 E-kitap yükle</a>` : key === 'reading' || key === 'read' ? '' : `<a class="btn primary" href="#/new-book?list=${key}&scan=1">📷 Barkodla ekle</a> <a class="btn" href="#/new-book?list=${key}">✍️ Elle ekle</a>`}</div>`;
   } else if (!list.length) h += `<p class="muted">Bu süzgeçte kitap yok.</p>`;
   else if (group) {
-    const groups = [...topics.map((t) => ({ t, items: list.filter((b) => (b.topics || []).includes(t.id)) })), { t: { name: 'Konusuz', emoji: '📂' }, items: list.filter((b) => !(b.topics || []).some((id) => DB.getTopic(id))) }].filter((g) => g.items.length);
+    const groups = [...topics.map((t) => ({ t, items: list.filter((b) => (b.topics || []).includes(t.id)) })), { t: { name: 'Kategorisiz', emoji: '📂' }, items: list.filter((b) => !(b.topics || []).some((id) => DB.getTopic(id))) }].filter((g) => g.items.length);
     groups.forEach((g) => { h += `<div class="group-head">${esc(g.t.emoji || '🏷️')} ${esc(g.t.name)} <span class="count">${g.items.length}</span></div><div class="lc-list">${g.items.map((b, i) => listCard(b, key, i)).join('')}</div>`; });
   } else h += `<div class="lc-list">${list.map((b, i) => listCard(b, key, i)).join('')}</div>`;
-  if (['toread', 'library', 'wish', 'private', 'ebooks', 'fav'].includes(key) && total) h += `<a class="fab" href="#/new-book?list=${key}${key === 'ebooks' ? '' : ''}">${key === 'ebooks' ? '📱 Yükle' : '＋ Ekle'}</a>`;
+  if (['toread', 'library', 'wish', 'private', 'ebooks', 'privateEbooks', 'fav'].includes(key) && total) h += `<a class="fab" href="#/new-book?list=${key}">${key === 'ebooks' || key === 'privateEbooks' ? '📱 Yükle' : '＋ Ekle'}</a>`;
   return h;
 }
 export function bindListTab(key) {
   const sel = $('#list-sort');
   if (sel) sel.onchange = () => { state.sort[key] = sel.value; rerender(); };
   const slot = $('#lock-slot');
-  if (slot) Lock.renderLockScreen(slot, 'Özel Kitaplar');
+  if (slot) Lock.renderLockScreen(slot, slot.dataset.name || 'Özel Kitaplar');
 }
 
 /** Listede sıra değiştir (Okunacak / Satın Alınacak) */
@@ -167,18 +178,18 @@ export function openTopicEditor(id = null, onDone = null) {
   const t = id ? DB.getTopic(id) : null;
   let emoji = t ? t.emoji || '📚' : '📚';
   const s = openSheet({
-    title: t ? 'Konu başlığını düzenle' : '＋ Yeni konu başlığı',
-    body: `<label class="field"><span>Konu adı</span><input id="tp-name" maxlength="40" value="${esc(t ? t.name : '')}" placeholder="ör. Felsefe, Tarih, Kişisel gelişim"></label>
+    title: t ? 'Kategoriyi düzenle' : '＋ Yeni kategori',
+    body: `<label class="field"><span>Kategori adı</span><input id="tp-name" maxlength="40" value="${esc(t ? t.name : '')}" placeholder="ör. Felsefe, Tarih, Kişisel gelişim"></label>
       <div class="field"><span>Simge</span><div class="emoji-grid">${TOPIC_EMOJIS.map((x) => `<button type="button" data-em="${x}" class="${x === emoji ? 'on' : ''}">${x}</button>`).join('')}</div></div>
-      <p class="hint">Konu başlıkları kitaplar, listeler ve makalelerde ortaktır.</p>`,
+      <p class="hint">Kategoriler bütün kitap bölümlerinde ve makalelerde ortaktır; bir bölümde eklediğiniz kategoriyi diğerlerinde de kullanabilirsiniz.</p>`,
     foot: `${t ? '<button class="btn danger" data-x="del" style="flex:0 0 auto">🗑️</button>' : ''}<button class="btn" data-act="close-sheet">Vazgeç</button><button class="btn primary" data-x="save">💾 Kaydet</button>`,
   });
   s.addEventListener('click', (e) => { const b = e.target.closest('[data-em]'); if (!b) return; emoji = b.dataset.em; s.querySelectorAll('[data-em]').forEach((x) => x.classList.toggle('on', x === b)); });
   $('[data-x="save"]', s).onclick = async () => {
     const name = $('#tp-name', s).value.trim();
-    if (!name) { toast('Konu adını yazın'); return; }
+    if (!name) { toast('Kategori adını yazın'); return; }
     const dup = DB.topics().find((x) => x.id !== id && norm(x.name) === norm(name));
-    if (dup) { toast('Bu adla bir konu zaten var'); return; }
+    if (dup) { toast('Bu adla bir kategori zaten var'); return; }
     const rec = await DB.save('topics', { ...(t || { order: DB.topics().length }), name, emoji });
     await closeSheet(); toast('Kaydedildi ✓');
     if (onDone) onDone(rec); else rerender();
@@ -186,10 +197,10 @@ export function openTopicEditor(id = null, onDone = null) {
   const del = $('[data-x="del"]', s);
   if (del) del.onclick = async () => {
     const used = DB.books().concat(DB.articles()).filter((b) => (b.topics || []).includes(t.id));
-    if (!(await confirmDialog(`“${t.name}” konusu silinsin mi?${used.length ? ` ${used.length} kayıttan bu konu kaldırılır (kayıtlar silinmez).` : ''}`, 'Sil'))) return;
+    if (!(await confirmDialog(`“${t.name}” kategorisi silinsin mi?${used.length ? ` ${used.length} kayıttan bu kategori kaldırılır (kayıtlar silinmez).` : ''}`, 'Sil'))) return;
     for (const b of used) { b.topics = b.topics.filter((x) => x !== t.id); await DB.saveBook(b); }
     await DB.remove('topics', t.id);
-    toast('Konu silindi'); if (onDone) onDone(null); else rerender();
+    toast('Kategori silindi'); if (onDone) onDone(null); else rerender();
   };
   setTimeout(() => $('#tp-name', s).focus(), 250);
 }
@@ -197,7 +208,7 @@ export function openTopicEditor(id = null, onDone = null) {
 /** Formlar için konu seçici */
 export function topicPickerHtml(selected = []) {
   return `<div class="topic-pick" id="topic-pick">${DB.topics().map((t) => `<button type="button" class="chip topic ${selected.includes(t.id) ? 'sel' : ''}" data-tp="${t.id}">${esc(t.emoji || '🏷️')} ${esc(t.name)}</button>`).join('')}
-    <button type="button" class="chip add" data-tp-new>＋ Yeni konu</button></div>`;
+    <button type="button" class="chip add" data-tp-new>＋ Yeni kategori</button></div>`;
 }
 export function bindTopicPicker(root, initial = []) {
   const sel = new Set(initial.filter((id) => DB.getTopic(id)));
@@ -209,7 +220,7 @@ export function bindTopicPicker(root, initial = []) {
       const c = e.target.closest('[data-tp]');
       if (c) { if (sel.has(c.dataset.tp)) sel.delete(c.dataset.tp); else sel.add(c.dataset.tp); c.classList.toggle('sel'); return; }
       if (e.target.closest('[data-tp-new]')) {
-        const name = (prompt('Yeni konu başlığı (ör. Felsefe, Tarih):') || '').trim();
+        const name = (prompt('Yeni kategori (ör. Felsefe, Tarih, Roman):') || '').trim();
         if (!name) return;
         const ex = DB.topics().find((x) => norm(x.name) === norm(name));
         if (ex) { sel.add(ex.id); paint(); return; }
@@ -225,14 +236,14 @@ export function bindTopicPicker(root, initial = []) {
 function groupByTopic(list) {
   const topics = DB.topics();
   const groups = topics.map((t) => ({ name: `${t.emoji || ''} ${t.name}`.trim(), items: list.filter((b) => (b.topics || []).includes(t.id)) }));
-  groups.push({ name: '📂 Konusuz', items: list.filter((b) => !(b.topics || []).some((id) => DB.getTopic(id))) });
+  groups.push({ name: '📂 Kategorisiz', items: list.filter((b) => !(b.topics || []).some((id) => DB.getTopic(id))) });
   return groups.filter((g) => g.items.length);
 }
 function openCatalog() {
   const s = openSheet({
     title: '🖨️ Kütüphane kataloğu',
     body: `<label class="field"><span>Hangi kitaplar?</span><select id="cat-read"><option value="all">Hepsi</option><option value="read">Yalnızca okuduklarım</option><option value="unread">Yalnızca okumadıklarım</option></select></label>
-      <label class="field"><span>Düzen</span><select id="cat-group"><option value="topic">Konu başlıklarına göre</option><option value="alpha">Alfabetik tek liste</option></select></label>
+      <label class="field"><span>Düzen</span><select id="cat-group"><option value="topic">Kategorilere göre</option><option value="alpha">Alfabetik tek liste</option></select></label>
       <label class="check"><input type="checkbox" id="cat-ebook"> 📱 E-kitapları da ekle</label>
       <button class="btn primary block mt" data-x="go">🖨️ PDF / Yazdır</button>
       <p class="hint mt">Açılan yazdırma ekranında <b>“PDF olarak kaydet”</b>i seçerseniz PDF dosyası olur; yazıcı seçerseniz kâğıda basılır.</p>`,
@@ -255,7 +266,7 @@ function openCatalog() {
 function openWishList() {
   const s = openSheet({
     title: '🖨️ Alış listesi',
-    body: `<label class="field"><span>Düzen</span><select id="w-group"><option value="order">Önce almak istediklerim sırasıyla</option><option value="topic">Konu başlıklarına göre</option></select></label>
+    body: `<label class="field"><span>Düzen</span><select id="w-group"><option value="order">Önce almak istediklerim sırasıyla</option><option value="topic">Kategorilere göre</option></select></label>
       <label class="field"><span>Önem</span><select id="w-st"><option value="0">Hepsi</option><option value="1">⭐ ve üstü</option><option value="2">⭐⭐ ve üstü</option><option value="3">Yalnızca ⭐⭐⭐</option></select></label>
       <button class="btn primary block mt" data-x="go">🖨️ PDF / Yazdır</button>
       <p class="hint mt">Yazdırma ekranında <b>“PDF olarak kaydet”</b>i seçerseniz PDF dosyası olur.</p>`,

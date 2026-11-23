@@ -134,8 +134,8 @@ async function ensureSeeds() {
 const live = (store) => [...S[store].values()].filter((x) => !x.deleted);
 
 // ---- Görünürlük: Özel Kitaplar kilitliyken gizlenir (app.js bağlar) ----
-export const visibility = { hidePrivate: () => false };
-const visible = (b) => b && !b.deleted && !(b.private && visibility.hidePrivate());
+export const visibility = { hidePrivate: (b) => false }; // eslint-disable-line no-unused-vars
+const visible = (b) => b && !b.deleted && !(b.private && visibility.hidePrivate(b));
 
 // ---- Kitaplar, makaleler ve alıntılar ----
 /** Görünür kitaplar (makaleler hariç) */

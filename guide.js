@@ -44,7 +44,8 @@ export const GUIDE = [
       <li><b>🛒 Satın Alınacak:</b> Almak istediğiniz kitaplar. ↑↓ ile “önce almak istediklerim” sırası, ⭐ önem. <b>🛒 Aldım</b>'a basınca kitap Kütüphanem'e geçer. <b>🖨️ Alış listesi</b> ile işaretlemeli bir liste yazdırın.</li>
       <li><b>💎 Seçkin:</b> “Hayatıma dokundu” dediğiniz kitaplar.</li>
       <li><b>🔒 Özel:</b> Herkesin görmesini istemediğiniz kitaplar. PIN kilidi açıkken bu kitaplar ve alıntıları kilit açılana kadar hiçbir listede, aramada ve etiketlerde görünmez.</li>
-      <li><b>🏷️ Konu başlıkları:</b> “＋ Konu” ile ekleyin; kitaplar ve makalelerde ortaktır. “🗂️ Konulara ayır” listeyi başlıklar altında gösterir. Yönetmek için: Ayarlar → 🏷️ Konu başlıkları.</li></ul>`,
+      <li><b>🏷️ Kategoriler:</b> Her bölümün üstündeki “＋ Kategori” ile ekleyin (ör. Felsefe, Tarih, Roman); bütün bölümlerde ve makalelerde ortaktır, yanında o bölümdeki kitap sayısı yazar. “🗂️ Kategoriler” listeyi kategoriler altında gösterir. Yönetmek için: Ayarlar → 🏷️ Kategoriler.</li>
+      <li><b>📱 E-kitaplar</b> bölümünde iki sekme vardır: <b>E-kitaplarım</b> ve PIN ile kilitli <b>🔒 Özel E-kitaplarım</b>. E-kitap yüklerken “🔒 Özel” kutusunu işaretlerseniz kitap Özel E-kitaplarım'a gider.</li></ul>`,
   },
   {
     id: 'okuyucu', e: '📱', t: 'E-kitap okuyucu (PDF, Word, TXT, EPUB)',
@@ -65,7 +66,8 @@ export const GUIDE = [
       <li><b>DOI</b> numarasını yazıp <b>🔍 Bul</b>'a basın: başlık, yazarlar, dergi, yıl, cilt, sayı ve sayfalar kendiliğinden dolar.</li>
       <li>İsterseniz PDF ya da Word dosyasını ekleyin. Dosyası olmayan (yalnızca bağlantısı olan ya da kâğıt) makaleleri de kaydedebilirsiniz.</li></ol>
       <ul><li>Makaleler kitap okuyucusuyla okunur; alıntı, renk, yıldız, etiket, yorum, tekrar oku, sayfaya yorum ve kaldığı yerden devam <b>kitaplardaki gibidir</b>.</li>
-      <li><b>📋 Okuyacaklarım / ✅ Okuduklarım</b> sekmeleriyle ayrı görün; “Okudum” düğmesiyle işaretleyin. Konu başlıkları kitaplarla ortaktır.</li></ul>`,
+      <li><b>📋 Okuyacaklarım / ✅ Okuduklarım</b> ile ayrı görün; “Okudum” ile işaretleyin. Kategoriler kitaplarla ortaktır.</li>
+      <li><b>🔒 Özel Makalelerim:</b> Makale eklerken “🔒 Özel makale”yi işaretleyin; PIN ile kilitli sekmede durur, kilitliyken aramada da görünmez.</li></ul>`,
   },
   {
     id: 'blog', e: '✍️', t: 'Blog',
@@ -121,7 +123,7 @@ export const GUIDE = [
     id: 'kilit', e: '🔒', t: 'PIN kilidi',
     h: `<ol><li>Ayarlar → <b>🔒 Kilit</b> → <b>PIN kilidini aç</b>. 4 haneli PIN'i iki kez girin.</li>
       <li>Size bir <b>kurtarma kodu</b> gösterilir (ör. K7M4-9QX2). <b>Mutlaka bir yere yazın</b>; bir daha gösterilmez.</li>
-      <li>Aynı sayfadan hangi bölümlerin kilitli olacağını seçin: Günlük, Düşüncelerim, Özel Notlar, kendi defterleriniz, Alışveriş Listem.</li></ol>
+      <li>Aynı sayfadan hangi bölümlerin kilitli olacağını seçin: Günlük, Düşüncelerim, Özel Kitaplar, Özel E-kitaplarım, Özel Makalelerim, Blog, Özel Notlar, kendi defterleriniz, Alışveriş Listem.</li></ol>
       <ul><li>Tüm kilitler için <b>tek PIN ve tek kurtarma kodu</b> vardır; kilidi bir kez açınca tüm kilitli bölümler açılır.</li>
       <li>Belirlediğiniz süre (varsayılan 5 dakika) kullanmazsanız ya da uygulamayı kapatırsanız kilit yeniden devreye girer. 🔒 düğmesiyle hemen kilitleyebilirsiniz.</li>
       <li><b>PIN'i unuttuysanız:</b> kilit ekranında <b>PIN'i unuttum</b> → kurtarma kodunu yazın → yeni PIN belirleyin.</li>
@@ -150,7 +152,7 @@ export const GUIDE = [
       <li><b>🧭 Menü:</b> Alt menüde görünecek bölümler ve sıraları.</li>
       <li><b>📷 Barkod:</b> Titreşim, ses, kitap bulunamayınca çıkacak arama düğmeleri.</li>
       <li><b>📖 Okuma görünümü:</b> Okuyucunun zemin rengi, yazı tipi, boyutu, satır aralığı, kenar boşluğu, sayfa çevirme biçimi.</li>
-      <li><b>🏷️ Konu başlıkları:</b> Kitap ve makale konularını ekleme, adlandırma, sıralama, silme.</li>
+      <li><b>🏷️ Kategoriler:</b> Kitap ve makale kategorilerini ekleme, adlandırma, sıralama, silme.</li>
       <li><b>📝 Not defterleri:</b> Defterleri ve alışveriş kategorilerini ekleme, adlandırma, sıralama, silme.</li>
       <li><b>💡 Düşünce defterleri</b> ve <b>📔 Günlük başlıkları</b>.</li>
       <li><b>💾 Yedekleme</b>, <b>⬇️ Dışa aktarma</b>, <b>📲 Yükle ve paylaş</b>, <b>🔐 Gizlilik</b>, <b>⚠️ Verileri sil</b>.</li></ul>`,

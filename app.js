@@ -11,7 +11,7 @@ import { renderJournal, renderJournalCal, JOURNAL_ACTIONS, getPrompt, manageProm
 import { renderNotes, renderNotebook, renderShopping, noteCard, nbIsOpen, NOTE_ACTIONS, openNbookEditor, openShopcatEditor, moveOrder, lockKey } from './notes.js?v=3.1';
 import { manageNotebooks as manageThoughtNotebooks } from './thoughts.js?v=3.1';
 import { GUIDE } from './guide.js?v=3.1';
-import { LISTS, SECTION_ROUTES, listHref, inList, renderListTab, bindListTab, LIST_ACTIONS, topicChips, topicPickerHtml, bindTopicPicker, openTopicEditor } from './lists.js?v=3.1';
+import { LISTS, SECTION_ROUTES, PRIVATE_LOCK, privateLockOf, listHref, inList, renderListTab, bindListTab, LIST_ACTIONS, topicChips, topicPickerHtml, bindTopicPicker, openTopicEditor } from './lists.js?v=3.1';
 import { renderReader, leaveReader, readerRefresh, hooks as readerHooks, readMeta, fileKind, KIND_LABEL, HL_COLORS, HL_NAMES, BG_PRESETS, FONTS, readerPrefs, autoFg } from './reader.js?v=3.1';
 import { renderArticles, renderArticleForm, ARTICLE_ACTIONS } from './articles.js?v=3.1';
 import { renderBlog, renderPost, renderPostEditor, BLOG_ACTIONS, postPlain } from './blog.js?v=3.1';
@@ -105,10 +105,11 @@ function route() {
   try {
     if (!parts.length) renderHome('all');
     else if (parts[0] === 'books') renderHome(LISTS[parts[1]] ? parts[1] : 'all');
+    else if (parts[0] === 'ebooks' && parts[1] === 'private') renderHome('privateEbooks');
     else if (Object.values(SECTION_ROUTES).includes(parts[0])) renderHome(Object.keys(SECTION_ROUTES).find((k) => SECTION_ROUTES[k] === parts[0]));
     else if (parts[0] === 'read') renderReader(parts[1], params);
     else if (parts[0] === 'articles') renderArticles();
-    else if (parts[0] === 'new-article') renderArticleForm(null);
+    else if (parts[0] === 'new-article') renderArticleForm(null, params.get('private') === '1');
     else if (parts[0] === 'blog') renderBlog();
     else if (parts[0] === 'new-post') renderPostEditor(null);
     else if (parts[0] === 'post' && parts[2] === 'edit') renderPostEditor(parts[1]);
@@ -175,8 +176,15 @@ function renderHome(tab = 'all') {
   if (tab !== 'all') {
     const sec = !!SECTION_ROUTES[tab];
     const cnt = DB.books().filter((b) => inList(b, tab)).length;
-    const locked = tab === 'private' && Lock.enabled() && !Lock.isOpen('privateBooks');
-    view.innerHTML = `<div class="topbar"><button class="back${sec ? ' mob-only' : ''}" data-act="back" aria-label="Geri">‹</button><h1>${LISTS[tab].e} ${LISTS[tab].l}${cnt && !locked ? ` <span class="h-count">${cnt}</span>` : ''}</h1>${tab === 'library' || tab === 'wish' ? `<a class="btn sm" href="#/new-book?list=${tab}&scan=1" title="Barkodla ekle">📷</a>` : ''}</div>${renderListTab(tab)}`;
+    const locked = PRIVATE_LOCK[tab] && Lock.enabled() && !Lock.isOpen(PRIVATE_LOCK[tab]);
+    const isEb = tab === 'ebooks' || tab === 'privateEbooks';
+    const title = isEb ? LISTS.ebooks : LISTS[tab];
+    const ebTabs = isEb ? (() => {
+      const all = DB.books();
+      const pl = Lock.enabled() && !Lock.isOpen('privateEbooks');
+      return `<div class="sub-tabs"><a class="${tab === 'ebooks' ? 'on' : ''}" href="#/ebooks">📱 E-kitaplarım <small>${all.filter((b) => inList(b, 'ebooks')).length}</small></a><a class="${tab === 'privateEbooks' ? 'on' : ''}" href="#/ebooks/private">🔒 Özel E-kitaplarım${pl ? '' : ` <small>${all.filter((b) => inList(b, 'privateEbooks')).length}</small>`}</a></div>`;
+    })() : '';
+    view.innerHTML = `<div class="topbar"><button class="back${sec || isEb ? ' mob-only' : ''}" data-act="back" aria-label="Geri">‹</button><h1>${title.e} ${title.l}${cnt && !locked && !isEb ? ` <span class="h-count">${cnt}</span>` : ''}</h1>${tab === 'library' || tab === 'wish' ? `<a class="btn sm" href="#/new-book?list=${tab}&scan=1" title="Barkodla ekle">📷</a>` : ''}</div>${ebTabs}${renderListTab(tab)}`;
     bindListTab(tab);
     return;
   }
@@ -240,7 +248,7 @@ const quoteSort = {};
 function renderBook(id) {
   const b = DB.getBook(id);
   const raw = DB.getBookRaw(id);
-  if (!b && raw && raw.private) { Lock.renderLockScreen(view, 'Özel Kitaplar'); return; }
+  if (!b && raw && raw.private) { const lk = privateLockOf(raw); Lock.renderLockScreen(view, lk === 'privateArticles' ? 'Özel Makalelerim' : lk === 'privateEbooks' ? 'Özel E-kitaplarım' : 'Özel Kitaplar'); return; }
   if (!b) { view.innerHTML = `<div class="empty"><div class="e">🔍</div><h3>Kitap bulunamadı</h3><a class="btn" href="#/">Kitaplara dön</a></div>`; return; }
   const qs = DB.quotesOf(id);
   const tab = bookTab[id] || 'quotes';
@@ -335,7 +343,7 @@ function bookInfoTab(b) {
       ${b.notes ? `<p class="mt">${esc(b.notes)}</p>` : ''}</div>
     ${b.kind !== 'article' ? `<div class="card"><b>📚 Listeler</b><p class="hint">Kitabın hangi listelerde görüneceğini seçin.</p>
       ${[['owned', '🏠 Kütüphanemde var'], ['wish', '🛒 Satın almak istiyorum'], ['favorite', '💎 Seçkin (hayatıma dokundu)'], ['private', '🔒 Özel kitap (PIN ile kilitli bölümde)']].map(([k, l]) => `<label class="check"><input type="checkbox" data-flag="${k}" ${b[k] ? 'checked' : ''}> ${l}</label>`).join('')}
-      <div class="mt">${topicChips(b) || '<span class="small muted">Konu başlığı yok</span>'} <a class="btn sm ghost" href="#/book/${b.id}/edit">Konuları düzenle</a></div></div>` : ''}
+      <div class="mt">${topicChips(b) || '<span class="small muted">Kategori yok</span>'} <a class="btn sm ghost" href="#/book/${b.id}/edit">Kategorileri düzenle</a></div></div>` : ''}
     ${b.fileId ? `<div class="card"><b>📱 Dosya</b><p class="small">${esc(b.fileName || '')} · ${esc(KIND_LABEL[b.fileType] || '')}${b.fileSize ? ` · ${(b.fileSize / 1048576).toFixed(1)} MB` : ''}</p><a class="btn block" href="#/read/${b.id}">📖 Oku</a></div>` : ''}
     <button class="btn danger block" data-act="del-book" data-book="${b.id}">🗑️ ${b.kind === 'article' ? 'Makaleyi' : 'Kitabı'} sil</button>`;
 }
@@ -379,8 +387,8 @@ function bindInfoTab(b) {
 const BOOK_FIELDS = ['title', 'subtitle', 'author', 'translator', 'publisher', 'city', 'year', 'edition', 'pages', 'isbn', 'categories', 'description'];
 
 function renderBookForm(id, autoScan = false, listKey = '') {
-  const sectionAdd = ['library', 'wish', 'fav', 'private', 'ebooks'].includes(listKey);
-  const b = id ? DB.getBook(id) : { status: sectionAdd ? 'none' : listKey === 'reading' ? 'okunuyor' : 'okunacak', isNovel: false, owned: listKey === 'library', wish: listKey === 'wish', favorite: listKey === 'fav', private: listKey === 'private' };
+  const sectionAdd = ['library', 'wish', 'fav', 'private', 'ebooks', 'privateEbooks'].includes(listKey);
+  const b = id ? DB.getBook(id) : { status: sectionAdd ? 'none' : listKey === 'reading' ? 'okunuyor' : 'okunacak', isNovel: false, owned: listKey === 'library', wish: listKey === 'wish', favorite: listKey === 'fav', private: listKey === 'private' || listKey === 'privateEbooks' };
   let newFile = null;
   if (!b) { go('#/'); return; }
   const v = (k) => esc(b[k] || '');
@@ -404,7 +412,7 @@ function renderBookForm(id, autoScan = false, listKey = '') {
       <div class="grid3"><label class="field"><span>Basım yılı</span><input name="year" inputmode="numeric" value="${v('year')}"></label>
       <label class="field"><span>Baskı</span><input name="edition" inputmode="numeric" value="${v('edition')}" placeholder="ör. 5"></label>
       <label class="field"><span>Sayfa sayısı</span><input name="pages" inputmode="numeric" value="${v('pages')}"></label></div>
-      <label class="field"><span>Konu / tür</span><input name="categories" value="${v('categories')}" placeholder="ör. Felsefe, Tarih"></label>
+      <label class="field"><span>Tür (yayın bilgisi)</span><input name="categories" value="${v('categories')}" placeholder="ör. Roman, Deneme"></label>
       <label class="field"><span>Tanıtım yazısı</span><textarea name="description" rows="3">${v('description')}</textarea></label>
       <label class="check"><input type="checkbox" name="isNovel" ${b.isNovel ? 'checked' : ''}> Roman / öykü (içindekiler gerekmez)</label>
     </div>
@@ -417,9 +425,9 @@ function renderBookForm(id, autoScan = false, listKey = '') {
       <div><button type="button" class="btn sm" data-act="cover-pick">🖼️ Kapak görseli</button> <button type="button" class="btn sm ghost" data-act="cover-remove" ${b.cover ? '' : 'hidden'}>Kaldır</button></div></div>
       <label class="field mt"><span>Kitap hakkında notum</span><textarea name="notes" rows="2">${v('notes')}</textarea></label>
     </div>
-    <div class="card"><b>📚 Listeler ve konular</b>
-      ${[['owned', '🏠 Kütüphanemde var'], ['wish', '🛒 Satın almak istiyorum'], ['favorite', '💎 Seçkin (hayatıma dokundu)'], ['private', '🔒 Özel kitap (PIN ile kilitli bölümde)']].map(([k, l]) => `<label class="check"><input type="checkbox" name="${k}" ${b[k] ? 'checked' : ''}> ${l}</label>`).join('')}
-      <div class="field mt"><span>Konu başlıkları</span>${topicPickerHtml(b.topics || [])}</div></div>
+    <div class="card"><b>📚 Bölümler ve kategoriler</b>
+      ${[['owned', '🏠 Kütüphanemde var'], ['wish', '🛒 Satın almak istiyorum'], ['favorite', '💎 Seçkin (hayatıma dokundu)'], ['private', '🔒 Özel (PIN ile kilitli; e-kitapsa “Özel E-kitaplarım”da)']].map(([k, l]) => `<label class="check"><input type="checkbox" name="${k}" ${b[k] ? 'checked' : ''}> ${l}</label>`).join('')}
+      <div class="field mt"><span>Kategoriler</span>${topicPickerHtml(b.topics || [])}</div></div>
     <div class="card ${listKey === 'ebooks' ? 'hl-card' : ''}"><b>📱 E-kitap dosyası</b><p class="hint">PDF, Word (.docx), metin (.txt) ya da EPUB yükleyin; uygulamanın içinde okuyun, metni seçip alıntı olarak kaydedin. Dosya yalnızca bu cihazda saklanır.</p>
       <div id="ebook-file">${b.fileId ? `<div class="file-pill">📄 ${esc(b.fileName || 'Dosya')} <small>${esc(KIND_LABEL[b.fileType] || '')}</small></div>` : ''}</div>
       <div class="row-actions"><button type="button" class="btn ${listKey === 'ebooks' ? 'primary' : ''}" data-act="ebook-pick" style="flex:1">${b.fileId ? '🔁 Dosyayı değiştir' : '📎 Dosya seç'}</button>${b.fileId ? '<button type="button" class="btn ghost" data-act="ebook-remove">Kaldır</button>' : ''}</div></div>
@@ -535,7 +543,7 @@ function renderBookForm(id, autoScan = false, listKey = '') {
     Scan.rememberBook(b).catch(() => {});
     toast(isNew ? 'Kitap eklendi ✓' : 'Kaydedildi ✓');
     // Yeni kitap: işaretlenen bölüm açılsın (öncelik: Özel, Satın Alınacaklar, Kütüphanem, E-kitaplar, Seçkin)
-    const dest = sectionAdd ? listKey : b.private ? 'private' : b.wish ? 'wish' : b.owned ? 'library' : b.fileId ? 'ebooks' : b.favorite ? 'fav' : '';
+    const dest = (sectionAdd && !(listKey === 'ebooks' && b.private)) ? (listKey === 'private' && b.fileId ? 'privateEbooks' : listKey) : b.private && b.fileId ? 'privateEbooks' : b.private ? 'private' : b.wish ? 'wish' : b.owned ? 'library' : b.fileId ? 'ebooks' : b.favorite ? 'fav' : '';
     if (isNew && dest) { location.replace(listHref(dest)); setTimeout(() => toast(`Kitap “${LISTS[dest].l}” bölümüne eklendi ✓`), 50); }
     else if (isNew) location.replace('#/book/' + b.id); else go('#/book/' + b.id);
   };
@@ -856,7 +864,7 @@ const SETTINGS_PAGES = [
     ['reader', '📖', 'Okuma görünümü', 'Zemin rengi, yazı tipi, boyut, sayfa çevirme'],
   ]],
   ['İçerik', [
-    ['topics', '🏷️', 'Konu başlıkları', 'Kitap ve makale konuları'],
+    ['topics', '🏷️', 'Kategoriler', 'Kitap ve makale kategorileri'],
     ['notebooks', '📝', 'Not defterleri', 'Defterler ve alışveriş kategorileri'],
     ['@thought-nbs', '💡', 'Düşünce defterleri', 'Ekle, adlandır, sil'],
     ['@journal-prompts', '📔', 'Günlük başlıkları', 'Ekle, emoji, gizle'],
@@ -889,7 +897,7 @@ async function renderSettings(sub = '') {
   let h = top(SETTINGS_TITLES[sub] || '⚙️ Ayarlar');
   if (sub === 'lock') {
     const pinOn = Lock.enabled();
-    const sections = [['journal', '📔 Günlük'], ['thoughts', '💡 Düşüncelerim'], ['privateBooks', '🔒 Özel Kitaplar'], ['blog', '✍️ Blog'], ...DB.nbooks().map((n) => [lockKey(n.id), `${n.emoji || '📓'} ${n.name}`]), ['shopping', '🛒 Alışveriş Listem']];
+    const sections = [['journal', '📔 Günlük'], ['thoughts', '💡 Düşüncelerim'], ['privateBooks', '🔒 Özel Kitaplar'], ['privateEbooks', '🔒 Özel E-kitaplarım'], ['privateArticles', '🔒 Özel Makalelerim'], ['blog', '✍️ Blog'], ...DB.nbooks().map((n) => [lockKey(n.id), `${n.emoji || '📓'} ${n.name}`]), ['shopping', '🛒 Alışveriş Listem']];
     h += `<div class="card"><b>PIN</b>
       <p class="hint">Tüm kilitli bölümler için <b>tek PIN</b> ve <b>tek kurtarma kodu</b> kullanılır. Kilidi bir kez açınca tüm kilitli bölümler açılır.</p>
       ${pinOn ? `<p class="small">Durum: <b style="color:var(--teal)">Açık</b></p><div class="row-actions"><button class="btn" data-act="pin-change" style="flex:1">🔁 PIN'i değiştir</button><button class="btn" data-act="pin-regen" style="flex:1">🔑 Kurtarma kodunu yenile</button></div><button class="btn danger block" data-act="pin-off">Kilidi tamamen kapat</button>`
@@ -930,11 +938,11 @@ async function renderSettings(sub = '') {
         <button class="btn block mt" data-act="set-shopcat-new">＋ Kategori</button></div>`;
   } else if (sub === 'topics') {
     const ts = DB.topics();
-    h += `<p class="hint">Konu başlıkları Kütüphanem, Okunacaklar, Satın Alınacaklar, Seçkin, Özel Kitaplar ve Makalelerde ortaktır. Katalog ve alış listesi bu başlıklara göre ayrılır.</p>
+    h += `<p class="hint">Kategoriler Kütüphanem, Okunacaklar, Satın Alınacaklar, Seçkin, Özel Kitaplar, E-kitaplar ve Makalelerde ortaktır. Her bölümdeki “＋ Kategori” düğmesiyle de eklenir. Katalog ve alış listesi kategorilere göre ayrılır.</p>
       <div class="card">${ts.length ? ts.map((t, i) => `<div class="order-row"><span style="flex:1">${esc(t.emoji || '🏷️')} ${esc(t.name)} <small class="muted">${DB.books().concat(DB.articles()).filter((b) => (b.topics || []).includes(t.id)).length} kayıt</small></span>
         <button class="btn sm" data-act="topic-move" data-id="${t.id}" data-d="-1" ${i === 0 ? 'disabled' : ''}>↑</button><button class="btn sm" data-act="topic-move" data-id="${t.id}" data-d="1" ${i === ts.length - 1 ? 'disabled' : ''}>↓</button>
-        <button class="btn sm" data-act="set-topic-edit" data-id="${t.id}">✏️</button></div>`).join('') : '<p class="hint">Henüz konu başlığı yok.</p>'}
-        <button class="btn primary block mt" data-act="set-topic-new">＋ Konu başlığı</button></div>`;
+        <button class="btn sm" data-act="set-topic-edit" data-id="${t.id}">✏️</button></div>`).join('') : '<p class="hint">Henüz kategori yok.</p>'}
+        <button class="btn primary block mt" data-act="set-topic-new">＋ Kategori</button></div>`;
   } else if (sub === 'reader') {
     const p = readerPrefs();
     h += `<div class="card"><div class="field"><span>Zemin rengi</span><div class="bg-row">${BG_PRESETS.map(([bg, fg, l]) => `<button type="button" class="bg-sw ${p.bg.toLowerCase() === bg.toLowerCase() ? 'on' : ''}" data-setbg="${bg}" data-fg="${fg}" style="background:${bg};color:${fg}" title="${l}">Aa</button>`).join('')}
@@ -1157,9 +1165,10 @@ async function start() {
     return;
   }
   // Özel Kitaplar kilitliyken her yerde gizlensin; eski kurulumlarda bu kilidi varsayılan olarak ekle
-  DB.visibility.hidePrivate = () => Lock.enabled() && !Lock.isOpen('privateBooks');
+  DB.visibility.hidePrivate = (b) => Lock.enabled() && !Lock.isOpen(privateLockOf(b));
   const st0 = DB.getSettings();
   if (!st0.locksV3) DB.setSettings({ locksV3: true, locks: [...new Set([...(st0.locks || []), 'privateBooks'])] });
+  if (!st0.locks32) DB.setSettings({ locks32: true, locks: [...new Set([...(DB.getSettings().locks || []), 'privateEbooks', 'privateArticles'])] });
   if (!st0.lists31) {
     // 3.1: Satın alınacak (henüz okunmaya başlanmamış) kitaplar okuma listesinden çıkar; yalnızca kendi bölümünde görünür
     for (const b of DB.books()) if (b.wish && (b.status || 'okunacak') === 'okunacak' && !b.startDate) { b.status = 'none'; await DB.saveBook(b); }
