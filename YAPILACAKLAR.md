@@ -1,38 +1,51 @@
-# Yapılacaklar (sonraya bırakılanlar)
+# Yapılacaklar
 
-## 1. Türkçe kitaplar için ek bilgi kaynağı
-**Sorun:** Barkod okunuyor, ama bazı Türkçe kitaplar ISBN ile (barkodla da, elle yazınca da) bulunamıyor.
-Şu anki kaynaklar (Google Books, Open Library) Türk yayınevlerinin kitaplarını eksik içeriyor.
+Durum: **Not alındı, uygulanmadı.** Kullanıcı "uygula" diyene kadar kodda değişiklik yapılmayacak.
+Açık sorular yanıtlanınca bu dosya güncellenecek.
 
-**Seçenekler:**
-- **Wikidata** (ücretsiz, sunucu gerekmez): Bazı Türkçe kitaplar var; kapsamı sınırlı ama eklemesi kolay.
-- **Türk kitap siteleri / Kültür Bakanlığı ISBN sorgusu:** Kapsamı en iyi seçenek, ama bu siteler tarayıcıdan
-  doğrudan sorgulanamıyor (CORS) ve kullanım koşulları incelenmeli. Küçük bir ara sunucu
-  (ör. ücretsiz Cloudflare Worker) gerektirir.
-- **Ücretli servisler** (ISBNdb vb.): Anahtar ve aylık ücret gerektirir.
-- **Kendi kitaplığından öğrenme:** Elle girilen kitap bilgisi, aynı ISBN tekrar okutulduğunda cihazdaki
-  kayıttan doldurulur (zaten ekli kitap için uyarı var; diğer cihazlara yedekle taşınır).
+## A. Kitap ekleme ve bilgi bulma
+1. **Tam ekran barkod okuyucu:** Kamera tam ekran açılsın, kendiliğinden ve sürekli odaklansın; barkodu
+   küçük bir çerçeveye getirmek gerekmesin, görüntünün her yerinde algılasın.
+2. **Kitap bulunamazsa** "🔎 Kitapyurdu'nda ara" ve "🔎 Google'da ara" düğmeleri (ISBN ile arama sayfası açılır).
+3. **Kendi kayıtlarından doldurma:** Elle girilmiş bir ISBN tekrar okutulunca bilgiler kendiliğinden dolsun.
 
-**Bulunamayan örnek ISBN'ler** (ikisi de orijinal baskı; barkod doğru okunuyor, elle yazınca da bulunamıyor):
-- `9786256162990`: Doğan Kitap (978-625-6162-99-0)
-- `9786051982656`: *Yaşamak İçin Nedenler* (978-605-198-265-6), bandrollü
-- `9786254106200`: Pegasus Yayınları, Shane Parrish (978-625-410-620-0), bandrollü
+## B. E-kitap okuyucu (PDF, Word, TXT, EPUB)
+4. Kitap ekle bölümünden PDF / Word (.docx) / metin (.txt) / EPUB dosyası yükleme.
+5. Okuma ayarları: zemin rengi (istenen renk), yazı boyutu, yazı tipi. Varsayılan: en rahat okunan yazı tipi.
+6. Metni seçip "Notlarıma kaydet": önem derecesi, etiket, yorum, tekrar oku seçenekleriyle; her alıntıya ayrı renk tonu.
+7. Sayfalara "Tekrar oku" işareti; notlara ve sayfalara yorum ekleme.
+8. Sayfa çevirme: kitap gibi çevirme ya da başparmakla sağa/sola kaydırma.
+9. Altta sayfa numarası; sayfa numarası yazınca o sayfaya gitme; kalınan sayfadan devam etme.
 
-Yeni kaynak eklenirken önce bu ISBN'lerle denenecek.
+## C. Kitap listeleri
+10. **Özel Kitaplar:** Herkesin görmesini istemediğiniz kitaplar; PIN ile kilitli (günlük gibi).
+11. **Seçkin Kitaplar** bölümü (ayrıntısı soruldu).
+12. **Okunacak Kitaplar:** Yıldız (okuma/önem derecesi), 1'den başlayan sıralama, konulara göre tasnif, yeni konu başlığı ekleme.
+13. **Kütüphanem:** Evdeki kitaplar; barkod / ISBN / elle ekleme; konulara göre tasnif; "okudum" işareti;
+    konu başlıkları altında, okundu bilgisiyle **kütüphane kataloğu PDF/çıktı**.
+14. **Satın Almak İstediğim Kitaplar:** Yıldız, sıralama, konuya göre tasnif, "önce almak istediklerim";
+    **alış listesi PDF/çıktı**.
 
-**Araştırma sonucu (23.11.2026):**
-- **Open Library:** Üç ISBN'in hiçbiri yok.
-- **Google Books:** Denenemedi (test ortamında kota hatası). Kullanıcının telefonunda da bulamadı.
-- **Wikidata:** Erişim hatası verdi; zaten Türkçe kitap kapsamı çok dar.
-- **Kitapyurdu:** Cloudflare bot korumalı (otomatik sorguya "insan mısın" sayfası döndürüyor). Tarayıcıdan da doğrudan sorgulanamıyor (CORS yok).
-- **D&R ve İdefix:** Sayfalar yönlendirme yapıyor ya da JavaScript ile yükleniyor; doğrudan sorgulanamıyor (CORS yok).
-- **Sonuç:** Türk kitap sitelerinden otomatik bilgi çekmek, ara sunucuyla bile güvenilir değil (bot koruması) ve kullanım koşulları açısından sorunlu. Kültür Bakanlığı ISBN sisteminin herkese açık bir API'si yok.
+## D. Not Defteri
+15. Menüde Günlük'ün yanında **Not Defteri**. İçinde **Genel Notlar** ve **Özel Notlar**; "＋ Not Defteri" ile yeni defter ekleme ve adlandırma.
+16. Ayarlar'dan istenen not defterine PIN kilidi; tüm kilitler için **tek kurtarma kodu**.
+17. Her notun kaydedildiği tarih ve saat görünsün.
+18. Not defteri içinde **Alışveriş Listem**; kendi alışveriş kategorilerini ekleyip adlandırma.
 
-**Önerilen uygulanabilir çözüm (kullanıcı onayı bekliyor):**
-1. **Tek dokunuşla internette ara:** Kitap bulunamazsa "🔎 Kitapyurdu'nda ara" ve "🔎 Google'da ara" düğmeleri çıksın; ISBN ile arama sayfası açılsın. Kullanıcı bilgileri görüp forma yazsın.
-2. **Kendi kayıtlarından doldurma:** Daha önce elle girilmiş bir ISBN tekrar okutulursa (silinmiş kitap ya da başka cihazdan gelen yedek dahil) bilgiler oradan dolsun.
-3. **İsteğe bağlı, ücretli:** ISBNdb gibi bir servis (aylık ücret + anahtar). Türkçe kapsamı önce bu üç ISBN ile denenmeli.
+## E. Ertelenenler
+19. **Play Store'a yükleme:** Kullanıcı karar verince konuşulacak. (Teknik hazırlık zaten yapıldı.)
 
-## 2. Play Store'a yükleme
-Teknik hazırlık yapıldı (gizlilik sayfası, simgeler, manifest). Kalan: geliştirici hesabı, PWABuilder ile paket,
-`assetlinks.json` doğrulaması (mkaragozz.github.io deposu), 12 kişilik 14 günlük kapalı test, mağaza metinleri ve ekran görüntüleri.
+---
+
+## Ek bilgi: Türkçe kitap kaynağı araştırması (23.11.2026)
+Bulunamayan örnek ISBN'ler (üçü de orijinal baskı):
+- 9786256162990: Doğan Kitap
+- 9786051982656: *Yaşamak İçin Nedenler*, bandrollü
+- 9786254106200: Pegasus Yayınları, Shane Parrish, bandrollü
+
+Sonuçlar:
+- Open Library'de üçü de yok. Google Books test ortamında kota hatası verdi; kullanıcının telefonunda da bulamadı.
+- Kitapyurdu Cloudflare bot korumalı; D&R ve İdefix yönlendirme yapıyor ya da JavaScript ile yükleniyor.
+  Hiçbiri tarayıcıdan doğrudan sorgulanamıyor (CORS yok).
+- Kültür Bakanlığı ISBN sisteminin herkese açık API'si yok.
+- Bu yüzden çözüm olarak A-2 ve A-3 seçildi. Ücretli servis (ISBNdb vb.) şimdilik yok.
