@@ -33,6 +33,10 @@ bu düğme yalnızca uygulama dosyalarını yeniden indirir, notlarınızı silm
 ## Bölümler
 Ayrıntılı, aranabilir kılavuz uygulamanın içinde: **Ayarlar → 📘 Kullanım kılavuzu**.
 
+- **🗂️ Kitap listeleri:** Okuyorum, Okunacak (okuma sırası ve yıldız), Kütüphanem (okudum işareti, katalog PDF), Satın Alınacak (alış listesi PDF), Seçkin, E-kitaplar ve 🔒 Özel Kitaplar; ortak konu başlıkları.
+- **📱 E-kitap okuyucu:** PDF, Word (.docx), TXT ve EPUB yükleyip okuyun; zemin rengi, yazı tipi ve boyutu; metni seçip renkli alıntı olarak kaydedin; sayfaya tekrar oku işareti ve yorum; kaldığınız yerden devam.
+- **📄 Makaleler:** DOI ile bilgi doldurma, PDF/Word makaleyi aynı okuyucuyla okuma, okuduklarım / okuyacaklarım.
+- **✍️ Blog:** Biçimli yazılar, taslak/tamamlandı, ay-yıl arşivi, kopyalama, Word ve PDF.
 - **📝 Not Defteri:** Genel Notlar, Özel Notlar ve kendi defterleriniz; her not başlıklı ve tarih-saatli. İçinde **🛒 Alışveriş Listem** (kendi kategorilerinizle).
 - **📚 Kitaplar:** Kitap eklerken arka kapaktaki **barkodu okutun**; adı, yazarı, yayınevi, yılı,
   sayfa sayısı ve kapağı kendiliğinden dolar. Bulunamazsa bilgileri elle yazarsınız.

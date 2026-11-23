@@ -5,7 +5,7 @@ export const GUIDE = [
   {
     id: 'basla', e: '👋', t: 'Başlarken',
     h: `<p><b>Kitap & Notlarım</b>; okuduğunuz kitaplardan alıntıları sayfa numarasıyla saklamanız, kendi notlarınızı ve düşüncelerinizi yazmanız, günlük tutmanız için hazırlanmış bir uygulamadır.</p>
-      <ul><li>Alttaki menüden bölümler arasında geçersiniz: <b>📚 Kitaplar · 📝 Notlar · 💡 Düşünceler · 📔 Günlük · 🔎 Ara · ☰ Diğer</b>.</li>
+      <ul><li>Alttaki menüden bölümler arasında geçersiniz: <b>📚 Kitaplar · 📝 Notlar · 💡 Düşünceler · 📔 Günlük · 🔎 Ara · ☰ Diğer</b>. <b>📄 Makaleler</b>, <b>✍️ Blog</b>, Tekrar Oku ve Etiketler ☰ Diğer'dedir.</li>
       <li>Menüde hangi bölümlerin görüneceğini <b>Ayarlar → 🧭 Menü</b>'den değiştirebilirsiniz; menüde olmayanlar <b>☰ Diğer</b> sayfasında durur.</li>
       <li>Bilgisayarda menü solda, telefonda altta görünür.</li>
       <li>Bütün verileriniz <b>yalnızca bu cihazda</b> saklanır. Düzenli olarak yedek alın (bkz. <i>Yedekleme</i>).</li></ul>`,
@@ -35,6 +35,46 @@ export const GUIDE = [
       <li>İsterseniz <b>🔖 Tekrar okunacaklar listesine ekle</b> kutucuğunu işaretleyip hatırlatma tarihi verin.</li></ol>
       <p>Kitap sayfasında alıntıları yıldıza göre süzebilir, <b>sayfa sırası / önem / en yeni</b>'ye göre sıralayabilirsiniz. 📋 düğmesi alıntıyı “Yazar, <i>Kitap</i>, s. 45” kaynağıyla kopyalar.</p>
       <p>İçindekiler sekmesine bölüm başlıklarını yazarsanız, sayfa numarası yazdığınızda alıntının bölümü kendiliğinden dolar.</p>`,
+  },
+  {
+    id: 'listeler', e: '🗂️', t: 'Kitap listeleri (Kütüphanem, Okunacak, Satın Alınacak, Seçkin, Özel)',
+    h: `<p>Kitaplar sayfasının üstündeki sekmeler: <b>Tümü · Okuyorum · Okunacak · Kütüphanem · Satın Alınacak · Seçkin · E-kitaplar · 🔒 Özel</b>. Bir kitabı bir kez kaydedersiniz; hangi listelerde olacağını işaretler belirler (kitap ekleme ekranındaki <b>📚 Listeler ve konular</b> kutusu ya da kitabın Bilgiler sekmesi).</p>
+      <ul><li><b>🕮 Okunacak:</b> Okumak istediğiniz kitaplar. ↑↓ ile <b>okuma sıranızı</b> (1, 2, 3…) belirleyin, ⭐ ile önem verin; yıldıza, ada ya da yazara göre de sıralayabilirsiniz. “📖 Okumaya başla” kitabı Okuyorum'a taşır.</li>
+      <li><b>🏠 Kütüphanem:</b> Evinizdeki kitaplar. Barkodla, ISBN'le ya da elle ekleyin. <b>✅ Okudum / ○ Okumadım</b> ile işaretleyin; üstten “Okuduklarım / Okumadıklarım”ı ayrı görün. <b>🖨️ Katalog</b> ile konu başlıklarına ayrılmış, okundu bilgili kataloğunuzu PDF olarak kaydedin ya da yazdırın.</li>
+      <li><b>🛒 Satın Alınacak:</b> Almak istediğiniz kitaplar. ↑↓ ile “önce almak istediklerim” sırası, ⭐ önem. <b>🛒 Aldım</b>'a basınca kitap Kütüphanem'e geçer. <b>🖨️ Alış listesi</b> ile işaretlemeli bir liste yazdırın.</li>
+      <li><b>💎 Seçkin:</b> “Hayatıma dokundu” dediğiniz kitaplar.</li>
+      <li><b>🔒 Özel:</b> Herkesin görmesini istemediğiniz kitaplar. PIN kilidi açıkken bu kitaplar ve alıntıları kilit açılana kadar hiçbir listede, aramada ve etiketlerde görünmez.</li>
+      <li><b>🏷️ Konu başlıkları:</b> “＋ Konu” ile ekleyin; kitaplar ve makalelerde ortaktır. “🗂️ Konulara ayır” listeyi başlıklar altında gösterir. Yönetmek için: Ayarlar → 🏷️ Konu başlıkları.</li></ul>`,
+  },
+  {
+    id: 'okuyucu', e: '📱', t: 'E-kitap okuyucu (PDF, Word, TXT, EPUB)',
+    h: `<ol><li><b>＋ Kitap</b> ekranındaki <b>📱 E-kitap dosyası</b> kutusundan PDF, Word (.docx), metin (.txt) ya da EPUB dosyası seçin. Kitabın adı ve yazarı dosyadan okunabiliyorsa kendiliğinden dolar.</li>
+      <li>Kitap sayfasındaki <b>📖 Oku</b> düğmesiyle okumaya başlayın. Sonra tekrar açtığınızda <b>kaldığınız sayfadan</b> devam eder; ana sayfada “📖 Okumaya devam et” çıkar.</li></ol>
+      <ul><li><b>Sayfa çevirme:</b> Başparmakla sağa/sola kaydırın, ekranın sağ/sol kenarına dokunun ya da alttaki ‹ › düğmelerini kullanın. Ayarlardan <b>“Kitap gibi”</b> çevirme efektini seçebilirsiniz.</li>
+      <li><b>Sayfa numarası:</b> Altta yazar; dokunup numara yazarak o sayfaya gidin. EPUB, Word ve TXT'de sayfa numarası ekrana göre hesaplanır ve yanında yüzde (%) yazar; yazıyı büyütünce sayfa sayısı değişir ama kaldığınız yer korunur.</li>
+      <li><b>Aa (okuma ayarları):</b> Zemin rengi (hazır gözü yormayan tonlar ya da 🎨 ile istediğiniz renk), yazı tipi (varsayılan: ekranda en rahat okunan <b>Literata</b>), yazı boyutu, satır aralığı, kenar boşluğu.</li>
+      <li><b>PDF:</b> 📄 <b>Orijinal görünüm</b> sayfayı aynen gösterir (zemin rengi ve yakınlaştırma değişir, sayfa numaraları kitapla aynıdır). 📝 <b>Metin görünümü</b> yazıyı çıkarır; yazı tipi ve boyutu da değişir, resimler ve sayfa düzeni kaybolur. Üstteki 📝/📄 düğmesiyle geçiş yapın.</li>
+      <li><b>Alıntı kaydetme:</b> Metni parmağınızla seçin, alttaki <b>✍️ Notlarıma kaydet</b>'e basın. Alıntı kitabın Alıntılar bölümüne sayfa numarasıyla gider; yıldız, etiket, yorum, tekrar oku ve <b>renk</b> seçebilirsiniz. Seçtiğiniz renk metnin üzerinde fosforlu kalem gibi görünür; vurguya dokununca alıntıyı düzenlersiniz.</li>
+      <li><b>🔖</b> bulunduğunuz sayfayı <b>Tekrar Oku</b> listesine ekler; <b>💬</b> sayfaya yorum yazar; <b>📑</b> tüm alıntıları, işaretleri ve yorumları listeler, dokununca o yere gider.</li>
+      <li>Kitap sayfasındaki alıntı kartlarında 📖 düğmesi alıntının kitaptaki yerini açar.</li></ul>
+      <p class="muted">Dosyalar yalnızca bu cihazda saklanır. Eski Word biçimi (.doc) desteklenmez; Word'de “.docx” olarak kaydedin. Şifreli (DRM'li) e-kitaplar açılamaz.</p>`,
+  },
+  {
+    id: 'makale', e: '📄', t: 'Makaleler',
+    h: `<ol><li>Menüden (ya da ☰ Diğer'den) <b>📄 Makaleler</b> → <b>＋ Makale</b>.</li>
+      <li><b>DOI</b> numarasını yazıp <b>🔍 Bul</b>'a basın: başlık, yazarlar, dergi, yıl, cilt, sayı ve sayfalar kendiliğinden dolar.</li>
+      <li>İsterseniz PDF ya da Word dosyasını ekleyin. Dosyası olmayan (yalnızca bağlantısı olan ya da kâğıt) makaleleri de kaydedebilirsiniz.</li></ol>
+      <ul><li>Makaleler kitap okuyucusuyla okunur; alıntı, renk, yıldız, etiket, yorum, tekrar oku, sayfaya yorum ve kaldığı yerden devam <b>kitaplardaki gibidir</b>.</li>
+      <li><b>📋 Okuyacaklarım / ✅ Okuduklarım</b> sekmeleriyle ayrı görün; “Okudum” düğmesiyle işaretleyin. Konu başlıkları kitaplarla ortaktır.</li></ul>`,
+  },
+  {
+    id: 'blog', e: '✍️', t: 'Blog',
+    h: `<p>Blog yazılarınızı yazıp saklayabileceğiniz <b>kişisel arşivinizdir</b>; internette yayınlanmaz.</p>
+      <ul><li><b>✍️ Yeni yazı</b>: başlık yazın; araç çubuğuyla <b>kalın, italik, altı çizili, ara başlık, liste, alıntı, bağlantı</b> ekleyin. Kapak fotoğrafı, kategori ve etiket verin.</li>
+      <li><b>📝 Taslak olarak kaydet</b> ya da <b>✅ Tamamlandı olarak kaydet</b>. Yazma ve düzenleme tarihleri saklanır.</li>
+      <li>Blog sayfasında yazılar <b>yıl ve ay</b> olarak arşivlenir; taslak/tamamlanan, kategori ve arama ile süzün.</li>
+      <li>Yazıyı açıp <b>📋 Metni kopyala</b>, <b>🌐 HTML kopyala</b> (Blogger, WordPress, Medium gibi sitelere biçimiyle yapıştırmak için), <b>📝 Word</b> ya da <b>🖨️ PDF</b>.</li>
+      <li>İsterseniz Blog'u Ayarlar → 🔒 Kilit'ten PIN ile kilitleyin.</li></ul>`,
   },
   {
     id: 'notlar', e: '📝', t: 'Not Defteri',
@@ -94,7 +134,8 @@ export const GUIDE = [
       <ol><li>Ayarlar → <b>💾 Yedekleme</b> → <b>📤 Yedek al</b>. Bir <code>.json</code> dosyası oluşur.</li>
       <li>Dosyayı diğer cihaza gönderin (Drive, WhatsApp, e-posta, USB).</li>
       <li>Diğer cihazda Ayarlar → 💾 Yedekleme → <b>📥 Yedeği içe aktar</b>.</li></ol>
-      <p>Kayıtlar <b>birleştirilir</b>; aynı kayıt iki cihazda da değiştiyse en son düzenlenen kalır. Yedek dosyası günlüğü, fotoğrafları ve özel notları da içerir; güvendiğiniz yerlere gönderin. PIN ve uygulama ayarları yedeğe girmez, her cihazda ayrıca yapılır.</p>`,
+      <p>Kayıtlar <b>birleştirilir</b>; aynı kayıt iki cihazda da değiştiyse en son düzenlenen kalır. Yedek dosyası günlüğü, fotoğrafları ve özel notları da içerir; güvendiğiniz yerlere gönderin. PIN ve uygulama ayarları yedeğe girmez, her cihazda ayrıca yapılır.</p>
+      <p><b>E-kitap ve makale dosyaları</b> büyük olduğu için normalde yedeğe girmez (notlarınız, alıntılarınız ve kaldığınız sayfa girer). Dosyaları da taşımak için Ayarlar → 💾 Yedekleme'de <b>“📱 E-kitap ve makale dosyalarını da yedekle”</b>yi işaretleyin.</p>`,
   },
   {
     id: 'disa', e: '⬇️', t: 'Dışa aktarma (PDF, Word, Excel)',
@@ -108,6 +149,8 @@ export const GUIDE = [
     h: `<ul><li><b>🔒 Kilit:</b> PIN, kilitli bölümler, kilit süresi, kurtarma kodu.</li>
       <li><b>🧭 Menü:</b> Alt menüde görünecek bölümler ve sıraları.</li>
       <li><b>📷 Barkod:</b> Titreşim, ses, kitap bulunamayınca çıkacak arama düğmeleri.</li>
+      <li><b>📖 Okuma görünümü:</b> Okuyucunun zemin rengi, yazı tipi, boyutu, satır aralığı, kenar boşluğu, sayfa çevirme biçimi.</li>
+      <li><b>🏷️ Konu başlıkları:</b> Kitap ve makale konularını ekleme, adlandırma, sıralama, silme.</li>
       <li><b>📝 Not defterleri:</b> Defterleri ve alışveriş kategorilerini ekleme, adlandırma, sıralama, silme.</li>
       <li><b>💡 Düşünce defterleri</b> ve <b>📔 Günlük başlıkları</b>.</li>
       <li><b>💾 Yedekleme</b>, <b>⬇️ Dışa aktarma</b>, <b>📲 Yükle ve paylaş</b>, <b>🔐 Gizlilik</b>, <b>⚠️ Verileri sil</b>.</li></ul>`,

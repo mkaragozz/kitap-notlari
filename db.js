@@ -15,10 +15,20 @@
 //   shopcats  : alışveriş listesi kategorileri (Market, Eczane…)
 //   shopitems : alışveriş listesi maddeleri (işaretlenebilir)
 //   isbnmemo  : elle girilen kitap bilgilerinin ISBN hafızası (aynı ISBN tekrar okutulunca doldurmak için)
+//   topics    : kitap ve makalelerde ortak konu başlıkları
+//   pagemarks : okuyucuda sayfa işaretleri ("tekrar oku") ve sayfa yorumları
+//   posts     : blog yazıları
+//   files     : e-kitap / makale dosyaları (PDF, Word, TXT, EPUB). Büyük olduğu için belleğe alınmaz,
+//               normal yedeğe girmez (Ayarlar'da "E-kitapları da yedekle" seçeneği vardır).
+//
+// "books" deposunda kitaplar ve makaleler birlikte durur: makalelerde kind === 'article'.
+// Kitap işaretleri: owned (Kütüphanemde), wish (Satın alınacak), favorite (Seçkin), private (Özel),
+// status (okunuyor / okunacak / bitti = okudum), topics [konu id], toReadOrder, wishOrder, listStars.
 
 const DB_NAME = 'kitap-notlari';
-const DB_VERSION = 4;
-export const STORES = ['books', 'quotes', 'thoughts', 'notebooks', 'moments', 'days', 'prompts', 'nbooks', 'notes', 'shopcats', 'shopitems', 'isbnmemo'];
+const DB_VERSION = 5;
+export const STORES = ['books', 'quotes', 'thoughts', 'notebooks', 'moments', 'days', 'prompts', 'nbooks', 'notes', 'shopcats', 'shopitems', 'isbnmemo', 'topics', 'pagemarks', 'posts'];
+const FILE_STORE = 'files';
 let dbPromise = null;
 
 export const S = Object.fromEntries(STORES.map((s) => [s, new Map()]));
@@ -29,7 +39,7 @@ function openDB() {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
       const d = req.result;
-      STORES.forEach((name) => { if (!d.objectStoreNames.contains(name)) d.createObjectStore(name, { keyPath: 'id' }); });
+      [...STORES, FILE_STORE].forEach((name) => { if (!d.objectStoreNames.contains(name)) d.createObjectStore(name, { keyPath: 'id' }); });
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
@@ -123,12 +133,18 @@ async function ensureSeeds() {
 
 const live = (store) => [...S[store].values()].filter((x) => !x.deleted);
 
-// ---- Kitaplar ve alıntılar ----
-export function books() { return live('books'); }
-export function getBook(id) {
-  const b = S.books.get(id);
-  return b && !b.deleted ? b : null;
-}
+// ---- Görünürlük: Özel Kitaplar kilitliyken gizlenir (app.js bağlar) ----
+export const visibility = { hidePrivate: () => false };
+const visible = (b) => b && !b.deleted && !(b.private && visibility.hidePrivate());
+
+// ---- Kitaplar, makaleler ve alıntılar ----
+/** Görünür kitaplar (makaleler hariç) */
+export function books() { return live('books').filter((b) => b.kind !== 'article' && visible(b)); }
+/** Görünür makaleler */
+export function articles() { return live('books').filter((b) => b.kind === 'article' && visible(b)); }
+export function getBook(id) { const b = S.books.get(id); return visible(b) ? b : null; }
+/** Gizli (özel) olsa bile kaydı döner */
+export function getBookRaw(id) { const b = S.books.get(id); return b && !b.deleted ? b : null; }
 export function allQuotes() { return live('quotes').filter((q) => getBook(q.bookId)); }
 export function quotesOf(bookId) { return allQuotes().filter((q) => q.bookId === bookId); }
 export function getQuote(id) { const q = S.quotes.get(id); return q && !q.deleted ? q : null; }
@@ -151,6 +167,12 @@ export function getNote(id) { const n = S.notes.get(id); return n && !n.deleted 
 export function shopcats() { return live('shopcats').sort((a, b) => (a.order ?? 99) - (b.order ?? 99) || (a.createdAt || '').localeCompare(b.createdAt || '')); }
 export function shopitems() { return live('shopitems'); }
 export function getIsbnMemo(isbn) { const m = S.isbnmemo.get(isbn); return m && !m.deleted ? m : null; }
+export function topics() { return live('topics').sort((a, b) => (a.order ?? 99) - (b.order ?? 99) || a.name.localeCompare(b.name, 'tr')); }
+export function getTopic(id) { const t = S.topics.get(id); return t && !t.deleted ? t : null; }
+export function pagemarksOf(bookId) { return live('pagemarks').filter((m) => m.bookId === bookId); }
+export function allPagemarks() { return live('pagemarks').filter((m) => getBook(m.bookId)); }
+export function posts() { return live('posts'); }
+export function getPost(id) { const p = S.posts.get(id); return p && !p.deleted ? p : null; }
 export function getDay(date) { const d = S.days.get(date); return d && !d.deleted ? d : null; }
 
 // ---- Genel kaydetme / silme ----
@@ -186,14 +208,58 @@ export async function deleteBook(id) {
   const qs = [...S.quotes.values()].filter((q) => q.bookId === id && !q.deleted)
     .map((q) => ({ id: q.id, bookId: q.bookId, deleted: true, createdAt: q.createdAt, updatedAt: now }));
   qs.forEach((q) => S.quotes.set(q.id, q));
+  const pms = [...S.pagemarks.values()].filter((m) => m.bookId === id && !m.deleted)
+    .map((m) => ({ id: m.id, bookId: id, deleted: true, createdAt: m.createdAt, updatedAt: now }));
+  pms.forEach((m) => S.pagemarks.set(m.id, m));
+  if (b.fileId) await deleteFile(b.fileId);
   await remove('books', id);
   await putMany('quotes', qs);
+  await putMany('pagemarks', pms);
 }
 
+// ---- Dosyalar (e-kitap / makale) ----
+export async function putFile(rec) {
+  // rec: { id?, name, type, size, blob }
+  if (!rec.id) rec.id = uid();
+  rec.updatedAt = new Date().toISOString();
+  await putMany(FILE_STORE, [rec]);
+  requestPersist();
+  return rec;
+}
+export async function getFile(id) {
+  if (!id) return null;
+  const d = await openDB();
+  return new Promise((resolve, reject) => {
+    const r = d.transaction(FILE_STORE, 'readonly').objectStore(FILE_STORE).get(id);
+    r.onsuccess = () => resolve(r.result || null);
+    r.onerror = () => reject(r.error);
+  });
+}
+export async function deleteFile(id) {
+  const d = await openDB();
+  return new Promise((resolve) => {
+    const t = d.transaction(FILE_STORE, 'readwrite');
+    t.objectStore(FILE_STORE).delete(id);
+    t.oncomplete = () => resolve(); t.onerror = () => resolve();
+  });
+}
+export async function allFiles() { return getAll(FILE_STORE); }
+const blobToB64 = (blob) => new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(String(r.result).split(',')[1] || ''); r.onerror = () => reject(r.error); r.readAsDataURL(blob); });
+function b64ToBlob(b64, type) { const bin = atob(b64); const a = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return new Blob([a], { type: type || 'application/octet-stream' }); }
+
 // ---- Yedekleme / aktarım ----
-export function exportBackup() {
-  const out = { app: 'kitap-notlari', version: 2, exportedAt: new Date().toISOString() };
+export async function exportBackup({ withFiles = false } = {}) {
+  const out = { app: 'kitap-notlari', version: 3, exportedAt: new Date().toISOString() };
   STORES.forEach((s) => { out[s] = [...S[s].values()]; });
+  if (withFiles) {
+    const files = await allFiles();
+    out.files = [];
+    for (const f of files) {
+      const owner = [...S.books.values()].find((b) => b.fileId === f.id && !b.deleted);
+      if (!owner || !f.blob) continue;
+      out.files.push({ id: f.id, name: f.name, type: f.type, size: f.size, updatedAt: f.updatedAt, data: await blobToB64(f.blob) });
+    }
+  }
   return out;
 }
 
@@ -215,11 +281,21 @@ export async function importBackup(data) {
     }
     await putMany(store, put);
   }
+  if (Array.isArray(data.files)) {
+    for (const f of data.files) {
+      if (!f || !f.id || !f.data) continue;
+      const cur = await getFile(f.id);
+      if (cur && (cur.updatedAt || '') >= (f.updatedAt || '')) continue;
+      await putMany(FILE_STORE, [{ id: f.id, name: f.name, type: f.type, size: f.size, updatedAt: f.updatedAt, blob: b64ToBlob(f.data, f.type) }]);
+      stats.files = (stats.files || 0) + 1;
+    }
+  }
   return stats;
 }
 
 export async function wipeAll() {
   for (const s of STORES) { await clearStore(s); S[s].clear(); }
+  await clearStore(FILE_STORE);
   await ensureSeeds();
 }
 
@@ -241,6 +317,9 @@ const DEFAULTS = {
   scanVibrate: true, scanBeep: true, searchLinks: ['kitapyurdu', 'google'],
   // Alt menüde görünen bölümler ve sırası (Kitaplar ve Diğer sabit)
   nav: ['notes', 'thoughts', 'journal', 'search'],
+  // Okuyucu (Ayarlar → Okuma görünümü)
+  reader: { bg: '#FBF5E6', fg: '#2B2B2B', font: 'Literata', size: 19, line: 1.6, margin: 22, turn: 'slide' },
+  backupFiles: false,
 };
 const REMOVED = ['apiKey', 'model', 'citeStyle'];
 export function getSettings() {

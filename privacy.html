@@ -23,7 +23,7 @@
   <div class="card">
     <h1>📚 Kitap &amp; Notlarım: Gizlilik Politikası</h1>
     <div id="policy">
-    <p class="muted">Yürürlük ve son güncelleme tarihi: 23 Kasım 2026</p>
+    <p class="muted">Yürürlük tarihi: 23 Kasım 2026 · Son güncelleme: 23 Kasım 2026 (sürüm 3.0)</p>
 
     <div class="box"><b>Kısaca:</b> Kitap &amp; Notlarım'a yazdığınız her şey <b>yalnızca sizin cihazınızda</b> saklanır.
       Uygulamanın bir sunucusu, kullanıcı hesabı, reklamı, analiz ya da takip aracı yoktur. Geliştirici dahil hiç kimse
@@ -31,7 +31,7 @@
 
     <h3>1. Kapsam ve sorumlu</h3>
     <p>Bu politika, <b>Kitap &amp; Notlarım</b> uygulamasının (web uygulaması ve cihaza yüklenen hâli) verilerinizi nasıl ele aldığını açıklar.
-      Uygulama bireysel bir geliştirici tarafından hazırlanmıştır. İletişim bilgisi 13. maddededir.</p>
+      Uygulama bireysel bir geliştirici tarafından hazırlanmıştır. İletişim bilgisi 14. maddededir.</p>
 
     <h3>2. Hangi bilgileri saklıyoruz?</h3>
     <p>Uygulamaya girdiğiniz bilgiler, cihazınızdaki tarayıcı depolama alanında (IndexedDB ve yerel depolama) tutulur:</p>
@@ -39,6 +39,8 @@
       <li>Kitaplar ve kitap bilgileri (ad, yazar, yayınevi, ISBN, kapak görseli, okuma durumu, puan)</li>
       <li>Alıntılar, yorumlar, etiketler, önem dereceleri, tekrar okuma işaretleri, içindekiler ve özetler</li>
       <li>Not defterleri ve notlar, alışveriş listesi</li>
+      <li>Kitap listeleri (Kütüphanem, Okunacak, Satın Alınacak, Seçkin, Özel), konu başlıkları, makaleler ve blog yazıları</li>
+      <li><b>Yüklediğiniz e-kitap ve makale dosyaları</b> (PDF, Word, TXT, EPUB), okuyucudaki vurgular, sayfa işaretleri, sayfa yorumları ve kaldığınız sayfa</li>
       <li>Düşünceler ve günlük yazıları, ruh hâli seçimleri, günlüğe eklediğiniz fotoğraflar</li>
       <li>Elle girdiğiniz kitap bilgilerinin ISBN hafızası (aynı kitap tekrar okutulunca doldurmak için)</li>
       <li>Uygulama ayarları (menü düzeni, kilitli bölümler, barkod tercihleri, son yedek tarihi)</li>
@@ -55,6 +57,7 @@
     <table>
       <tr><th>Ne zaman?</th><th>Nereye?</th><th>Ne gönderilir?</th></tr>
       <tr><td>Barkod okutunca / ISBN ile aranınca</td><td>Google Books (googleapis.com), Open Library (openlibrary.org)</td><td>Yalnızca kitabın ISBN numarası</td></tr>
+      <tr><td>Makale eklerken DOI ile aranınca</td><td>Crossref (api.crossref.org)</td><td>Yalnızca makalenin DOI numarası</td></tr>
       <tr><td>Kitap kapağı indirilirken</td><td>books.google.com, covers.openlibrary.org</td><td>Kapak görselinin adresi</td></tr>
       <tr><td>“🔎 Kitapyurdu'nda / Google'da ara” düğmesine basınca</td><td>Seçtiğiniz site (tarayıcınızda yeni sayfa olarak açılır)</td><td>ISBN numarası (o sitenin kendi gizlilik politikası geçerlidir)</td></tr>
       <tr><td>Uygulama açılırken</td><td>Google Fonts (fonts.googleapis.com, fonts.gstatic.com)</td><td>Yazı tipi dosyası isteği</td></tr>
@@ -64,27 +67,32 @@
     <p>Bu isteklerde notlarınız, günlüğünüz veya kişisel bilgileriniz <b>yer almaz</b>. Ancak her internet isteğinde olduğu gibi, bu hizmetler teknik olarak
       cihazınızın IP adresini ve tarayıcı bilgisini görebilir; bu bilgiler o hizmetlerin kendi gizlilik politikalarına tabidir.</p>
 
-    <h3>5. Kamera ve fotoğraflar</h3>
+    <h3>5. E-kitap ve makale dosyaları</h3>
+    <p>Yüklediğiniz dosyalar <b>yalnızca cihazınızda</b> saklanır ve cihazınızda açılır; hiçbir sunucuya yüklenmez. Dosyaları okumak için gereken bileşenler
+      (pdf.js, Mammoth, JSZip) uygulamanın içinde gelir. Okuyucuda kullanılan yazı tipleri Google Fonts'tan yüklenir. Dosyaların yalnızca kişisel kullanımınız için
+      yüklendiğini varsayarız; telif hakkıyla korunan eserleri paylaşma sorumluluğu kullanıcıya aittir. Şifreli (DRM korumalı) dosyalar açılamaz.</p>
+
+    <h3>6. Kamera ve fotoğraflar</h3>
     <ul>
       <li>Kamera <b>yalnızca</b> barkod okuturken ve günlüğe fotoğraf çekerken, sizin izninizle açılır. Barkod okuma görüntüsü cihazda işlenir; kaydedilmez ve gönderilmez.</li>
       <li>Günlüğe eklediğiniz fotoğraflar küçültülerek yalnızca cihazınızda saklanır.</li>
       <li>Kamera iznini istediğiniz zaman tarayıcı ya da telefon ayarlarından geri alabilirsiniz.</li>
     </ul>
 
-    <h3>6. PIN kilidi</h3>
+    <h3>7. PIN kilidi</h3>
     <p>PIN ve kurtarma kodu cihazda <b>açık metin olarak değil</b>, tuzlanmış tek yönlü özet (SHA-256) olarak saklanır; geri çevrilemez.
       PIN kilidi, cihazınızı eline alan birinin seçtiğiniz bölümleri açmasını engellemek içindir. Veriler cihazda ayrıca şifrelenmez.
       PIN ve kurtarma kodu yedek dosyasına girmez.</p>
 
-    <h3>7. Yedekler ve dışa aktarılan dosyalar</h3>
+    <h3>8. Yedekler ve dışa aktarılan dosyalar</h3>
     <p>“Yedek al” ile oluşturulan dosya ve PDF/Word/Excel çıktıları, tüm içeriğinizi (günlük, özel notlar ve fotoğraflar dahil) içerebilir.
-      Bu dosyaları nereye kaydedeceğinize ve kiminle paylaşacağınıza <b>siz karar verirsiniz</b>. Gönderdiğiniz yerin (Drive, WhatsApp, e-posta vb.)
+      E-kitap dosyaları ancak “E-kitap ve makale dosyalarını da yedekle” seçeneği işaretliyse yedeğe girer. Bu dosyaları nereye kaydedeceğinize ve kiminle paylaşacağınıza <b>siz karar verirsiniz</b>. Gönderdiğiniz yerin (Drive, WhatsApp, e-posta vb.)
       kendi gizlilik koşulları geçerlidir. Yedek dosyalarını güvendiğiniz yerlerde saklayın.</p>
 
-    <h3>8. Çerezler ve takip</h3>
+    <h3>9. Çerezler ve takip</h3>
     <p>Uygulama çerez kullanmaz; reklam, analiz veya takip aracı içermez. Çevrimdışı çalışabilmek için uygulama dosyaları tarayıcının önbelleğine kaydedilir; bu önbellek kişisel veri içermez.</p>
 
-    <h3>9. Saklama süresi ve verilerin silinmesi</h3>
+    <h3>10. Saklama süresi ve verilerin silinmesi</h3>
     <p>Verileriniz siz silene kadar cihazınızda kalır. Silmek için:</p>
     <ul>
       <li>Tek tek kayıtları uygulama içinden silebilirsiniz.</li>
@@ -93,22 +101,22 @@
     </ul>
     <p>Bizde verilerinizin bir kopyası bulunmadığı için silinen veriler geri getirilemez. Önemli verilerinizin yedeğini alın.</p>
 
-    <h3>10. Haklarınız (KVKK ve GDPR)</h3>
+    <h3>11. Haklarınız (KVKK ve GDPR)</h3>
     <p>Verileriniz bizim tarafımızdan toplanmadığı ve işlenmediği için, 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) ve Avrupa Birliği
       Genel Veri Koruma Tüzüğü (GDPR) kapsamındaki erişim, düzeltme, silme, taşıma ve itiraz haklarınızı <b>doğrudan uygulama içinden</b> kullanabilirsiniz:
-      verilerinizi görebilir, düzeltebilir, silebilir ve “Yedek al” ile taşınabilir bir dosya olarak alabilirsiniz. Sorularınız için 13. maddedeki adrese yazabilirsiniz.</p>
+      verilerinizi görebilir, düzeltebilir, silebilir ve “Yedek al” ile taşınabilir bir dosya olarak alabilirsiniz. Sorularınız için 14. maddedeki adrese yazabilirsiniz.</p>
 
-    <h3>11. Çocuklar</h3>
+    <h3>12. Çocuklar</h3>
     <p>Uygulama hiçbir yaş grubundan kişisel veri toplamaz. Çocukların uygulamayı ebeveyn gözetiminde kullanmasını öneririz.</p>
 
-    <h3>12. Güvenlik</h3>
+    <h3>13. Güvenlik</h3>
     <p>Uygulama yalnızca güvenli bağlantı (HTTPS) üzerinden sunulur. Verileriniz cihazınızın ve tarayıcınızın sağladığı korumayla saklanır.
       Cihazınızı ekran kilidiyle korumanızı ve düzenli yedek almanızı öneririz.</p>
 
-    <h3>13. İletişim</h3>
+    <h3>14. İletişim</h3>
     <p>Bu politika veya uygulama hakkındaki soru ve önerileriniz için: <a href="mailto:mkaraggoz@gmail.com">mkaraggoz@gmail.com</a></p>
 
-    <h3>14. Değişiklikler</h3>
+    <h3>15. Değişiklikler</h3>
     <p>Bu politika uygulamaya yeni özellikler eklendikçe güncellenebilir. Güncel hâli her zaman bu sayfada yayımlanır; üstteki tarih son güncellemeyi gösterir.</p>
     </div>
     <p class="muted" style="margin-top:22px"><a href="./">← Uygulamaya dön</a></p>

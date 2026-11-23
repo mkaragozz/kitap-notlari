@@ -1,6 +1,6 @@
 # Yapılacaklar
 
-Durum: **1. aşama (A, D, E) sürüm 2.3'te uygulandı.** Sırada: 2. aşama (C, kitap listeleri), 3. aşama (B, e-kitap okuyucu).
+Durum: **Tüm aşamalar tamamlandı (sürüm 3.0).** Bekleyen tek konu: Play Store (ertelendi).
 Uygulama adı "Kitap & Notlarım" olarak değiştirildi.
 
 ## Verilen kararlar (23.11.2026)
@@ -22,7 +22,9 @@ Uygulama adı "Kitap & Notlarım" olarak değiştirildi.
 - **Uygulama sırası:** 1) A (barkod) + D (Not Defteri) + E (ayarlar, gizlilik, kılavuz), 2) C (kitap listeleri), 3) B (e-kitap okuyucu).
 - **Gizlilik iletişimi:** Gizlilik politikasına iletişim adresi olarak **mkaraggoz@gmail.com** yazılacak (kullanıcı yazılışı teyit etti).
 
-## Açık sorular (2. ve 3. aşamadan önce yanıtlanacak)
+## Açık sorular → hepsi "önerildiği gibi" yanıtlandı (23.11.2026)
+Tüm aşamalar bitince tek seferde **sürüm 3.0** olarak yayınlanacak.
+
 1. Okuyucuda seçilen metin nereye kaydedilsin? Öneri: o kitabın **Alıntılar** bölümüne, sayfa numarasıyla.
 2. Mevcut "Okunuyor / Okunacak / Bitti" durumları ile yeni listeler: Öneri "Okunacak" durumu = Okunacak Kitaplar,
    "Bitti" = Kütüphanem'deki "okudum". Kitaplar sayfasında sekmeler: Tümü · Okuyorum · Okunacak · Kütüphanem · Satın Alınacak · Seçkin · 🔒 Özel.
@@ -50,7 +52,7 @@ Uygulama adı "Kitap & Notlarım" olarak değiştirildi.
 2. **Kitap bulunamazsa** "🔎 Kitapyurdu'nda ara" ve "🔎 Google'da ara" düğmeleri (ISBN ile arama sayfası açılır).
 3. **Kendi kayıtlarından doldurma:** Elle girilmiş bir ISBN tekrar okutulunca bilgiler kendiliğinden dolsun.
 
-## B. E-kitap okuyucu (PDF, Word, TXT, EPUB) (⏳ 3. aşama)
+## B. E-kitap okuyucu (PDF, Word, TXT, EPUB) (✅ 3.0'da yapıldı)
 4. **Kitap ekle** bölümünden PDF / Word (.docx) / metin (.txt) / EPUB dosyası yükleme (giriş noktası Kitap ekle ekranı).
 5. Okuma ayarları: **zemin rengi** (hazır gözü yormayan tonlar + istenen herhangi bir renk için renk seçici), yazı boyutu,
    yazı tipi (istenen yazı stiline değiştirilebilir). **Varsayılan: en rahat okunan yazı tipi** gelir.
@@ -61,7 +63,7 @@ Uygulama adı "Kitap & Notlarım" olarak değiştirildi.
 9. Altta **kaçıncı sayfada olunduğu** yazsın; sayfa kısmına numara yazınca o sayfaya gitsin; kitaba tekrar
    gelince **kalınan sayfadan** devam etsin.
 
-## C. Kitap listeleri (⏳ 2. aşama)
+## C. Kitap listeleri (✅ 3.0'da yapıldı)
 10. **Özel Kitaplar** sekmesi: Herkesin ulaşmasını istemediğiniz kitaplar; PIN ile kilitli (günlük gibi).
     Kilitliyken bu kitaplar ve alıntıları Kitaplar listesinde, aramada, etiketlerde ve Tekrar Oku'da da görünmesin.
 11. **Seçkin Kitaplar:** En çok beğenilen, "hayatıma dokundu" denilen kitaplar.
@@ -98,13 +100,13 @@ Uygulama adı "Kitap & Notlarım" olarak değiştirildi.
     adım adım anlatım (kitap ekleme, barkod, alıntı, okuyucu, listeler, not defteri, düşünceler, günlük, kilit,
     yedekleme, dışa aktarma, kurulum ve güncelleme, sık sorulan sorular).
 
-## G. Makaleler (⏳ e-kitap okuyucuyla birlikte, 3. aşama)
+## G. Makaleler (✅ 3.0'da yapıldı)
 23. **Makale bölümü:** PDF ve Word dosyası olarak makale ekleme; kitap okuyucunun aynısıyla okuma.
     Okurken alıntı seçme, not ve fikir ekleme; yıldız, etiket, renk, tekrar oku, sayfaya yorum, kalınan sayfadan devam:
     **kitap sayfasındaki tüm özellikler** makalelerde de olacak.
 24. **Makale arşivi:** Okuduğum ve okuyacağım makaleler ayrı görülsün (okundu / okunacak işareti), kaydedilip saklansın.
 
-## H. Blog (⏳ yeni aşama)
+## H. Blog (✅ 3.0'da yapıldı)
 25. **Blog bölümü:** Blog yazılarımı yazıp kaydetme ve arşivleme.
 
 ## F. Ertelenenler
