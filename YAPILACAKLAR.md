@@ -19,7 +19,7 @@ Durum: **Not alındı, uygulanmadı.** Kullanıcı "uygula" diyene kadar kodda d
 - **Alışveriş Listem:** Kategoriler (Market, Eczane…) altında işaretlenebilir maddeler; alınanlar ✓,
   istenirse alınanlar silinir.
 - **Uygulama sırası:** 1) A (barkod) + D (Not Defteri) + E (ayarlar, gizlilik, kılavuz), 2) C (kitap listeleri), 3) B (e-kitap okuyucu).
-- **Gizlilik iletişimi:** Şimdilik GitHub sayfası (github.com/mkaragozz/kitap-notlari/issues); e-posta yazılmayacak. Play Store'a geçilirse e-posta eklenecek.
+- **Gizlilik iletişimi:** Şimdilik hiçbir iletişim adresi yazılmayacak (ne e-posta ne GitHub). Play Store'a geçilirse yeniden konuşulacak.
 
 ## A. Kitap ekleme ve bilgi bulma
 1. **Tam ekran barkod okuyucu:** Kamera tam ekran açılsın, kendiliğinden ve sürekli odaklansın; barkodu
@@ -69,7 +69,7 @@ Durum: **Not alındı, uygulanmadı.** Kullanıcı "uygula" diyene kadar kodda d
 20. **Kapsamlı gizlilik politikası:** Bütün yeni özellikleri kapsayacak şekilde yeniden yazılacak: yüklenen
     e-kitap dosyaları, kamera, fotoğraflar, kilit/PIN, yedek dosyaları, internet bağlantıları (ISBN arama,
     Kitapyurdu/Google arama düğmeleri, yazı tipleri), çerezler, çocuklar, veri silme, haklar (KVKK/GDPR
-    çerçevesinde), iletişim, değişiklikler. Hem uygulama içinde hem `privacy.html`.
+    çerçevesinde), değişiklikler. İletişim adresi yazılmayacak. Hem uygulama içinde hem `privacy.html`.
 21. **Kullanım kılavuzu Ayarlar'da:** Ayarlar → "📘 Kullanım kılavuzu" bölümü; konulara ayrılmış, aranabilir,
     adım adım anlatım (kitap ekleme, barkod, alıntı, okuyucu, listeler, not defteri, düşünceler, günlük, kilit,
     yedekleme, dışa aktarma, kurulum ve güncelleme, sık sorulan sorular).
