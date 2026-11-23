@@ -148,6 +148,11 @@ function updateBadge() {
 }
 
 // ================= Ana sayfa =================
+function shelfCard(b) {
+  const pct = b.pages && b.currentPage ? Math.min(100, Math.round((b.currentPage / b.pages) * 100)) : 0;
+  return `<a class="shelf-item" href="${b.fileId && b.status === 'okunuyor' ? '#/read/' + b.id : '#/book/' + b.id}">${coverHtml(b)}
+    <b>${esc(b.title)}</b><small>${esc(b.author || '')}</small>${b.status === 'okunuyor' && pct ? `<div class="progress"><i style="width:${pct}%"></i></div>` : ''}</a>`;
+}
 function bookCard(b) {
   const qn = DB.quotesOf(b.id).length;
   const pct = b.pages && b.currentPage ? Math.min(100, Math.round((b.currentPage / b.pages) * 100)) : 0;
@@ -169,7 +174,9 @@ function sectionLinksHtml() {
 function renderHome(tab = 'all') {
   if (tab !== 'all') {
     const sec = !!SECTION_ROUTES[tab];
-    view.innerHTML = `<div class="topbar"><button class="back${sec ? ' mob-only' : ''}" data-act="back" aria-label="Geri">‹</button><h1>${LISTS[tab].e} ${LISTS[tab].l}</h1></div>${renderListTab(tab)}`;
+    const cnt = DB.books().filter((b) => inList(b, tab)).length;
+    const locked = tab === 'private' && Lock.enabled() && !Lock.isOpen('privateBooks');
+    view.innerHTML = `<div class="topbar"><button class="back${sec ? ' mob-only' : ''}" data-act="back" aria-label="Geri">‹</button><h1>${LISTS[tab].e} ${LISTS[tab].l}${cnt && !locked ? ` <span class="h-count">${cnt}</span>` : ''}</h1>${tab === 'library' || tab === 'wish' ? `<a class="btn sm" href="#/new-book?list=${tab}&scan=1" title="Barkodla ekle">📷</a>` : ''}</div>${renderListTab(tab)}`;
     bindListTab(tab);
     return;
   }
@@ -178,9 +185,9 @@ function renderHome(tab = 'all') {
   const bs = all0.filter((b) => ['okunuyor', 'okunacak', 'bitti'].includes(b.status || 'okunacak'));
   const qs = DB.allQuotes();
   const s = DB.getSettings();
-  let h = `<section class="hero"><h1>📚 Kitap & Notlarım</h1><p>Aklınıza gelen bir fikri yazın; hangi kitabın hangi sayfasında olduğunu bulalım.</p>
-    <form class="searchbar" id="home-search"><input name="q" placeholder="Konu, cümle, yazar…" autocomplete="off" enterkeyhint="search"><button>Ara</button></form></section>
-    <div class="quick-links"><a href="#/thoughts" class="ql c5">💡<span>Düşünce yaz</span></a><a href="#/journal" class="ql c3">📔<span>Bugünün günlüğü</span></a><a href="#/new-book?scan=1" class="ql c4">📷<span>Barkodla kitap ekle</span></a></div>
+  let h = `<section class="hero slim"><h1>📚 Kitap & Notlarım</h1>
+    <form class="searchbar" id="home-search"><input name="q" placeholder="Kitap, alıntı, not, fikir ara…" autocomplete="off" enterkeyhint="search"><button>Ara</button></form></section>
+    <div class="qa-row"><a href="#/new-book?scan=1">📷 Barkodla ekle</a><a href="#/thoughts">💡 Düşünce</a><a href="#/journal">📔 Günlük</a><a href="#/notes">📝 Not</a></div>
     ${sectionLinksHtml()}`;
   if (!all0.length) {
     h += `<div class="empty"><div class="e">📖</div><h3>Henüz kitap yok</h3><p>İlk kitabınızı ekleyin. Arka kapaktaki barkodu okutursanız kitap bilgileri kendiliğinden dolar.</p>
@@ -194,7 +201,6 @@ function renderHome(tab = 'all') {
     bindHomeSearch();
     return;
   }
-  h += `<div class="stats"><div class="stat"><b>${all0.length}</b><span>Kitap</span></div><div class="stat"><b>${qs.length}</b><span>Alıntı</span></div><div class="stat"><b>${bs.filter((b) => b.status === 'okunuyor').length}</b><span>Okunuyor</span></div></div>`;
   const due = dueCount();
   if (due) h += `<a class="banner coral" href="#/reread" style="text-decoration:none;color:inherit"><span style="font-size:22px">🔖</span><span class="grow">Bugün tekrar okumanız gereken <b>${due}</b> bölüm var.</span><span>›</span></a>`;
   const total = qs.length + DB.thoughts().length + DB.moments().length;
@@ -214,8 +220,8 @@ function renderHome(tab = 'all') {
   if (!bs.length) h += `<div class="empty small"><div class="e">📖</div><h3>Okuma listeniz boş</h3><p>Kütüphanem'deki ya da yeni eklediğiniz bir kitabı <b>Okunacak</b> ya da <b>Okunuyor</b> olarak işaretleyince burada görünür.</p></div>`;
   groups.forEach(([k, title, list]) => {
     if (!list.length && !(k === 'read' && readAll.length)) return;
-    h += `<div class="section-title">${title} <span class="count">${list.length}</span><a class="see-all" href="#/books/${k}">${k === 'read' ? `Tüm okuduklarım (${readAll.length})` : 'Liste'} ›</a></div>`;
-    h += list.length ? `<div class="book-grid">${list.map(bookCard).join('')}</div>` : '<p class="muted small">Son 3 ayda bitirdiğiniz kitap yok.</p>';
+    h += `<div class="section-title">${title} <span class="count">${list.length}</span><a class="see-all" href="#/books/${k}">${k === 'read' ? `Tümü (${readAll.length})` : 'Tümü'} ›</a></div>`;
+    h += list.length ? `<div class="shelf">${list.map(shelfCard).join('')}</div>` : '<p class="muted small">Son 3 ayda bitirdiğiniz kitap yok.</p>';
   });
   h += `<a class="fab" href="#/new-book">＋ Kitap</a>`;
   view.innerHTML = h;
@@ -795,10 +801,16 @@ function renderMore() {
   const n = dueCount();
   const vis = navOrder();
   const hidden = Object.keys(NAV_ITEMS).filter((k) => !vis.includes(k));
+  const books = DB.books();
+  const cnt = (k) => { if (!LISTS[k]) return ''; if (k === 'private' && Lock.enabled() && !Lock.isOpen('privateBooks')) return '🔒'; return books.filter((b) => inList(b, k)).length; };
+  const row = (k) => `<a href="${NAV_ITEMS[k].h}"><span>${NAV_ITEMS[k].e}</span><b>${NAV_ITEMS[k].full}</b>${k === 'reread' && n ? `<i class="nav-badge" style="position:static">${n}</i>` : `<small class="cnt">${cnt(k)}</small>`}<em>›</em></a>`;
+  const bookKeys = hidden.filter((k) => LISTS[k]);
+  const otherKeys = hidden.filter((k) => !LISTS[k]);
   view.innerHTML = `<div class="topbar"><h1>☰ Diğer</h1></div>
-    <div class="more-list">
-      ${hidden.map((k) => `<a href="${NAV_ITEMS[k].h}"><span>${NAV_ITEMS[k].e}</span><b>${NAV_ITEMS[k].full}</b>${k === 'reread' && n ? `<i class="nav-badge" style="position:static">${n}</i>` : ''}<em>›</em></a>`).join('')}
-      <a href="#/settings"><span>⚙️</span><b>Ayarlar</b><small>Kilit, menü, defterler, yedekleme…</small><em>›</em></a>
+    ${bookKeys.length ? `<div class="set-group">Kitaplarım</div><div class="more-list tight">${bookKeys.map(row).join('')}</div>` : ''}
+    ${otherKeys.length ? `<div class="set-group">Bölümler</div><div class="more-list tight">${otherKeys.map(row).join('')}</div>` : ''}
+    <div class="set-group">Uygulama</div><div class="more-list tight">
+      <a href="#/settings"><span>⚙️</span><b>Ayarlar</b><em>›</em></a>
       <a href="#/settings/guide"><span>📘</span><b>Kullanım kılavuzu</b><em>›</em></a>
       <button data-act="share-app"><span>📤</span><b>Uygulamayı paylaş</b><em>›</em></button>
       <a href="#/privacy"><span>🔐</span><b>Gizlilik politikası</b><em>›</em></a>

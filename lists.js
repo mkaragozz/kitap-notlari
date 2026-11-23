@@ -56,23 +56,22 @@ function miniStars(b, field) {
 
 function listCard(b, key, idx) {
   const read = isRead(b);
-  let side = '';
-  if (key === 'toread') side = `<div class="lc-order"><b>${idx + 1}</b><button class="btn sm" data-act="list-move" data-id="${b.id}" data-d="-1" aria-label="Yukarı">↑</button><button class="btn sm" data-act="list-move" data-id="${b.id}" data-d="1" aria-label="Aşağı">↓</button></div>`;
-  if (key === 'wish') side = `<div class="lc-order"><b>${idx + 1}</b><button class="btn sm" data-act="list-move" data-id="${b.id}" data-d="-1">↑</button><button class="btn sm" data-act="list-move" data-id="${b.id}" data-d="1">↓</button></div>`;
-  const actions = [];
-  if (key === 'ebooks') actions.push(`<a class="btn sm primary" href="#/read/${b.id}">📖 Oku</a>`);
-  if (key === 'library' || key === 'fav' || key === 'private' || key === 'ebooks' || key === 'read') actions.push(`<button class="btn sm ${read ? 'teal' : ''}" data-act="toggle-read" data-id="${b.id}">${read ? '✅ Okudum' : '○ Okumadım'}</button>`);
-  if (key === 'wish') actions.push(`<button class="btn sm teal" data-act="bought" data-id="${b.id}">🛒 Aldım</button>`);
-  if (key === 'toread') actions.push(`<button class="btn sm" data-act="start-reading" data-id="${b.id}">📖 Okumaya başla</button>`);
+  const ordered = key === 'toread' || key === 'wish';
   const starField = key === 'wish' ? 'wishStars' : key === 'toread' ? 'toReadStars' : null;
-  return `<article class="list-card">
-    ${side}
+  let act = '';
+  if (key === 'wish') act = `<button class="lc-act buy" data-act="bought" data-id="${b.id}" title="Aldım: Kütüphanem'e taşı">🛒<small>Aldım</small></button>`;
+  else if (key === 'toread') act = `<button class="lc-act" data-act="start-reading" data-id="${b.id}" title="Okumaya başla">📖<small>Başla</small></button>`;
+  else if (key === 'ebooks' && b.fileId) act = `<a class="lc-act" href="#/read/${b.id}" title="Oku">📖<small>Oku</small></a>`;
+  else if (key !== 'reading') act = `<button class="lc-act chk ${read ? 'on' : ''}" data-act="toggle-read" data-id="${b.id}" title="${read ? 'Okudum (geri almak için dokunun)' : 'Okudum olarak işaretle'}">${read ? '✓' : ''}<small>${read ? 'Okudum' : 'Okumadım'}</small></button>`;
+  const tags = `${topicChips(b)}${key !== 'library' && b.owned ? '<span class="chip own">🏠</span>' : ''}${b.fileId && key !== 'ebooks' ? '<span class="chip filek">📱</span>' : ''}${b.favorite && key !== 'fav' ? '<span class="chip">💎</span>' : ''}`;
+  return `<article class="list-card c">
+    ${ordered ? `<div class="lc-ord"><button data-act="list-move" data-id="${b.id}" data-d="-1" aria-label="Yukarı">▲</button><b>${idx + 1}</b><button data-act="list-move" data-id="${b.id}" data-d="1" aria-label="Aşağı">▼</button></div>` : ''}
     <a class="lc-main" href="#/book/${b.id}">${thumbHtml(b)}<div class="lc-body">
-      <div class="lc-title">${esc(b.title)}${b.fileId ? ' <span title="E-kitap">📱</span>' : ''}${b.favorite && key !== 'fav' ? ' <span title="Seçkin">💎</span>' : ''}</div>
-      <div class="lc-sub">${esc(b.author || '—')}${b.publisher ? ' · ' + esc(b.publisher) : ''}${b.year ? ' · ' + esc(b.year) : ''}</div>
-      <div class="lc-tags">${topicChips(b)}${key !== 'library' && b.owned ? '<span class="chip own">🏠 Kütüphanemde</span>' : ''}${key !== 'toread' && key !== 'reading' && read ? '<span class="chip readc">✅ Okundu</span>' : ''}</div>
+      <div class="lc-title">${esc(b.title)}</div>
+      <div class="lc-sub">${esc(b.author || '—')}</div>
+      ${tags || starField ? `<div class="lc-tags">${starField ? miniStars(b, starField) : ''}${tags}</div>` : ''}
     </div></a>
-    <div class="lc-foot">${starField ? miniStars(b, starField) : ''}<span style="flex:1"></span>${actions.join('')}</div>
+    ${act}
   </article>`;
 }
 
@@ -100,49 +99,45 @@ export function renderListTab(key) {
   else if (tf !== 'all') list = list.filter((b) => (b.topics || []).includes(tf));
   if (key === 'library' && state.read !== 'all') list = list.filter((b) => (state.read === 'read' ? isRead(b) : !isRead(b)));
   list = sortList(list, key);
-  const sortOpts = key === 'toread' ? [['order', 'Okuma sırası (1, 2, 3…)'], ['stars', 'Yıldıza göre'], ['title', 'Ada göre'], ['author', 'Yazara göre']]
-    : key === 'wish' ? [['order', 'Önce almak istediklerim'], ['stars', 'Yıldıza göre'], ['title', 'Ada göre'], ['author', 'Yazara göre']]
-      : [['title', 'Ada göre'], ['author', 'Yazara göre'], ['new', 'Son eklenen']];
+  const sortOpts = key === 'toread' ? [['order', 'Okuma sırası'], ['stars', 'Yıldız'], ['title', 'A-Z'], ['author', 'Yazar']]
+    : key === 'wish' ? [['order', 'Alma sırası'], ['stars', 'Yıldız'], ['title', 'A-Z'], ['author', 'Yazar']]
+      : [['title', 'A-Z'], ['author', 'Yazar'], ['new', 'Son eklenen']];
   const sort = state.sort[key] || sortOpts[0][0];
   const group = !!state.group[key];
   let h = '';
-  const hints = {
-    reading: 'Şu an okuduğunuz kitaplar. Kitabın Bilgiler sekmesinden durumunu değiştirebilirsiniz.',
-    toread: 'Okumak istediğiniz kitaplar. ↑↓ ile okuma sıranızı belirleyin, ⭐ ile önem verin.',
-    read: 'Okuduğunuz bütün kitaplar.',
-    library: 'Evinizdeki kitaplar. Okuduklarınızı “Okudum” olarak işaretleyin; kataloğunuzu PDF olarak alın.',
-    wish: 'Satın almak istediğiniz kitaplar. Aldığınızda “🛒 Aldım”a basın, kitap Kütüphanem\'e geçer.',
-    fav: '“Hayatıma dokundu” dediğiniz kitaplar.',
-    private: 'Herkesin görmesini istemediğiniz kitaplar. Kilitliyken başka hiçbir listede ve aramada görünmez.',
-    ebooks: 'Yüklediğiniz e-kitaplar (PDF, Word, TXT, EPUB). Kitaba dokunup 📖 Oku ile okumaya başlayın.',
-  };
-  h += `<p class="hint">${hints[key]}</p>`;
   if (key === 'private' && !Lock.enabled()) h += `<div class="banner sun small">🔒 Bu bölümü kilitlemek için <a href="#/settings/lock">Ayarlar → Kilit</a>'ten PIN belirleyin.</div>`;
-  if (key === 'library' && total) {
-    const r = all.filter((b) => inList(b, 'library') && isRead(b)).length;
-    h += `<div class="seg read-seg">${[['all', `Hepsi (${total})`], ['read', `✅ Okuduklarım (${r})`], ['unread', `○ Okumadıklarım (${total - r})`]].map(([k, l]) => `<button class="${state.read === k ? 'on' : ''}" data-act="read-filter" data-f="${k}">${l}</button>`).join('')}</div>`;
-  }
-  if (total && topics.length) {
-    h += `<div class="nb-row">${[['all', 'Tüm konular'], ...topics.map((t) => [t.id, `${t.emoji || '🏷️'} ${t.name}`]), ['none', 'Konusuz']].map(([k, l]) => `<button class="nb-chip ${tf === k ? 'on' : ''}" data-act="topic-filter" data-k="${key}" data-t="${k}">${esc(l)}</button>`).join('')}
-      <button class="nb-chip add" data-act="topic-new">＋ Konu</button></div>`;
-  }
   if (total) {
-    h += `<div class="row-actions">
-      <select class="input sm-input" id="list-sort" data-k="${key}" style="width:auto;flex:1">${sortOpts.map(([k, l]) => `<option value="${k}" ${sort === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
-      ${topics.length ? `<button class="btn sm ${group ? 'primary' : ''}" data-act="list-group" data-k="${key}">🗂️ Konulara ayır</button>` : `<button class="btn sm" data-act="topic-new">＋ Konu başlığı</button>`}
-      ${key === 'library' ? `<button class="btn sm teal" data-act="catalog-pdf">🖨️ Katalog</button>` : ''}
-      ${key === 'wish' ? `<button class="btn sm teal" data-act="wish-pdf">🖨️ Alış listesi</button>` : ''}
+    // Araç satırı: sıralama + konulara ayır + çıktı
+    h += `<div class="lt-tools">
+      <label class="lt-sort">⇅<select id="list-sort" data-k="${key}">${sortOpts.map(([k, l]) => `<option value="${k}" ${sort === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      <span style="flex:1"></span>
+      ${topics.length ? `<button class="lt-btn ${group ? 'on' : ''}" data-act="list-group" data-k="${key}" title="Konu başlıklarına ayır">🗂️ <span>Konular</span></button>` : ''}
+      ${key === 'library' ? `<button class="lt-btn" data-act="catalog-pdf" title="Katalog: PDF / yazdır">🖨️ <span>Katalog</span></button>` : ''}
+      ${key === 'wish' ? `<button class="lt-btn" data-act="wish-pdf" title="Alış listesi: PDF / yazdır">🖨️ <span>Liste</span></button>` : ''}
     </div>`;
+    // Süzgeç şeridi: (Kütüphanem'de okundu durumu) | konular
+    const r = key === 'library' ? all.filter((b) => inList(b, 'library') && isRead(b)).length : 0;
+    const readChips = key === 'library' ? [['all', `Hepsi ${total}`], ['read', `✓ Okuduklarım ${r}`], ['unread', `Okumadıklarım ${total - r}`]].map(([k, l]) => `<button class="pill ${state.read === k ? 'on' : ''}" data-act="read-filter" data-f="${k}">${l}</button>`).join('') + '<i class="pill-sep"></i>' : '';
+    const topicChipsRow = topics.length ? [['all', 'Tüm konular'], ...topics.map((t) => [t.id, `${t.emoji || '🏷️'} ${t.name}`]), ['none', 'Konusuz']].map(([k, l]) => `<button class="pill t ${tf === k ? 'on' : ''}" data-act="topic-filter" data-k="${key}" data-t="${k}">${esc(l)}</button>`).join('') : '';
+    h += `<div class="pill-row">${readChips}${topicChipsRow}<button class="pill add" data-act="topic-new">＋ Konu</button></div>`;
   }
   if (!total) {
-    h += `<div class="empty"><div class="e">${LISTS[key].e}</div><h3>${esc(LISTS[key].l)} listesi boş</h3>
+    const tips = {
+      library: 'Evinizdeki kitapları ekleyin; konulara ayırın, okuduklarınızı işaretleyin, kataloğunuzu yazdırın.',
+      wish: 'Almak istediğiniz kitapları ekleyin; aldığınızda tek dokunuşla Kütüphanem\'e geçer.',
+      fav: '“Hayatıma dokundu” dediğiniz kitaplar burada durur. Kitabın Bilgiler sekmesinden “💎 Seçkin”i işaretleyin.',
+      private: 'Herkesin görmesini istemediğiniz kitaplar. Kilitliyken başka hiçbir yerde görünmez.',
+      ebooks: 'PDF, Word, TXT ya da EPUB yükleyin; uygulamanın içinde okuyun.',
+      toread: 'Okumak istediğiniz kitaplar burada sıralanır.', reading: 'Okumaya başladığınız kitaplar burada görünür.', read: 'Bitirdiğiniz kitaplar burada görünür.',
+    };
+    h += `<div class="empty"><div class="e">${LISTS[key].e}</div><h3>${esc(LISTS[key].l)} boş</h3><p>${tips[key] || ''}</p>
       ${key === 'ebooks' ? '<a class="btn primary" href="#/new-book?list=ebooks">📱 E-kitap yükle</a>' : key === 'reading' || key === 'read' ? '' : `<a class="btn primary" href="#/new-book?list=${key}&scan=1">📷 Barkodla ekle</a> <a class="btn" href="#/new-book?list=${key}">✍️ Elle ekle</a>`}</div>`;
   } else if (!list.length) h += `<p class="muted">Bu süzgeçte kitap yok.</p>`;
   else if (group) {
     const groups = [...topics.map((t) => ({ t, items: list.filter((b) => (b.topics || []).includes(t.id)) })), { t: { name: 'Konusuz', emoji: '📂' }, items: list.filter((b) => !(b.topics || []).some((id) => DB.getTopic(id))) }].filter((g) => g.items.length);
-    groups.forEach((g) => { h += `<div class="group-head">${esc(g.t.emoji || '🏷️')} ${esc(g.t.name)} <span class="count">${g.items.length}</span></div>${g.items.map((b, i) => listCard(b, key, i)).join('')}`; });
-  } else h += list.map((b, i) => listCard(b, key, i)).join('');
-  if (['toread', 'library', 'wish', 'private', 'ebooks', 'fav'].includes(key)) h += `<a class="fab" href="#/new-book?list=${key}">${key === 'ebooks' ? '📱 Yükle' : '＋ Ekle'}</a>`;
+    groups.forEach((g) => { h += `<div class="group-head">${esc(g.t.emoji || '🏷️')} ${esc(g.t.name)} <span class="count">${g.items.length}</span></div><div class="lc-list">${g.items.map((b, i) => listCard(b, key, i)).join('')}</div>`; });
+  } else h += `<div class="lc-list">${list.map((b, i) => listCard(b, key, i)).join('')}</div>`;
+  if (['toread', 'library', 'wish', 'private', 'ebooks', 'fav'].includes(key) && total) h += `<a class="fab" href="#/new-book?list=${key}${key === 'ebooks' ? '' : ''}">${key === 'ebooks' ? '📱 Yükle' : '＋ Ekle'}</a>`;
   return h;
 }
 export function bindListTab(key) {
