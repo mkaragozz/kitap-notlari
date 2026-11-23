@@ -16,6 +16,7 @@
 **Bulunamayan örnek ISBN'ler** (ikisi de orijinal baskı; barkod doğru okunuyor, elle yazınca da bulunamıyor):
 - `9786256162990`: Doğan Kitap (978-625-6162-99-0)
 - `9786051982656`: *Yaşamak İçin Nedenler* (978-605-198-265-6), bandrollü
+- `9786254106200`: Pegasus Yayınları, Shane Parrish (978-625-410-620-0), bandrollü
 
 Yeni kaynak eklenirken önce bu iki ISBN ile denenecek.
 
