@@ -1,15 +1,18 @@
-import * as DB from './db.js?v=2.2';
-import * as EX from './export.js?v=2.2';
-import * as Lock from './lock.js?v=2.2';
-import * as Scan from './scanner.js?v=2.2';
+import * as DB from './db.js?v=2.3';
+import * as EX from './export.js?v=2.3';
+import * as Lock from './lock.js?v=2.3';
+import * as Scan from './scanner.js?v=2.3';
 import { $, $$, esc, view, nav, toast, openSheet, closeSheet, confirmDialog, modal, today, fmtDate, norm, highlight,
-  pickFiles, fileToDataUrl, copyText, starPickerHtml, bindStarPicker, longDate, fmtTime } from './ui.js?v=2.2';
+  pickFiles, fileToDataUrl, copyText, starPickerHtml, bindStarPicker, longDate, fmtTime } from './ui.js?v=2.3';
 import { pageNum, sortQuotes, allTags, quoteCard, thoughtCard, thoughtText, openRelated, starFilterHtml, applyStarFilter,
-  tagInputHtml, bindTagInput } from './cards.js?v=2.2';
-import { renderThoughts, renderThought, THOUGHT_ACTIONS } from './thoughts.js?v=2.2';
-import { renderJournal, renderJournalCal, JOURNAL_ACTIONS, getPrompt } from './journal.js?v=2.2';
+  tagInputHtml, bindTagInput } from './cards.js?v=2.3';
+import { renderThoughts, renderThought, THOUGHT_ACTIONS } from './thoughts.js?v=2.3';
+import { renderJournal, renderJournalCal, JOURNAL_ACTIONS, getPrompt, managePrompts } from './journal.js?v=2.3';
+import { renderNotes, renderNotebook, renderShopping, noteCard, nbIsOpen, NOTE_ACTIONS, openNbookEditor, openShopcatEditor, moveOrder, lockKey } from './notes.js?v=2.3';
+import { manageNotebooks as manageThoughtNotebooks } from './thoughts.js?v=2.3';
+import { GUIDE } from './guide.js?v=2.3';
 
-const APP_VERSION = '2.2';
+const APP_VERSION = '2.3';
 window.__knStarted = true; // index.html'deki güvenlik ağı için: modüller sorunsuz yüklendi
 const COLORS = [['#7C5CFF', '#FF5DA2'], ['#FF6B57', '#FFB020'], ['#10B8A6', '#2F9BFF'], ['#FF5DA2', '#FFB020'], ['#2F9BFF', '#7C5CFF'], ['#10B8A6', '#7CD957'], ['#FF8A3D', '#FF5D7A']];
 const TAG_COLORS = ['#7C5CFF', '#FF5DA2', '#10B8A6', '#FF6B57', '#2F9BFF', '#FFB020', '#8E5CF7', '#13A88F'];
@@ -58,16 +61,43 @@ function parseHash() {
   const [path, qs] = h.split('?');
   return { parts: path.split('/').filter(Boolean).map(decodeURIComponent), params: new URLSearchParams(qs || ''), path };
 }
-const NAV_OF = { book: 'home', 'new-book': 'home', thoughts: 'thoughts', thought: 'thoughts', journal: 'journal', 'journal-cal': 'journal', search: 'search', reread: 'reread', tags: 'tags', tag: 'tags', settings: 'settings', more: 'more', privacy: 'more' };
+const NAV_OF = { book: 'home', 'new-book': 'home', notes: 'notes', shopping: 'notes', thoughts: 'thoughts', thought: 'thoughts', journal: 'journal', 'journal-cal': 'journal', search: 'search', reread: 'reread', tags: 'tags', tag: 'tags', settings: 'settings', more: 'more', privacy: 'more' };
+
+// ---- Menü: Ayarlar'dan seçilen bölümler ve sıraları ----
+const NAV_ITEMS = {
+  notes: { e: '📝', l: 'Notlar', full: 'Not Defteri', h: '#/notes' },
+  thoughts: { e: '💡', l: 'Düşünceler', full: 'Düşüncelerim', h: '#/thoughts' },
+  journal: { e: '📔', l: 'Günlük', full: 'Günlük', h: '#/journal' },
+  search: { e: '🔎', l: 'Ara', full: 'Ara', h: '#/search' },
+  reread: { e: '🔖', l: 'Tekrar Oku', full: 'Tekrar Oku', h: '#/reread' },
+  tags: { e: '🏷️', l: 'Etiketler', full: 'Etiketler', h: '#/tags' },
+};
+function navOrder() { return (DB.getSettings().nav || []).filter((k) => NAV_ITEMS[k]); }
+function buildNav() {
+  const vis = navOrder();
+  const rest = Object.keys(NAV_ITEMS).filter((k) => !vis.includes(k));
+  const a = (k, cls = '') => `<a href="${NAV_ITEMS[k].h}" data-nav="${k}" class="${cls}"><span class="ni">${NAV_ITEMS[k].e}</span><span>${NAV_ITEMS[k].l}</span>${k === 'reread' ? '<b class="nav-badge" hidden></b>' : ''}</a>`;
+  $('#nav').innerHTML = `<div class="nav-brand"><span class="logo">📚</span> Kitap & Notlarım</div>
+    <a href="#/" data-nav="home"><span class="ni">📚</span><span>Kitaplar</span></a>
+    ${vis.map((k) => a(k)).join('')}
+    ${rest.map((k) => a(k, 'desk-only')).join('')}
+    <a href="#/settings" data-nav="settings" class="desk-only"><span class="ni">⚙️</span><span>Ayarlar</span></a>
+    <a href="#/more" data-nav="more" class="mob-only"><span class="ni">☰</span><span>Diğer</span><b class="nav-badge" hidden></b></a>`;
+  $('#nav').classList.toggle('n7', vis.length >= 5);
+}
 function route() {
   const { parts, params, path } = parseHash();
   const key = parts.length ? NAV_OF[parts[0]] || 'home' : 'home';
-  $$('.nav a').forEach((a) => a.classList.toggle('active', a.dataset.nav === key || (a.dataset.nav === 'more' && ['reread', 'tags', 'settings', 'more'].includes(key))));
+  const vis = navOrder();
+  $$('.nav a').forEach((a) => a.classList.toggle('active', a.dataset.nav === key || (a.dataset.nav === 'more' && !vis.includes(key) && key !== 'home' && window.innerWidth < 900)));
   try {
     if (!parts.length) renderHome();
     else if (parts[0] === 'book' && parts[2] === 'edit') renderBookForm(parts[1]);
     else if (parts[0] === 'book') renderBook(parts[1]);
     else if (parts[0] === 'new-book') renderBookForm(null, params.get('scan') === '1');
+    else if (parts[0] === 'notes' && parts[1]) renderNotebook(parts[1]);
+    else if (parts[0] === 'notes') renderNotes();
+    else if (parts[0] === 'shopping') renderShopping();
     else if (parts[0] === 'thoughts') renderThoughts();
     else if (parts[0] === 'thought') renderThought(parts[1]);
     else if (parts[0] === 'journal') renderJournal(parts[1]);
@@ -76,7 +106,7 @@ function route() {
     else if (parts[0] === 'reread') renderReread();
     else if (parts[0] === 'tags') renderTags();
     else if (parts[0] === 'tag') renderTag(parts[1]);
-    else if (parts[0] === 'settings') renderSettings();
+    else if (parts[0] === 'settings') renderSettings(parts[1] || '');
     else if (parts[0] === 'more') renderMore();
     else if (parts[0] === 'privacy') renderPrivacy();
     else renderHome();
@@ -87,7 +117,7 @@ function route() {
   if (path !== lastPath) { window.scrollTo(0, 0); lastPath = path; }
   updateBadge();
 }
-const rerender = () => route();
+const rerender = () => { if (!document.querySelector('.sheet.full')) route(); };
 function go(hash) { if (location.hash === hash) route(); else location.hash = hash; }
 nav.go = go; nav.rerender = rerender;
 function updateBadge() {
@@ -109,7 +139,7 @@ function renderHome() {
   const bs = DB.books();
   const qs = DB.allQuotes();
   const s = DB.getSettings();
-  let h = `<section class="hero"><h1>📚 Kitap Notlarım</h1><p>Aklınıza gelen bir fikri yazın; hangi kitabın hangi sayfasında olduğunu bulalım.</p>
+  let h = `<section class="hero"><h1>📚 Kitap & Notlarım</h1><p>Aklınıza gelen bir fikri yazın; hangi kitabın hangi sayfasında olduğunu bulalım.</p>
     <form class="searchbar" id="home-search"><input name="q" placeholder="Konu, cümle, yazar…" autocomplete="off" enterkeyhint="search"><button>Ara</button></form></section>
     <div class="quick-links"><a href="#/thoughts" class="ql c5">💡<span>Düşünce yaz</span></a><a href="#/journal" class="ql c3">📔<span>Bugünün günlüğü</span></a><a href="#/new-book?scan=1" class="ql c4">📷<span>Barkodla kitap ekle</span></a></div>`;
   if (!bs.length) {
@@ -340,14 +370,15 @@ function renderBookForm(id, autoScan = false) {
   };
   const applyInfo = async (isbn, info) => {
     form.isbn.value = isbn;
+    const links = Scan.searchLinksHtml(isbn);
     if (!info) {
-      msg(`Bu ISBN ile kitap bulunamadı (${esc(isbn)}). Bilgileri aşağıya elle yazın.${dupCheck(isbn)}`, 'sun');
-      form.title.focus();
+      msg(`Bu ISBN ile kitap bulunamadı (${esc(isbn)}). İnternette arayıp bilgileri aşağıya elle yazabilirsiniz; bir dahaki sefere bu ISBN okutulunca bilgiler kendiliğinden dolar.${dupCheck(isbn)}${links ? `<div class="row-actions" style="margin:8px 0 0">${links}</div>` : ''}`, 'sun');
       return;
     }
     const n = fill(info);
+    if (!cover && info.cover) setCover(info.cover);
     if (!cover && info.coverUrls && info.coverUrls.length) setCover(await Scan.fetchCover(info.coverUrls));
-    msg(`✓ ${n ? `${n} alan dolduruldu.` : 'Bilgiler zaten dolu.'} Lütfen kontrol edin; eksik olanları (çevirmen, baskı gibi) elle tamamlayın.${dupCheck(isbn)}`);
+    msg(`✓ ${info.fromMemo ? 'Daha önce kaydettiğiniz bilgilerden dolduruldu.' : n ? `${n} alan dolduruldu.` : 'Bilgiler zaten dolu.'} Lütfen kontrol edin; eksik olanları elle tamamlayın.${dupCheck(isbn)}${links && !info.fromMemo ? `<div class="row-actions" style="margin:8px 0 0">${links}</div>` : ''}`);
   };
   const doScan = async () => {
     const r = await Scan.scanAndLookup();
@@ -385,6 +416,7 @@ function renderBookForm(id, autoScan = false) {
     b.cover = cover;
     if (!b.title) { toast('Kitap adı gerekli'); form.title.focus(); return; }
     await DB.saveBook(b);
+    Scan.rememberBook(b).catch(() => {});
     toast(isNew ? 'Kitap eklendi ✓' : 'Kaydedildi ✓');
     if (isNew) location.replace('#/book/' + b.id); else go('#/book/' + b.id);
   };
@@ -503,7 +535,7 @@ function openExport(bookId) {
     const sections = list.map((bk) => ({ book: bk, toc: bk.toc || [], quotes: DB.quotesOf(bk.id) }))
       .filter((sec) => single || sec.quotes.length || sec.book.summary);
     if (!sections.length) { toast('Dışa aktarılacak kayıt yok'); return; }
-    const base = single ? EX.safeName(single.title) + ' - notlar' : 'Kitap Notlarım - ' + today();
+    const base = single ? EX.safeName(single.title) + ' - notlar' : 'Kitap & Notlarım - ' + today();
     try {
       if (b.dataset.f === 'pdf') {
         await closeSheet();
@@ -526,10 +558,13 @@ function renderSearch(q) {
   const terms = norm(q).split(/\s+/).filter((t) => t.length > 0);
   let h = `<div class="topbar"><h1>🔎 Ara</h1></div>
     <form class="searchbar card" id="search-form" style="padding:6px 6px 6px 14px"><input name="q" value="${esc(q)}" placeholder="Konu, fikir, cümle, yazar…" autocomplete="off" enterkeyhint="search"><button>Ara</button></form>`;
-  const open = Lock.isOpen();
-  const lockNote = !open ? `<div class="banner sun small">🔒 Düşünceler ve günlük kilitli olduğu için aramaya dahil edilmedi. <a href="#/thoughts">Kilidi açın</a>, sonra yeniden arayın.</div>` : '';
+  const tOpen = Lock.isOpen('thoughts'), jOpen = Lock.isOpen('journal');
+  const closedNbs = DB.nbooks().filter((n) => !nbIsOpen(n.id));
+  const shut = [!tOpen && 'Düşünceler', !jOpen && 'Günlük', ...closedNbs.map((n) => n.name)].filter(Boolean);
+  const open = !shut.length;
+  const lockNote = shut.length ? `<div class="banner sun small">🔒 Kilitli bölümler aramaya dahil edilmedi: ${esc(shut.join(', '))}. <button class="btn sm" data-act="unlock-search">Kilidi aç</button></div>` : '';
   if (!q) {
-    h += `<div class="empty"><div class="e">💡</div><h3>Aklınıza ne geldi?</h3><p>Bir kelime, konu ya da hatırladığınız bir cümle yazın. Alıntılarda, yorumlarınızda, etiketlerde, içindekiler başlıklarında${open ? ', düşüncelerinizde ve günlüğünüzde' : ''} aranır.</p></div>${lockNote}`;
+    h += `<div class="empty"><div class="e">💡</div><h3>Aklınıza ne geldi?</h3><p>Bir kelime, konu ya da hatırladığınız bir cümle yazın. Kitaplarda, alıntılarda, yorumlarda, etiketlerde, notlarda${open ? ', düşüncelerinizde ve günlüğünüzde' : ''} aranır.</p></div>${lockNote}`;
     view.innerHTML = h; bindSearch(); return;
   }
   const match = (hay) => { const n = norm(hay); return terms.every((t) => n.includes(t)); };
@@ -542,11 +577,12 @@ function renderSearch(q) {
     const sa = terms.filter((t) => norm(a.text).includes(t)).length, sc = terms.filter((t) => norm(c.text).includes(t)).length;
     return sc - sa || (c.stars || 0) - (a.stars || 0) || (c.updatedAt || '').localeCompare(a.updatedAt || '');
   });
-  const tHits = open ? DB.thoughts().filter((t) => match([t.title, thoughtText(t), (t.tags || []).join(' ')].join(' '))) : [];
-  const mHits = open ? DB.moments().filter((m) => match(m.text)).sort((a, b) => (b.at || '').localeCompare(a.at || '')) : [];
+  const nHits = DB.allNotes().filter((n) => nbIsOpen(n.nbId) && match([n.title, n.text].join(' '))).sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+  const tHits = tOpen ? DB.thoughts().filter((t) => match([t.title, thoughtText(t), (t.tags || []).join(' ')].join(' '))) : [];
+  const mHits = jOpen ? DB.moments().filter((m) => match(m.text)).sort((a, b) => (b.at || '').localeCompare(a.at || '')) : [];
 
   h += lockNote;
-  if (!bookHits.length && !tocHits.length && !qHits.length && !tHits.length && !mHits.length) h += `<div class="empty"><div class="e">🤔</div><h3>Sonuç bulunamadı</h3><p>Daha kısa ya da farklı bir kelime deneyin.</p></div>`;
+  if (!bookHits.length && !tocHits.length && !qHits.length && !tHits.length && !mHits.length && !nHits.length) h += `<div class="empty"><div class="e">🤔</div><h3>Sonuç bulunamadı</h3><p>Daha kısa ya da farklı bir kelime deneyin.</p></div>`;
   if (bookHits.length) h += `<div class="section-title">📘 Kitaplar <span class="count">${bookHits.length}</span></div><div class="book-grid">${bookHits.map(bookCard).join('')}</div>`;
   if (tocHits.length) {
     h += `<div class="section-title">📑 İçindekiler’de geçiyor <span class="count">${tocHits.length}</span></div><div class="card"><ul class="toc-list">`;
@@ -557,6 +593,7 @@ function renderSearch(q) {
     h += `<div class="section-title">✍️ Alıntılar <span class="count">${qHits.length}</span></div><div class="row-actions">${starFilterHtml(searchFilter.stars, 'search-sfilter')}</div>`;
     h += qHits.slice(0, 100).map((x) => quoteCard(x, { showBook: true, terms })).join('') || '<p class="muted">Bu filtrede alıntı yok.</p>';
   }
+  if (nHits.length) h += `<div class="section-title">📝 Notlar <span class="count">${nHits.length}</span></div>${nHits.slice(0, 60).map((n) => noteCard(n, { showNb: true, terms })).join('')}`;
   if (tHits.length) h += `<div class="section-title">💡 Düşünceler <span class="count">${tHits.length}</span></div>${tHits.slice(0, 60).map((t) => thoughtCard(t, { terms })).join('')}`;
   if (mHits.length) {
     h += `<div class="section-title">📔 Günlük <span class="count">${mHits.length}</span></div>`;
@@ -615,14 +652,14 @@ function renderTags() {
   if (!tags.length) h += `<div class="empty"><div class="e">🏷️</div><h3>Henüz etiket yok</h3><p>Alıntılarınıza ve düşüncelerinize “özgürlük”, “liderlik”, “zaman” gibi konu etiketleri ekleyin. Aynı konunun farklı kitaplarda ve düşüncelerinizde nerelerde geçtiğini burada görürsünüz.</p></div>`;
   else {
     const max = tags[0][1];
-    h += `<p class="hint">Bir etikete dokunduğunuzda o konunun geçtiği tüm alıntılar${Lock.isOpen() ? ' ve düşünceler' : ''} listelenir.</p><div class="tag-cloud">${tags.map(([t, n], i) => `<a href="#/tag/${encodeURIComponent(t)}" style="background:${TAG_COLORS[i % TAG_COLORS.length]};font-size:${13 + Math.round((n / max) * 7)}px">#${esc(t)} <small style="opacity:.85">${n}</small></a>`).join('')}</div>`;
+    h += `<p class="hint">Bir etikete dokunduğunuzda o konunun geçtiği tüm alıntılar${Lock.isOpen('thoughts') ? ' ve düşünceler' : ''} listelenir.</p><div class="tag-cloud">${tags.map(([t, n], i) => `<a href="#/tag/${encodeURIComponent(t)}" style="background:${TAG_COLORS[i % TAG_COLORS.length]};font-size:${13 + Math.round((n / max) * 7)}px">#${esc(t)} <small style="opacity:.85">${n}</small></a>`).join('')}</div>`;
   }
   view.innerHTML = h;
 }
 function renderTag(tag) {
   const qs = DB.allQuotes().filter((q) => (q.tags || []).includes(tag));
   const ts = DB.thoughts().filter((t) => (t.tags || []).includes(tag));
-  const open = Lock.isOpen();
+  const open = Lock.isOpen('thoughts');
   const byBook = new Map();
   qs.forEach((q) => { if (!byBook.has(q.bookId)) byBook.set(q.bookId, []); byBook.get(q.bookId).push(q); });
   let h = `<div class="topbar"><button class="back" data-act="back" aria-label="Geri">‹</button><h1>#${esc(tag)}</h1></div>
@@ -636,18 +673,20 @@ function renderTag(tag) {
   view.innerHTML = h;
 }
 
-// ================= Diğer, Ayarlar, Gizlilik =================
+// ================= Diğer, Ayarlar, Gizlilik, Kılavuz =================
 function renderMore() {
   const n = dueCount();
+  const vis = navOrder();
+  const hidden = Object.keys(NAV_ITEMS).filter((k) => !vis.includes(k));
   view.innerHTML = `<div class="topbar"><h1>☰ Diğer</h1></div>
     <div class="more-list">
-      <a href="#/reread"><span>🔖</span><b>Tekrar Oku</b>${n ? `<i class="nav-badge" style="position:static">${n}</i>` : ''}<em>›</em></a>
-      <a href="#/tags"><span>🏷️</span><b>Etiketler</b><em>›</em></a>
-      <a href="#/settings"><span>⚙️</span><b>Ayarlar</b><small>PIN kilidi, yedekleme, yükleme</small><em>›</em></a>
+      ${hidden.map((k) => `<a href="${NAV_ITEMS[k].h}"><span>${NAV_ITEMS[k].e}</span><b>${NAV_ITEMS[k].full}</b>${k === 'reread' && n ? `<i class="nav-badge" style="position:static">${n}</i>` : ''}<em>›</em></a>`).join('')}
+      <a href="#/settings"><span>⚙️</span><b>Ayarlar</b><small>Kilit, menü, defterler, yedekleme…</small><em>›</em></a>
+      <a href="#/settings/guide"><span>📘</span><b>Kullanım kılavuzu</b><em>›</em></a>
       <button data-act="share-app"><span>📤</span><b>Uygulamayı paylaş</b><em>›</em></button>
       <a href="#/privacy"><span>🔐</span><b>Gizlilik politikası</b><em>›</em></a>
     </div>
-    <p class="hint" style="text-align:center">Kitap Notlarım · sürüm ${APP_VERSION}</p>`;
+    <p class="hint" style="text-align:center">Kitap & Notlarım · sürüm ${APP_VERSION}</p>`;
 }
 
 let installEvt = null;
@@ -667,50 +706,157 @@ function installCardHtml() {
   return `<div class="card"><b>📲 Uygulama olarak yükle</b>${how}<button class="btn block mt" data-act="share-app">📤 Uygulamayı paylaş</button></div>`;
 }
 
-async function renderSettings() {
+const SETTINGS_PAGES = [
+  ['Kişiselleştirme', [
+    ['lock', '🔒', 'Kilit', 'PIN, kilitli bölümler, kurtarma kodu'],
+    ['menu', '🧭', 'Menü', 'Alt menüde görünen bölümler ve sırası'],
+    ['barcode', '📷', 'Barkod ve kitap arama', 'Titreşim, ses, arama düğmeleri'],
+  ]],
+  ['İçerik', [
+    ['notebooks', '📝', 'Not defterleri', 'Defterler ve alışveriş kategorileri'],
+    ['@thought-nbs', '💡', 'Düşünce defterleri', 'Ekle, adlandır, sil'],
+    ['@journal-prompts', '📔', 'Günlük başlıkları', 'Ekle, emoji, gizle'],
+  ]],
+  ['Veri', [
+    ['backup', '💾', 'Yedekleme ve aktarım', 'Telefon ↔ bilgisayar'],
+    ['export', '⬇️', 'Dışa aktarma', 'PDF, Word, Excel'],
+  ]],
+  ['Uygulama', [
+    ['install', '📲', 'Yükle ve paylaş', 'Ana ekrana ekleme, paylaşma'],
+    ['guide', '📘', 'Kullanım kılavuzu', 'Adım adım anlatım, sık sorulanlar'],
+    ['@privacy', '🔐', 'Gizlilik politikası', ''],
+    ['danger', '⚠️', 'Verileri sil', ''],
+  ]],
+];
+const SETTINGS_TITLES = Object.fromEntries(SETTINGS_PAGES.flatMap(([, items]) => items.map(([k, e, t]) => [k, `${e} ${t}`])));
+
+async function renderSettings(sub = '') {
+  const top = (title) => `<div class="topbar"><button class="back" data-act="back" aria-label="Geri">‹</button><h1>${title}</h1></div>`;
+  if (!sub) {
+    view.innerHTML = `<div class="topbar"><button class="back mob-only" data-act="back" aria-label="Geri">‹</button><h1>⚙️ Ayarlar</h1></div>
+      ${SETTINGS_PAGES.map(([group, items]) => `<div class="set-group">${group}</div><div class="more-list">${items.map(([k, e, t, d]) => {
+        const attr = k === '@privacy' ? 'href="#/privacy"' : k.startsWith('@') ? `href="#" data-act="set-open" data-k="${k.slice(1)}"` : `href="#/settings/${k}"`;
+        return `<a ${attr}><span>${e}</span><b>${t}</b>${d ? `<small>${d}</small>` : ''}<em>›</em></a>`;
+      }).join('')}</div>`).join('')}
+      <p class="hint" style="text-align:center;margin-top:18px">Kitap & Notlarım · sürüm ${APP_VERSION}</p>`;
+    return;
+  }
   const s = DB.getSettings();
-  let persisted = null;
-  try { persisted = navigator.storage && navigator.storage.persisted ? await navigator.storage.persisted() : null; } catch (e) { /* yok */ }
-  const pinOn = Lock.enabled();
-  const counts = `${DB.books().length} kitap, ${DB.allQuotes().length} alıntı, ${DB.thoughts().length} düşünce, ${DB.moments().length} günlük yazısı`;
-  view.innerHTML = `<div class="topbar"><button class="back mob-only" data-act="back" aria-label="Geri">‹</button><h1>⚙️ Ayarlar</h1></div>
-  ${installCardHtml()}
-  <div class="card"><b>🔒 PIN kilidi</b>
-    <p class="hint">Açıkken <b>💡 Düşünceler</b> ve <b>📔 Günlük</b> bölümlerine girerken 4 haneli PIN sorulur. Kitaplar serbest kalır. Uygulamayı 5 dakika kullanmazsanız ya da kapatırsanız kilit yeniden devreye girer.</p>
-    ${pinOn ? `<p class="small">Durum: <b style="color:var(--teal)">Açık</b></p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="pin-change" style="flex:1">🔁 PIN'i değiştir</button><button class="btn danger" data-act="pin-off" style="flex:1">Kilidi kapat</button></div>`
-      : `<p class="small">Durum: <b>Kapalı</b></p><button class="btn primary block" data-act="pin-on">🔒 PIN kilidini aç</button>`}
-    <p class="hint mt">Bu kilit, telefonunuzu eline alan birinin bu bölümleri açmasını engeller; verileriniz cihazda şifrelenmiş değildir.</p></div>
-  <div class="card"><b>💾 Yedekleme ve telefon ↔ bilgisayar aktarımı</b>
-    <p class="hint">Verileriniz yalnızca bu cihazda saklanır (${counts}). Başka bir cihaza taşımak için: bu cihazda <b>Yedek al</b> → dosyayı diğer cihaza gönderin (Drive, WhatsApp, e-posta, USB) → orada <b>Yedeği içe aktar</b>. Kayıtlar birleştirilir; aynı kayıt varsa en son düzenlenen kalır. Yedek dosyası düşünceleri, günlüğü ve fotoğrafları da içerir; güvendiğiniz yerlere gönderin.</p>
-    <p class="small">Son yedek: <b>${s.lastBackup ? fmtDate(s.lastBackup) : 'hiç alınmadı'}</b>${persisted === true ? ' · 🔒 Kalıcı depolama açık' : ''}</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn teal" data-act="backup" style="flex:1">📤 Yedek al</button><button class="btn" data-act="restore" style="flex:1">📥 Yedeği içe aktar</button></div></div>
-  <div class="card"><b>⬇️ Tüm kitap notlarını dışa aktar</b>
-    <p class="hint">Tüm kitapların alıntılarını tek bir PDF, Word ya da Excel dosyası olarak alın. Düşünceler ve günlük kendi sayfalarından dışa aktarılır.</p>
-    <button class="btn block" data-act="export-all">📦 Tüm notlar</button></div>
-  <div class="card"><b>🔐 Gizlilik</b><p class="hint">Uygulama hiçbir sunucuya veri göndermez; hesap, reklam ya da takip yoktur.</p><a class="btn block" href="#/privacy">Gizlilik politikasını oku</a></div>
-  <div class="card"><b>⚠️ Tehlikeli bölge</b><p class="hint">Bu cihazdaki tüm kitap, alıntı, düşünce ve günlük kayıtlarını siler. Önce yedek alın.</p><button class="btn danger block" data-act="wipe">🗑️ Tüm verileri sil</button></div>
-  <p class="hint" style="text-align:center">Kitap Notlarım · sürüm ${APP_VERSION}</p>`;
+  let h = top(SETTINGS_TITLES[sub] || '⚙️ Ayarlar');
+  if (sub === 'lock') {
+    const pinOn = Lock.enabled();
+    const sections = [['journal', '📔 Günlük'], ['thoughts', '💡 Düşüncelerim'], ...DB.nbooks().map((n) => [lockKey(n.id), `${n.emoji || '📓'} ${n.name}`]), ['shopping', '🛒 Alışveriş Listem']];
+    h += `<div class="card"><b>PIN</b>
+      <p class="hint">Tüm kilitli bölümler için <b>tek PIN</b> ve <b>tek kurtarma kodu</b> kullanılır. Kilidi bir kez açınca tüm kilitli bölümler açılır.</p>
+      ${pinOn ? `<p class="small">Durum: <b style="color:var(--teal)">Açık</b></p><div class="row-actions"><button class="btn" data-act="pin-change" style="flex:1">🔁 PIN'i değiştir</button><button class="btn" data-act="pin-regen" style="flex:1">🔑 Kurtarma kodunu yenile</button></div><button class="btn danger block" data-act="pin-off">Kilidi tamamen kapat</button>`
+        : `<p class="small">Durum: <b>Kapalı</b></p><button class="btn primary block" data-act="pin-on">🔒 PIN kilidini aç</button>`}</div>
+      <div class="card"><b>Kilitli bölümler</b><p class="hint">İşaretli bölümlere girerken PIN sorulur.${pinOn ? '' : ' (PIN açıldığında geçerli olur.)'}</p>
+        ${sections.map(([k, l]) => `<label class="check"><input type="checkbox" data-lock="${esc(k)}" ${Lock.isLockedSection(k) ? 'checked' : ''}> ${esc(l)}</label>`).join('')}</div>
+      <div class="card"><label class="field"><span>Kullanılmazsa yeniden kilitle</span><select id="lock-min">${[1, 5, 15, 30, 60].map((m) => `<option value="${m}" ${String(s.lockMinutes) === String(m) ? 'selected' : ''}>${m} dakika sonra</option>`).join('')}</select></label>
+        <p class="hint">Uygulamayı kapattığınızda kilit her zaman yeniden devreye girer. Bu kilit meraklı gözlere karşıdır; veriler cihazda şifrelenmiş değildir.</p></div>`;
+  } else if (sub === 'menu') {
+    const vis = navOrder();
+    const all = [...vis, ...Object.keys(NAV_ITEMS).filter((k) => !vis.includes(k))];
+    h += `<p class="hint">Alt menüde <b>📚 Kitaplar</b> ve <b>☰ Diğer</b> her zaman vardır. Aşağıdan diğer bölümleri seçin ve sıralayın; işaretli olmayanlar <b>☰ Diğer</b> sayfasında durur. Telefonda en fazla 4 bölüm rahat sığar.</p>
+      <div class="card">${all.map((k) => {
+        const on = vis.includes(k), i = vis.indexOf(k);
+        return `<div class="order-row"><label class="check" style="flex:1"><input type="checkbox" data-navk="${k}" ${on ? 'checked' : ''}> ${NAV_ITEMS[k].e} ${NAV_ITEMS[k].full}</label>
+          ${on ? `<button class="btn sm" data-act="nav-move" data-k="${k}" data-d="-1" ${i === 0 ? 'disabled' : ''} aria-label="Yukarı">↑</button><button class="btn sm" data-act="nav-move" data-k="${k}" data-d="1" ${i === vis.length - 1 ? 'disabled' : ''} aria-label="Aşağı">↓</button>` : ''}</div>`;
+      }).join('')}</div>
+      <button class="btn block" data-act="nav-reset">Varsayılana dön</button>`;
+  } else if (sub === 'barcode') {
+    const links = s.searchLinks || [];
+    h += `<div class="card"><b>Okuyunca</b>
+        <label class="check"><input type="checkbox" data-set="scanVibrate" ${s.scanVibrate ? 'checked' : ''}> 📳 Titreşim</label>
+        <label class="check"><input type="checkbox" data-set="scanBeep" ${s.scanBeep ? 'checked' : ''}> 🔊 Kısa ses</label></div>
+      <div class="card"><b>Kitap bulunamayınca çıkacak arama düğmeleri</b><p class="hint">Düğme, kitabın ISBN'i ile o sitenin arama sayfasını açar.</p>
+        ${Object.entries(Scan.SEARCH_SITES).map(([k, v]) => `<label class="check"><input type="checkbox" data-link="${k}" ${links.includes(k) ? 'checked' : ''}> 🔎 ${esc(v.l)}</label>`).join('')}</div>
+      <div class="card"><b>ISBN hafızası</b><p class="hint">Elle girdiğiniz kitap bilgileri, aynı ISBN tekrar okutulunca kullanılmak üzere saklanır (${DB.S.isbnmemo ? [...DB.S.isbnmemo.values()].filter((x) => !x.deleted).length : 0} kayıt). Yedeğe dahildir.</p></div>`;
+  } else if (sub === 'notebooks') {
+    const nbs = DB.nbooks(), cats = DB.shopcats();
+    h += `<div class="card"><b>📝 Not defterleri</b><p class="hint">Hazır defterler (Genel Notlar, Özel Notlar) silinemez; adı ve simgesi değiştirilebilir.</p>
+        ${nbs.map((n, i) => `<div class="order-row"><span style="flex:1">${esc(n.emoji || '📓')} ${esc(n.name)}${Lock.isLockedSection(lockKey(n.id)) ? ' 🔒' : ''} <small class="muted">${DB.notesOf(n.id).length} not</small></span>
+          <button class="btn sm" data-act="nbook-move" data-id="${n.id}" data-d="-1" ${i === 0 ? 'disabled' : ''}>↑</button><button class="btn sm" data-act="nbook-move" data-id="${n.id}" data-d="1" ${i === nbs.length - 1 ? 'disabled' : ''}>↓</button>
+          <button class="btn sm" data-act="set-nbook-edit" data-id="${n.id}">✏️</button></div>`).join('')}
+        <button class="btn primary block mt" data-act="set-nbook-new">＋ Not Defteri</button></div>
+      <div class="card"><b>🛒 Alışveriş kategorileri</b>
+        ${cats.length ? cats.map((c, i) => `<div class="order-row"><span style="flex:1">${esc(c.emoji || '🛒')} ${esc(c.name)}</span>
+          <button class="btn sm" data-act="shopcat-move" data-id="${c.id}" data-d="-1" ${i === 0 ? 'disabled' : ''}>↑</button><button class="btn sm" data-act="shopcat-move" data-id="${c.id}" data-d="1" ${i === cats.length - 1 ? 'disabled' : ''}>↓</button>
+          <button class="btn sm" data-act="set-shopcat-edit" data-id="${c.id}">✏️</button></div>`).join('') : '<p class="hint">Henüz kategori yok.</p>'}
+        <button class="btn block mt" data-act="set-shopcat-new">＋ Kategori</button></div>`;
+  } else if (sub === 'backup') {
+    let persisted = null;
+    try { persisted = navigator.storage && navigator.storage.persisted ? await navigator.storage.persisted() : null; } catch (e) { /* yok */ }
+    const counts = `${DB.books().length} kitap, ${DB.allQuotes().length} alıntı, ${DB.allNotes().length} not, ${DB.thoughts().length} düşünce, ${DB.moments().length} günlük yazısı`;
+    h += `<div class="card"><p class="hint" style="margin-top:0">Verileriniz yalnızca bu cihazda saklanır (${counts}). Başka bir cihaza taşımak için: bu cihazda <b>Yedek al</b> → dosyayı diğer cihaza gönderin (Drive, WhatsApp, e-posta, USB) → orada <b>Yedeği içe aktar</b>. Kayıtlar birleştirilir; aynı kayıt varsa en son düzenlenen kalır.</p>
+      <p class="hint">Yedek dosyası günlüğü, fotoğrafları ve özel notları da içerir; güvendiğiniz yerlere gönderin. PIN ve ayarlar yedeğe girmez.</p>
+      <p class="small">Son yedek: <b>${s.lastBackup ? fmtDate(s.lastBackup) : 'hiç alınmadı'}</b>${persisted === true ? ' · 🔒 Kalıcı depolama açık' : ''}</p>
+      <div class="row-actions"><button class="btn teal" data-act="backup" style="flex:1">📤 Yedek al</button><button class="btn" data-act="restore" style="flex:1">📥 Yedeği içe aktar</button></div></div>`;
+  } else if (sub === 'export') {
+    h += `<div class="card"><b>📚 Tüm kitap notları</b><p class="hint">Tüm kitapların alıntılarını tek bir PDF, Word ya da Excel dosyası olarak alın.</p><button class="btn block" data-act="export-all">📦 Tüm notlar</button></div>
+      <div class="card"><b>💡 Düşünceler</b><p class="hint">Düşüncelerim sayfasındaki ⬇️ düğmesinden.</p><a class="btn block" href="#/thoughts">Düşüncelerime git</a></div>
+      <div class="card"><b>📔 Günlük</b><p class="hint">Takvimdeki “⬇️ Bu ayı dışa aktar” düğmesinden.</p><a class="btn block" href="#/journal-cal">Takvime git</a></div>`;
+  } else if (sub === 'install') {
+    h += installCardHtml();
+  } else if (sub === 'guide') {
+    renderGuide(); return;
+  } else if (sub === 'danger') {
+    h += `<div class="card"><b>⚠️ Tüm verileri sil</b><p class="hint">Bu cihazdaki tüm kitap, alıntı, not, düşünce, günlük ve alışveriş kayıtlarını kalıcı olarak siler. Geri alınamaz. Önce yedek alın.</p>
+      <button class="btn block" data-act="backup">📤 Önce yedek al</button><button class="btn danger block mt" data-act="wipe">🗑️ Tüm verileri sil</button></div>`;
+  } else { go('#/settings'); return; }
+  view.innerHTML = h;
+  bindSettings(sub);
 }
 
-function renderPrivacy() {
-  view.innerHTML = `<div class="topbar"><button class="back" data-act="back" aria-label="Geri">‹</button><h1>🔐 Gizlilik</h1></div>
-    <div class="card prose">${PRIVACY_HTML}</div>`;
+function bindSettings(sub) {
+  view.querySelectorAll('[data-lock]').forEach((c) => { c.onchange = () => { Lock.setSectionLocked(c.dataset.lock, c.checked); toast('Kaydedildi ✓'); }; });
+  const lm = $('#lock-min'); if (lm) lm.onchange = () => { DB.setSettings({ lockMinutes: parseInt(lm.value, 10) }); toast('Kaydedildi ✓'); };
+  view.querySelectorAll('[data-set]').forEach((c) => { c.onchange = () => { DB.setSettings({ [c.dataset.set]: c.checked }); toast('Kaydedildi ✓'); }; });
+  view.querySelectorAll('[data-link]').forEach((c) => {
+    c.onchange = () => {
+      const cur = new Set(DB.getSettings().searchLinks || []);
+      if (c.checked) cur.add(c.dataset.link); else cur.delete(c.dataset.link);
+      DB.setSettings({ searchLinks: Object.keys(Scan.SEARCH_SITES).filter((k) => cur.has(k)) }); toast('Kaydedildi ✓');
+    };
+  });
+  view.querySelectorAll('[data-navk]').forEach((c) => {
+    c.onchange = () => {
+      let cur = navOrder();
+      if (c.checked) cur.push(c.dataset.navk); else cur = cur.filter((k) => k !== c.dataset.navk);
+      DB.setSettings({ nav: cur }); buildNav(); rerender();
+    };
+  });
+  void sub;
 }
-const PRIVACY_HTML = `<h3>Kitap Notlarım gizlilik politikası</h3>
-  <p><b>Kısaca:</b> Yazdığınız her şey yalnızca sizin cihazınızda saklanır. Uygulama hiçbir sunucuya veri göndermez, hesap açtırmaz, reklam ya da takip aracı içermez.</p>
-  <h4>Hangi veriler saklanır?</h4>
-  <p>Eklediğiniz kitaplar, alıntılar, yorumlar, düşünceler, günlük yazıları ve fotoğraflar, cihazınızdaki tarayıcı depolamasında (IndexedDB) tutulur. Bu verilere yalnızca siz erişebilirsiniz.</p>
-  <h4>İnternete ne gönderilir?</h4>
-  <p>Yalnızca barkod okuttuğunuzda ya da ISBN aradığınızda, kitap bilgisini bulmak için <b>ISBN numarası</b> Open Library (openlibrary.org) ve Google Books (googleapis.com) servislerine gönderilir. Bu isteklerde kişisel bilginiz yer almaz. Yazı tipleri Google Fonts'tan, Word ve Excel kütüphaneleri dışa aktarma sırasında jsDelivr ve cdnjs'den yüklenir.</p>
-  <h4>Kamera</h4>
-  <p>Kamera yalnızca barkod okuturken ve günlüğe fotoğraf eklerken, sizin izninizle kullanılır. Görüntüler cihazdan dışarı gönderilmez.</p>
-  <h4>PIN kilidi</h4>
-  <p>PIN'iniz cihazda açık metin olarak değil, tek yönlü özet (SHA-256) olarak saklanır.</p>
-  <h4>Yedekler</h4>
-  <p>“Yedek al” ile oluşturduğunuz dosya tüm verilerinizi içerir ve nereye göndereceğinize siz karar verirsiniz.</p>
-  <h4>Verilerin silinmesi</h4>
-  <p>Ayarlar → “Tüm verileri sil” ile ya da uygulamayı kaldırıp tarayıcı verilerini temizleyerek tüm kayıtlarınızı silebilirsiniz.</p>
-  <h4>Çocuklar</h4><p>Uygulama kişisel veri toplamadığı için yaş sınırlaması gerektiren bir veri işleme yapmaz.</p>`;
+
+function renderGuide() {
+  const q = guideState.q;
+  const terms = norm(q).split(/\s+/).filter(Boolean);
+  const list = GUIDE.filter((g) => !terms.length || terms.every((t) => norm(g.t + ' ' + g.h.replace(/<[^>]+>/g, ' ')).includes(t)));
+  view.innerHTML = `<div class="topbar"><button class="back" data-act="back" aria-label="Geri">‹</button><h1>📘 Kullanım kılavuzu</h1></div>
+    <input class="input" id="guide-q" placeholder="Kılavuzda ara… (ör. barkod, PIN, yedek)" value="${esc(q)}" style="margin-bottom:12px">
+    ${list.length ? list.map((g) => `<details class="card guide" ${terms.length || guideState.open === g.id ? 'open' : ''} data-g="${g.id}"><summary><span>${g.e}</span> ${esc(g.t)}</summary><div class="prose">${g.h}</div></details>`).join('')
+      : '<p class="muted">Aramanızla eşleşen konu yok.</p>'}
+    <p class="hint" style="text-align:center">Sorunuzun cevabı burada yoksa: <a href="#/privacy">Gizlilik politikası</a>'ndaki iletişim adresine yazabilirsiniz.</p>`;
+  const inp = $('#guide-q');
+  inp.oninput = () => { guideState.q = inp.value; const pos = inp.selectionStart; renderGuide(); const g = $('#guide-q'); g.focus(); g.setSelectionRange(pos, pos); };
+  view.querySelectorAll('details.guide').forEach((d) => d.addEventListener('toggle', () => { if (d.open) guideState.open = d.dataset.g; }));
+}
+const guideState = { q: '', open: null };
+
+let privacyCache = null;
+async function renderPrivacy() {
+  view.innerHTML = `<div class="topbar"><button class="back" data-act="back" aria-label="Geri">‹</button><h1>🔐 Gizlilik</h1></div><div class="card prose" id="privacy-box"><div class="loading-box"><div class="spinner"></div></div></div>`;
+  try {
+    if (!privacyCache) {
+      const html = await (await fetch('privacy.html')).text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const main = doc.querySelector('#policy');
+      privacyCache = main ? main.innerHTML : '';
+    }
+    const box = $('#privacy-box'); if (box) box.innerHTML = privacyCache || '<p>Gizlilik politikası yüklenemedi.</p>';
+  } catch (e) { const box = $('#privacy-box'); if (box) box.innerHTML = '<p>Gizlilik politikası şu an açılamadı. İnternete bağlanıp yeniden deneyin.</p>'; }
+}
 
 async function doBackup() {
   const data = DB.exportBackup();
@@ -729,7 +875,7 @@ async function doRestore() {
   } catch (err) { toast(err.message || 'Dosya okunamadı', 5000); }
 }
 async function shareApp() {
-  const data = { title: 'Kitap Notlarım', text: 'Kitaplardan alıntılarınızı sayfa numarasıyla saklayın; düşünce ve günlük tutun.', url: appUrl() };
+  const data = { title: 'Kitap & Notlarım', text: 'Kitaplardan alıntılarınızı sayfa numarasıyla saklayın; düşünce ve günlük tutun.', url: appUrl() };
   try { if (navigator.share) { await navigator.share(data); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
   copyText(data.url);
 }
@@ -738,6 +884,22 @@ async function shareApp() {
 const ACTIONS = {
   ...THOUGHT_ACTIONS,
   ...JOURNAL_ACTIONS,
+  ...NOTE_ACTIONS,
+  'set-open': (el, e) => { e.preventDefault(); if (el.dataset.k === 'thought-nbs') manageThoughtNotebooks(); if (el.dataset.k === 'journal-prompts') managePrompts(); },
+  'pin-regen': () => Lock.regenCode(),
+  'unlock-search': () => Lock.unlockFlow(() => rerender()),
+  'nav-move': (el) => {
+    const cur = navOrder(); const i = cur.indexOf(el.dataset.k); const j = i + parseInt(el.dataset.d, 10);
+    if (i < 0 || j < 0 || j >= cur.length) return;
+    [cur[i], cur[j]] = [cur[j], cur[i]]; DB.setSettings({ nav: cur }); buildNav(); rerender();
+  },
+  'nav-reset': () => { DB.setSettings({ nav: ['notes', 'thoughts', 'journal', 'search'] }); buildNav(); rerender(); toast('Varsayılan menü ✓'); },
+  'nbook-move': async (el) => { await moveOrder('nbooks', DB.nbooks(), el.dataset.id, parseInt(el.dataset.d, 10)); rerender(); },
+  'shopcat-move': async (el) => { await moveOrder('shopcats', DB.shopcats(), el.dataset.id, parseInt(el.dataset.d, 10)); rerender(); },
+  'set-nbook-edit': (el) => openNbookEditor(el.dataset.id, rerender),
+  'set-nbook-new': () => openNbookEditor(null, rerender),
+  'set-shopcat-edit': (el) => openShopcatEditor(el.dataset.id, rerender),
+  'set-shopcat-new': () => openShopcatEditor(null, rerender),
   'close-sheet': () => closeSheet(),
   back: () => { if (history.length > 1) history.back(); else go('#/'); },
   tab: (el) => { bookTab[view.dataset.book] = el.dataset.tab; rerender(); },
@@ -775,7 +937,7 @@ const ACTIONS = {
   backup: () => doBackup(),
   restore: () => doRestore(),
   wipe: async () => {
-    if (!(await confirmDialog('Bu cihazdaki TÜM kitaplar, alıntılar, düşünceler ve günlük kalıcı olarak silinecek. Geri alınamaz.', 'Devam'))) return;
+    if (!(await confirmDialog('Bu cihazdaki TÜM kitaplar, alıntılar, notlar, düşünceler, günlük ve alışveriş listesi kalıcı olarak silinecek. Geri alınamaz.', 'Devam'))) return;
     if (!(await confirmDialog('Son kez soruyorum: her şey silinsin mi?', 'Evet, hepsini sil'))) return;
     await DB.wipeAll(); toast('Tüm veriler silindi'); go('#/');
   },
@@ -814,6 +976,7 @@ async function start() {
     return;
   }
   window.addEventListener('hashchange', route);
+  buildNav();
   route();
   setupServiceWorker();
   let updated = false;

@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Kitap Notlarım",
-  "short_name": "Kitap Notlarım",
+  "name": "Kitap & Notlarım",
+  "short_name": "Kitap & Notlarım",
   "description": "Kitaplardan alıntılarınızı sayfa numarasıyla saklayın; düşüncelerinizi ve günlüğünüzü yazın. Verileriniz yalnızca cihazınızda kalır.",
   "lang": "tr",
   "dir": "ltr",

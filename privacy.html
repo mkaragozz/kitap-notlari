@@ -3,51 +3,114 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Gizlilik Politikası · Kitap Notlarım</title>
-  <meta name="description" content="Kitap Notlarım uygulamasının gizlilik politikası.">
+  <title>Gizlilik Politikası · Kitap &amp; Notlarım</title>
+  <meta name="description" content="Kitap &amp; Notlarım uygulamasının gizlilik politikası.">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <style>
-    :root { --bg: #FFF8F0; --ink: #2A2B45; --muted: #6E7191; --violet: #7C5CFF; --card: #fff; }
-    @media (prefers-color-scheme: dark) { :root { --bg: #17172A; --ink: #ECEBF5; --muted: #A5A7C2; --violet: #A08BFF; --card: #22223A; } }
-    body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
-    main { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
-    .card { background: var(--card); border-radius: 18px; padding: 20px; box-shadow: 0 6px 20px rgba(124, 92, 255, .10); }
-    h1 { font-size: 26px; margin: 0 0 4px; } h2 { font-size: 18px; margin: 22px 0 4px; color: var(--violet); }
-    p { margin: 6px 0; } .muted { color: var(--muted); font-size: 14px; } a { color: var(--violet); }
+    :root { --bg: #FFF8F0; --ink: #2A2B45; --muted: #6E7191; --violet: #7C5CFF; --card: #fff; --line: #F1E4D6; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #17172A; --ink: #ECEBF5; --muted: #A5A7C2; --violet: #A08BFF; --card: #22223A; --line: #34345a; } }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.65 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+    main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+    .card { background: var(--card); border-radius: 18px; padding: 22px; box-shadow: 0 6px 20px rgba(124, 92, 255, .10); }
+    h1 { font-size: 26px; margin: 0 0 4px; line-height: 1.25; } h3 { font-size: 18px; margin: 26px 0 6px; color: var(--violet); }
+    p, li { margin: 6px 0; } ul { padding-left: 22px; } .muted { color: var(--muted); font-size: 14px; } a { color: var(--violet); }
+    .box { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 12px 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 14.5px; } td, th { border-bottom: 1px solid var(--line); padding: 7px 6px; text-align: left; vertical-align: top; }
   </style>
 </head>
 <body>
 <main>
   <div class="card">
-    <h1>📚 Kitap Notlarım: Gizlilik Politikası</h1>
-    <p class="muted">Son güncelleme: 22 Kasım 2026</p>
+    <h1>📚 Kitap &amp; Notlarım: Gizlilik Politikası</h1>
+    <div id="policy">
+    <p class="muted">Yürürlük ve son güncelleme tarihi: 23 Kasım 2026</p>
 
-    <p><b>Kısaca:</b> Yazdığınız her şey yalnızca sizin cihazınızda saklanır. Uygulama hiçbir sunucuya kişisel veri göndermez, hesap açtırmaz, reklam ya da takip aracı içermez.</p>
+    <div class="box"><b>Kısaca:</b> Kitap &amp; Notlarım'a yazdığınız her şey <b>yalnızca sizin cihazınızda</b> saklanır.
+      Uygulamanın bir sunucusu, kullanıcı hesabı, reklamı, analiz ya da takip aracı yoktur. Geliştirici dahil hiç kimse
+      notlarınızı, günlüğünüzü veya fotoğraflarınızı göremez.</div>
 
-    <h2>Hangi veriler saklanır?</h2>
-    <p>Eklediğiniz kitaplar, alıntılar, yorumlar, düşünceler, günlük yazıları ve fotoğraflar, cihazınızdaki tarayıcı depolamasında (IndexedDB) tutulur. Bu verilere yalnızca siz erişebilirsiniz; geliştirici dahil hiç kimse göremez.</p>
+    <h3>1. Kapsam ve sorumlu</h3>
+    <p>Bu politika, <b>Kitap &amp; Notlarım</b> uygulamasının (web uygulaması ve cihaza yüklenen hâli) verilerinizi nasıl ele aldığını açıklar.
+      Uygulama bireysel bir geliştirici tarafından hazırlanmıştır. İletişim bilgisi 13. maddededir.</p>
 
-    <h2>İnternete ne gönderilir?</h2>
-    <p>Yalnızca barkod okuttuğunuzda ya da ISBN aradığınızda, kitap bilgisini bulmak için <b>ISBN numarası</b> Open Library (openlibrary.org) ve Google Books (googleapis.com) servislerine gönderilir. Bu isteklerde kişisel bilginiz yer almaz. Yazı tipleri Google Fonts'tan, Word ve Excel kütüphaneleri dışa aktarma sırasında jsDelivr ve cdnjs'den yüklenir.</p>
+    <h3>2. Hangi bilgileri saklıyoruz?</h3>
+    <p>Uygulamaya girdiğiniz bilgiler, cihazınızdaki tarayıcı depolama alanında (IndexedDB ve yerel depolama) tutulur:</p>
+    <ul>
+      <li>Kitaplar ve kitap bilgileri (ad, yazar, yayınevi, ISBN, kapak görseli, okuma durumu, puan)</li>
+      <li>Alıntılar, yorumlar, etiketler, önem dereceleri, tekrar okuma işaretleri, içindekiler ve özetler</li>
+      <li>Not defterleri ve notlar, alışveriş listesi</li>
+      <li>Düşünceler ve günlük yazıları, ruh hâli seçimleri, günlüğe eklediğiniz fotoğraflar</li>
+      <li>Elle girdiğiniz kitap bilgilerinin ISBN hafızası (aynı kitap tekrar okutulunca doldurmak için)</li>
+      <li>Uygulama ayarları (menü düzeni, kilitli bölümler, barkod tercihleri, son yedek tarihi)</li>
+      <li>PIN kilidi açıksa PIN'in ve kurtarma kodunun <b>tek yönlü özeti</b> (aşağıya bakın)</li>
+    </ul>
+    <p>Bu bilgiler cihazınızdan <b>hiçbir sunucuya gönderilmez</b> ve bizim tarafımızdan toplanmaz, görülmez, işlenmez.</p>
 
-    <h2>Kamera</h2>
-    <p>Kamera yalnızca barkod okuturken ve günlüğe fotoğraf eklerken, sizin izninizle kullanılır. Görüntüler cihazdan dışarı gönderilmez.</p>
+    <h3>3. Toplamadığımız bilgiler</h3>
+    <p>Ad, e-posta, telefon numarası, konum, rehber, cihaz kimliği, IP adresi kaydı, kullanım istatistiği veya reklam kimliği toplamayız.
+      Uygulamada kullanıcı hesabı yoktur; giriş yapmanız gerekmez.</p>
 
-    <h2>PIN kilidi</h2>
-    <p>PIN'iniz cihazda açık metin olarak değil, tek yönlü özet (SHA-256) olarak saklanır.</p>
+    <h3>4. İnternet bağlantıları</h3>
+    <p>Uygulama çoğu işi internetsiz yapar. Aşağıdaki durumlarda üçüncü taraf hizmetlere bağlanılır:</p>
+    <table>
+      <tr><th>Ne zaman?</th><th>Nereye?</th><th>Ne gönderilir?</th></tr>
+      <tr><td>Barkod okutunca / ISBN ile aranınca</td><td>Google Books (googleapis.com), Open Library (openlibrary.org)</td><td>Yalnızca kitabın ISBN numarası</td></tr>
+      <tr><td>Kitap kapağı indirilirken</td><td>books.google.com, covers.openlibrary.org</td><td>Kapak görselinin adresi</td></tr>
+      <tr><td>“🔎 Kitapyurdu'nda / Google'da ara” düğmesine basınca</td><td>Seçtiğiniz site (tarayıcınızda yeni sayfa olarak açılır)</td><td>ISBN numarası (o sitenin kendi gizlilik politikası geçerlidir)</td></tr>
+      <tr><td>Uygulama açılırken</td><td>Google Fonts (fonts.googleapis.com, fonts.gstatic.com)</td><td>Yazı tipi dosyası isteği</td></tr>
+      <tr><td>Word / Excel'e aktarırken</td><td>jsDelivr, cdnjs</td><td>Dönüştürme kütüphanesi dosyası isteği</td></tr>
+      <tr><td>Uygulamanın kendisi ve güncellemeleri</td><td>GitHub Pages (mkaragozz.github.io)</td><td>Uygulama dosyası isteği</td></tr>
+    </table>
+    <p>Bu isteklerde notlarınız, günlüğünüz veya kişisel bilgileriniz <b>yer almaz</b>. Ancak her internet isteğinde olduğu gibi, bu hizmetler teknik olarak
+      cihazınızın IP adresini ve tarayıcı bilgisini görebilir; bu bilgiler o hizmetlerin kendi gizlilik politikalarına tabidir.</p>
 
-    <h2>Yedekler</h2>
-    <p>“Yedek al” ile oluşturduğunuz dosya tüm verilerinizi içerir ve nereye göndereceğinize siz karar verirsiniz.</p>
+    <h3>5. Kamera ve fotoğraflar</h3>
+    <ul>
+      <li>Kamera <b>yalnızca</b> barkod okuturken ve günlüğe fotoğraf çekerken, sizin izninizle açılır. Barkod okuma görüntüsü cihazda işlenir; kaydedilmez ve gönderilmez.</li>
+      <li>Günlüğe eklediğiniz fotoğraflar küçültülerek yalnızca cihazınızda saklanır.</li>
+      <li>Kamera iznini istediğiniz zaman tarayıcı ya da telefon ayarlarından geri alabilirsiniz.</li>
+    </ul>
 
-    <h2>Verilerin silinmesi</h2>
-    <p>Uygulamada Ayarlar → “Tüm verileri sil” ile ya da uygulamayı kaldırıp tarayıcı verilerini temizleyerek tüm kayıtlarınızı silebilirsiniz.</p>
+    <h3>6. PIN kilidi</h3>
+    <p>PIN ve kurtarma kodu cihazda <b>açık metin olarak değil</b>, tuzlanmış tek yönlü özet (SHA-256) olarak saklanır; geri çevrilemez.
+      PIN kilidi, cihazınızı eline alan birinin seçtiğiniz bölümleri açmasını engellemek içindir. Veriler cihazda ayrıca şifrelenmez.
+      PIN ve kurtarma kodu yedek dosyasına girmez.</p>
 
-    <h2>Çocuklar</h2>
-    <p>Uygulama kişisel veri toplamaz ve paylaşmaz.</p>
+    <h3>7. Yedekler ve dışa aktarılan dosyalar</h3>
+    <p>“Yedek al” ile oluşturulan dosya ve PDF/Word/Excel çıktıları, tüm içeriğinizi (günlük, özel notlar ve fotoğraflar dahil) içerebilir.
+      Bu dosyaları nereye kaydedeceğinize ve kiminle paylaşacağınıza <b>siz karar verirsiniz</b>. Gönderdiğiniz yerin (Drive, WhatsApp, e-posta vb.)
+      kendi gizlilik koşulları geçerlidir. Yedek dosyalarını güvendiğiniz yerlerde saklayın.</p>
 
-    <h2>Değişiklikler</h2>
-    <p>Bu politika değişirse güncel hâli bu sayfada yayımlanır.</p>
+    <h3>8. Çerezler ve takip</h3>
+    <p>Uygulama çerez kullanmaz; reklam, analiz veya takip aracı içermez. Çevrimdışı çalışabilmek için uygulama dosyaları tarayıcının önbelleğine kaydedilir; bu önbellek kişisel veri içermez.</p>
 
+    <h3>9. Saklama süresi ve verilerin silinmesi</h3>
+    <p>Verileriniz siz silene kadar cihazınızda kalır. Silmek için:</p>
+    <ul>
+      <li>Tek tek kayıtları uygulama içinden silebilirsiniz.</li>
+      <li>Ayarlar → <b>⚠️ Verileri sil</b> ile tüm verileri kalıcı olarak silebilirsiniz.</li>
+      <li>Uygulamayı kaldırıp tarayıcı/site verilerini temizlemek de tüm verileri siler.</li>
+    </ul>
+    <p>Bizde verilerinizin bir kopyası bulunmadığı için silinen veriler geri getirilemez. Önemli verilerinizin yedeğini alın.</p>
+
+    <h3>10. Haklarınız (KVKK ve GDPR)</h3>
+    <p>Verileriniz bizim tarafımızdan toplanmadığı ve işlenmediği için, 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) ve Avrupa Birliği
+      Genel Veri Koruma Tüzüğü (GDPR) kapsamındaki erişim, düzeltme, silme, taşıma ve itiraz haklarınızı <b>doğrudan uygulama içinden</b> kullanabilirsiniz:
+      verilerinizi görebilir, düzeltebilir, silebilir ve “Yedek al” ile taşınabilir bir dosya olarak alabilirsiniz. Sorularınız için 13. maddedeki adrese yazabilirsiniz.</p>
+
+    <h3>11. Çocuklar</h3>
+    <p>Uygulama hiçbir yaş grubundan kişisel veri toplamaz. Çocukların uygulamayı ebeveyn gözetiminde kullanmasını öneririz.</p>
+
+    <h3>12. Güvenlik</h3>
+    <p>Uygulama yalnızca güvenli bağlantı (HTTPS) üzerinden sunulur. Verileriniz cihazınızın ve tarayıcınızın sağladığı korumayla saklanır.
+      Cihazınızı ekran kilidiyle korumanızı ve düzenli yedek almanızı öneririz.</p>
+
+    <h3>13. İletişim</h3>
+    <p>Bu politika veya uygulama hakkındaki soru ve önerileriniz için: <a href="mailto:mkaraggoz@gmail.com">mkaraggoz@gmail.com</a></p>
+
+    <h3>14. Değişiklikler</h3>
+    <p>Bu politika uygulamaya yeni özellikler eklendikçe güncellenebilir. Güncel hâli her zaman bu sayfada yayımlanır; üstteki tarih son güncellemeyi gösterir.</p>
+    </div>
     <p class="muted" style="margin-top:22px"><a href="./">← Uygulamaya dön</a></p>
   </div>
 </main>

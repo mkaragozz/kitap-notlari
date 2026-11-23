@@ -1,11 +1,11 @@
 // 📔 Günlük: yönlendirici başlıklarla gün içinde istediğiniz kadar "an" yazın.
 // Her an yazıldığı saatle kaydedilir; gün sonunda hepsi tek bir sayfa olarak okunur.
 // Ruh hâli, fotoğraf, takvim ve "geçen yıl bugün" hatırlatması.
-import * as DB from './db.js?v=2.2';
-import * as EX from './export.js?v=2.2';
-import * as Lock from './lock.js?v=2.2';
+import * as DB from './db.js?v=2.3';
+import * as EX from './export.js?v=2.3';
+import * as Lock from './lock.js?v=2.3';
 import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, rerender, go, today, fmtTime, fmtDateTime,
-  longDate, addDays, parseDate, localDate, MONTHS, pickFiles, loadImage, dataUrlToBlob } from './ui.js?v=2.2';
+  longDate, addDays, parseDate, localDate, MONTHS, pickFiles, loadImage, dataUrlToBlob } from './ui.js?v=2.3';
 
 // Hazır başlıklar. Kullanıcı bunların adını/emojisini değiştirebilir, gizleyebilir;
 // ayrıca kendi başlıklarını ekleyebilir (DB 'prompts' deposunda saklanır, yedeğe dahildir).
@@ -50,7 +50,7 @@ function onThisDay(date) {
 }
 
 export function renderJournal(date) {
-  if (!Lock.isOpen()) { Lock.renderLockScreen(view, 'Günlük'); return; }
+  if (!Lock.isOpen('journal')) { Lock.renderLockScreen(view, 'Günlük'); return; }
   const t = today();
   if (!isDate(date)) date = t;
   const ms = DB.momentsOn(date);
@@ -179,7 +179,7 @@ function viewPhoto(momentId, phId) {
 
 // ---- Takvim ----
 export function renderJournalCal(ym) {
-  if (!Lock.isOpen()) { Lock.renderLockScreen(view, 'Günlük'); return; }
+  if (!Lock.isOpen('journal')) { Lock.renderLockScreen(view, 'Günlük'); return; }
   if (!/^\d{4}-\d{2}$/.test(ym || '')) ym = today().slice(0, 7);
   const [y, mo] = ym.split('-').map(Number);
   const first = new Date(y, mo - 1, 1);
@@ -282,7 +282,7 @@ function openPromptEditor(id = null, onDone = null) {
   setTimeout(() => $('#pe-name', s).focus(), 250);
 }
 
-function managePrompts() {
+export function managePrompts() {
   const all = prompts({ withHidden: true });
   const s = openSheet({
     title: '⚙️ Günlük başlıkları',

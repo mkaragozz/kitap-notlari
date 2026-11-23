@@ -1,8 +1,8 @@
 // Alıntı ve düşünce kartları, etiket bağlantıları, ortak liste yardımcıları.
-import * as DB from './db.js?v=2.2';
-import * as Lock from './lock.js?v=2.2';
-import { pageLabel } from './export.js?v=2.2';
-import { $, $$, esc, norm, highlight, fmtDate, fmtDateTime, openSheet, starsBadge } from './ui.js?v=2.2';
+import * as DB from './db.js?v=2.3';
+import * as Lock from './lock.js?v=2.3';
+import { pageLabel } from './export.js?v=2.3';
+import { $, $$, esc, norm, highlight, fmtDate, fmtDateTime, openSheet, starsBadge } from './ui.js?v=2.3';
 
 export function pageNum(p) { const n = parseInt(p, 10); return isNaN(n) ? null : n; }
 
@@ -27,7 +27,7 @@ export function thoughtLastAt(t) { const ps = t.parts || []; return ps.length ? 
 export function allTags() {
   const m = new Map();
   DB.allQuotes().forEach((q) => (q.tags || []).forEach((t) => m.set(t, (m.get(t) || 0) + 1)));
-  if (Lock.isOpen()) DB.thoughts().forEach((x) => (x.tags || []).forEach((t) => m.set(t, (m.get(t) || 0) + 1)));
+  if (Lock.isOpen('thoughts')) DB.thoughts().forEach((x) => (x.tags || []).forEach((t) => m.set(t, (m.get(t) || 0) + 1)));
   return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'tr'));
 }
 
@@ -88,7 +88,7 @@ export function openRelated(kind, id) {
   const score = (x) => (x.tags || []).filter((t) => tags.includes(t));
   const items = [];
   DB.allQuotes().forEach((q) => { if (!(kind === 'quote' && q.id === id)) { const s = score(q); if (s.length) items.push({ type: 'quote', x: q, s }); } });
-  const open = Lock.isOpen();
+  const open = Lock.isOpen('thoughts');
   if (open) DB.thoughts().forEach((t) => { if (!(kind === 'thought' && t.id === id)) { const s = score(t); if (s.length) items.push({ type: 'thought', x: t, s }); } });
   items.sort((a, b) => b.s.length - a.s.length || (b.x.stars || 0) - (a.x.stars || 0) || (b.x.updatedAt || '').localeCompare(a.x.updatedAt || ''));
   body = `<p class="hint">Bu kaydın etiketleri: ${tags.map((t) => `<span class="chip">#${esc(t)}</span>`).join(' ')}<br>Ortak etiketi daha çok olanlar üstte. Ortak etiketler koyu renkle gösterilir.</p>`;

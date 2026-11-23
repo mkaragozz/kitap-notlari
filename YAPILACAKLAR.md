@@ -1,6 +1,7 @@
 # Yapılacaklar
 
-Durum: **Not alındı, uygulanmadı.** Kullanıcı "uygula" diyene kadar kodda değişiklik yapılmayacak.
+Durum: **1. aşama (A, D, E) sürüm 2.3'te uygulandı.** Sırada: 2. aşama (C, kitap listeleri), 3. aşama (B, e-kitap okuyucu).
+Uygulama adı "Kitap & Notlarım" olarak değiştirildi.
 
 ## Verilen kararlar (23.11.2026)
 - **Seçkin Kitaplar:** En çok beğenilen, "hayatıma dokundu" denilen kitaplar.

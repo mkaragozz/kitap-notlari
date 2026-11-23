@@ -1,4 +1,4 @@
-# Kitap Notlarım: Kullanım Kılavuzu
+# Kitap & Notlarım: Kullanım Kılavuzu
 
 Adres: **https://mkaragozz.github.io/kitap-notlari**
 
@@ -31,6 +31,9 @@ Verileriniz etkilenmez. Uygulama açılmazsa birkaç saniye sonra **"🔄 Onar v
 bu düğme yalnızca uygulama dosyalarını yeniden indirir, notlarınızı silmez.
 
 ## Bölümler
+Ayrıntılı, aranabilir kılavuz uygulamanın içinde: **Ayarlar → 📘 Kullanım kılavuzu**.
+
+- **📝 Not Defteri:** Genel Notlar, Özel Notlar ve kendi defterleriniz; her not başlıklı ve tarih-saatli. İçinde **🛒 Alışveriş Listem** (kendi kategorilerinizle).
 - **📚 Kitaplar:** Kitap eklerken arka kapaktaki **barkodu okutun**; adı, yazarı, yayınevi, yılı,
   sayfa sayısı ve kapağı kendiliğinden dolar. Bulunamazsa bilgileri elle yazarsınız.
 - **✍️ Alıntılar:** Alıntı metni, sayfa numarası, altında **💭 Yorumum** kutusu. Yalnızca yorum da yazılabilir.

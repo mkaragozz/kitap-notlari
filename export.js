@@ -240,8 +240,8 @@ export async function buildDocx(sections, opt) {
   });
 
   const doc = new D.Document({
-    creator: 'Kitap Notlarım',
-    title: sections.length === 1 ? sections[0].book.title : 'Kitap Notlarım',
+    creator: 'Kitap & Notlarım',
+    title: sections.length === 1 ? sections[0].book.title : 'Kitap & Notlarım',
     styles: DOC_STYLES,
     footnotes,
     sections: [{ properties: {}, children }],
@@ -327,7 +327,7 @@ export async function buildThoughtsDocx(title, groups) {
       if (t.tags && t.tags.length) children.push(new D.Paragraph({ children: [new D.TextRun({ text: t.tags.map((x) => '#' + x).join('  '), size: 18, color: '0FB9A8' })] }));
     });
   });
-  const doc = new D.Document({ creator: 'Kitap Notlarım', title, styles: DOC_STYLES, sections: [{ children }] });
+  const doc = new D.Document({ creator: 'Kitap & Notlarım', title, styles: DOC_STYLES, sections: [{ children }] });
   return D.Packer.toBlob(doc);
 }
 
@@ -367,6 +367,6 @@ export async function buildJournalDocx(title, days) {
       });
     });
   });
-  const doc = new D.Document({ creator: 'Kitap Notlarım', title, styles: DOC_STYLES, sections: [{ children }] });
+  const doc = new D.Document({ creator: 'Kitap & Notlarım', title, styles: DOC_STYLES, sections: [{ children }] });
   return D.Packer.toBlob(doc);
 }
