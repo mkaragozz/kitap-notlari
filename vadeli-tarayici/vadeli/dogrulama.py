@@ -58,7 +58,8 @@ def _btc_rejim(d: dict, p: StratejiParam) -> pd.Series | None:
     if not p.btc_filtre:
         return None
     df = d["BTCUSDT"][0]
-    return hazirla(df, replace(p, btc_filtre=False, hacim_kat=0, vol_min=0, vol_max=0))["rejim"]
+    return hazirla(df, replace(p, btc_filtre=False, hacim_kat=0, vol_min=0, vol_max=0, oi_teyit=False,
+                               fonlama_esik=0.0, kalabalik_z=0.0, taker_teyit=False))["rejim"]
 
 
 # ------------------------------------------------------------------ çekirdek çalıştırıcılar (süreç havuzunda)
@@ -74,7 +75,8 @@ def _is(args):
         b = _VERI["BTCUSDT"][0]
         if p.tetik_tf != "1h":
             b = veri.yeniden_ornekle(b, p.tetik_tf)
-        btc = hazirla(b, replace(p, btc_filtre=False, hacim_kat=0, vol_min=0, vol_max=0))["rejim"]
+        btc = hazirla(b, replace(p, btc_filtre=False, hacim_kat=0, vol_min=0, vol_max=0, oi_teyit=False,
+                                 fonlama_esik=0.0, kalabalik_z=0.0, taker_teyit=False))["rejim"]
     ek = None
     if p.turev_gerekli or _METRIK:
         from . import turev

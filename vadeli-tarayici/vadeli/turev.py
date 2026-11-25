@@ -99,7 +99,7 @@ class BinanceMetrikREST:
     def __init__(self, rest: "veri.BinanceREST"):
         self.rest = rest
 
-    def metrik(self, sembol: str, saat: int = 500) -> pd.DataFrame:
+    def metrik(self, sembol: str, alanlar: tuple[str, ...] = tuple(METRIK_SUTUN)) -> pd.DataFrame:
         b = self.rest.borsa
         s = veri.sembol_dogrula(sembol)
         limit = 500
@@ -112,6 +112,8 @@ class BinanceMetrikREST:
             "taker_oran": (b.fapiDataGetTakerlongshortRatio, "buySellRatio"),
         }
         for ad, (fn, alan) in uclar.items():
+            if ad not in alanlar:
+                continue
             try:
                 ham = self.rest._cagir(fn, {"symbol": s, "period": "5m", "limit": limit})
                 parcalar[ad] = pd.Series([float(x[alan]) for x in ham],

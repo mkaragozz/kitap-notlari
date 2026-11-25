@@ -31,6 +31,12 @@ class Ayarlar:
     rejim_tf: str = "4h"
     btc_filtre: bool = True
     yon: str = "ikisi"
+    # Türev filtresi: DENEYLER.md §1'de kabul edilen tek filtre (kırılımda açık pozisyon artışı)
+    oi_teyit: bool = True
+    oi_n: int = 6
+    fonlama_esik: float = 0.0
+    kalabalik_z: float = 0.0
+    taker_teyit: bool = False
     # maliyet
     komisyon: float = 0.0005
     kayma: float = 0.0003
@@ -57,7 +63,8 @@ class Ayarlar:
     def strateji(self) -> StratejiParam:
         return StratejiParam(giris_n=self.giris_n, cikis_n=self.cikis_n, atr_n=self.atr_n, atr_kat=self.atr_kat,
                              ema_n=self.ema_n, tetik_tf=self.tetik_tf, rejim_tf=self.rejim_tf,
-                             btc_filtre=self.btc_filtre, yon=self.yon)
+                             btc_filtre=self.btc_filtre, yon=self.yon, oi_teyit=self.oi_teyit, oi_n=self.oi_n,
+                             fonlama_esik=self.fonlama_esik, kalabalik_z=self.kalabalik_z, taker_teyit=self.taker_teyit)
 
     def risk(self) -> RiskParam:
         return RiskParam(hesap=self.hesap, risk_yuzde=self.risk_yuzde, max_kaldirac=self.max_kaldirac, mmr=self.mmr)

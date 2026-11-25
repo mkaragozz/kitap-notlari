@@ -68,3 +68,45 @@ def test_filtreler_sinyali_yalniz_azaltir():
 
 def test_surum_eski_varyantlarda_degismedi():
     assert StratejiParam().surum == "p5c3736f3"
+
+
+def test_canli_turev_filtresi_backtest_ile_ayni(tmp_path):
+    """Canlı tarayıcı (yalnız son ~41 saatlik metrik) ile backtest (tam arşiv) son mumda aynı sinyali üretir."""
+    import asyncio
+
+    from tests.test_canli_pano import SentetikBorsa
+    from vadeli.ayarlar import Ayarlar
+    from vadeli.canli import Tarayici
+    from vadeli.db import DB
+
+    borsa = SentetikBorsa()
+    tam_metrik = {}
+    for s, df in borsa.veri.items():
+        t = _bes_dk(len(df), tohum=hash(s) % 1000)
+        t.index = pd.date_range(df.index[0], periods=len(t), freq="5min")
+        tam_metrik[s] = turev.saatlige(t)
+
+    def metrik(sembol, alanlar=None):
+        sinir = pd.Timestamp(borsa.simdi_ms(), unit="ms", tz="UTC").floor("h")
+        m = tam_metrik[sembol]
+        return m[m.index < sinir].iloc[-41:]  # REST gibi kısa geçmiş
+    borsa.metrik = metrik
+
+    cfg = Ayarlar(veritabani=str(tmp_path / "t.db"), sinyal_csv=str(tmp_path / "s.csv"), websocket=False, sembol_sayisi=4,
+                  tetik_tf="4h", rejim_tf="4h", btc_filtre=False, oi_teyit=True)
+    tr = Tarayici(cfg, DB(cfg.veritabani), borsa)
+
+    async def calis():
+        await tr.evren_guncelle(zorla=True)
+        for _ in range(9):
+            await tr.tara()
+            await borsa.sonraki_kapanisi_bekle(0)
+    asyncio.run(calis())
+    for s, h in tr.hazir.items():
+        df = tr.mumlar[s]
+        d4 = veri.yeniden_ornekle(df, "4h")
+        ek = turev.ozellikler(tam_metrik[s], None, d4.index, "4h", oi_n=6)
+        b = hazirla(d4, tr.p, ek=ek)
+        son = h.index[-1]
+        for c in ("oi_deg", "long_sinyal", "short_sinyal"):
+            assert (h.loc[son, c] == b.loc[son, c]) or (pd.isna(h.loc[son, c]) and pd.isna(b.loc[son, c])), (s, c)

@@ -71,6 +71,8 @@ class Tarayici:
                                       "son_mum": None, "gecikme_sn": None, "ws_bagli": False, "hatali": {},
                                       "kaynak": borsa.ad, "tarama_sayisi": 0, "saglikli_sembol": 0, "sembol": 0}
         self._ws_gorev: asyncio.Task | None = None
+        self.metrikler: dict[str, tuple[int, pd.DataFrame]] = {}   # sembol -> (çekildiği tf mumu, saatlik metrik)
+        self.fonlamalar: dict[str, tuple[int, pd.Series]] = {}
         self._ws_semboller: list[str] = []
         self.ayarlari_uygula()
 
@@ -103,13 +105,39 @@ class Tarayici:
                              ema_n=self.p.ema_n, tetik_tf=self.p.tetik_tf, rejim_tf=self.p.rejim_tf)
         return hazirla(self.tetik_verisi(df), sade)["rejim"]
 
-    def hazirla_sembol(self, df1h: pd.DataFrame, btc: pd.Series | None = None) -> pd.DataFrame:
-        """Backtest ile aynı: strateji.hazirla (tetik zaman diliminde)."""
+    def turev_guncelle(self, sembol: str) -> None:
+        """Türev filtresi için açık pozisyon (ve gerekirse diğer) metrikleri: her yeni tetik mumunda bir kez çekilir."""
+        if not self.p.turev_gerekli:
+            return
+        tf_mum = self.borsa.simdi_ms() // self.tf_ms
+        kayit = self.metrikler.get(sembol)
+        if kayit and kayit[0] == tf_mum:
+            return
+        alanlar = tuple(a for a, gerek in (("oi", self.p.oi_teyit), ("ls_hesap", bool(self.p.kalabalik_z)),
+                                           ("taker_oran", self.p.taker_teyit)) if gerek)
+        try:
+            m = self.borsa.metrik(sembol, alanlar)
+            self.metrikler[sembol] = (tf_mum, m)
+            if self.p.fonlama_esik:
+                self.fonlamalar[sembol] = (tf_mum, self.borsa.fonlama(sembol))
+        except Exception as e:  # metrik yoksa teyit filtresi sinyali engeller (güvenli taraf)
+            self.durum["hatali"][sembol] = f"türev: {str(e)[:150]}"
+
+    def hazirla_sembol(self, df1h: pd.DataFrame, btc: pd.Series | None = None, sembol: str | None = None) -> pd.DataFrame:
+        """Backtest ile aynı: strateji.hazirla (tetik zaman diliminde) + aynı türev özellikleri."""
+        from . import turev
+
         if self.p.btc_filtre and btc is None:
             btc = self.btc_rejim()
             if btc is None:
                 btc = pd.Series(0, index=df1h.index)  # BTC verisi yoksa filtre hiçbir sinyale izin vermez
-        return hazirla(self.tetik_verisi(df1h), self.p, btc)
+        dt = self.tetik_verisi(df1h)
+        ek = None
+        if self.p.turev_gerekli:
+            m = self.metrikler.get(sembol, (0, None))[1] if sembol else None
+            f = self.fonlamalar.get(sembol, (0, None))[1] if sembol else None
+            ek = turev.ozellikler(m, f, dt.index, self.p.tetik_tf, oi_n=self.p.oi_n)
+        return hazirla(dt, self.p, btc, ek)
 
     def _izlenen(self) -> list[str]:
         s = [e["sembol"] for e in self.evren]
@@ -205,7 +233,9 @@ class Tarayici:
             if df.index[-1] >= beklenen_son:
                 saglikli += 1
             try:
-                h = await asyncio.to_thread(self.hazirla_sembol, df, btc)
+                if s in evren_set:
+                    await asyncio.to_thread(self.turev_guncelle, s)
+                h = await asyncio.to_thread(self.hazirla_sembol, df, btc, s)
             except Exception as e:
                 self.durum["hatali"][s] = f"hazirla: {e}"
                 continue

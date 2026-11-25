@@ -207,7 +207,8 @@ function sinyalKarti(x) {
       kv("Kaldıraç", fmt.d(x.kaldirac, 0) + "x"), kv("Pozisyon", fmt.usd(x.notional) + " $"), kv("Teminat", fmt.usd(x.teminat) + " $"),
       kv("Likidasyon", fmt.f(x.likidasyon)), kv("Risk", fmt.d(x.risk_usdt) + " $"), kv("4s rejim", x.rejim > 0 ? "EMA üstü ▲" : "EMA altı ▼"),
       kv("24s hacim", fmt.usd(x.hacim24) + " $"), kv("Sinyal mumu", fmt.zaman(x.zaman) + (x.tetik_tf === "4h" ? " (4s)" : "")),
-      kv("Kapanıştan beri", x.yas_saat == null ? "-" : fmt.d(x.yas_saat, 1) + " sa")),
+      kv("Kapanıştan beri", x.yas_saat == null ? "-" : fmt.d(x.yas_saat, 1) + " sa"),
+      x.oi_deg !== undefined ? kv("Açık poz. değişimi", fmt.y(x.oi_deg)) : null),
     yaklasan ? null : el("button", { class: "kucuk", onclick: (e) => { e.stopPropagation(); pozisyonFormuDoldur(x); } }, "Pozisyon aç"));
   kart.addEventListener("keydown", (e) => { if (e.key === "Enter") kart.click(); });
   return kart;

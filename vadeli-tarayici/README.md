@@ -6,8 +6,12 @@ açılan web panosu (PWA)**.
 
 > ⚠️ **Kaldıraç zarar riskini büyütür; stop'u borsada gir. Yatırım tavsiyesi değildir.**
 > **Doğrulama sonucu (özet):** şartnamedeki 1s-tetik strateji gerçek veride maliyetlerden sonra kenar göstermedi.
-> Varsayılan olarak doğrulamayı geçen **4s tetik + BTC rejim filtresi** varyantı kullanılır; ancak onun da 2025-2026
-> kenarı istatistiksel olarak sıfırdan ayırt edilemiyor. Ayrıntı: `RAPOR.md`.
+> Varsayılan olarak doğrulamayı geçen **4s tetik + BTC rejim filtresi + açık pozisyon teyidi** kullanılır. Bu varyantın
+> 2025-2026 sonucu umut verici ama istatistiksel olarak kesin değil. Ayrıntı: `RAPOR.md`.
+>
+> **Veri kaynakları:** Binance (mumlar, fonlama, açık pozisyon, long/short, taker — CoinGlass'taki Binance verisiyle aynı
+> ham veri), CoinGecko (piyasa geneli, ısı haritası), isteğe bağlı CoinMarketCap ve CoinGlass anahtarları.
+> TradingView'den veri **çekilmez** (resmi API yok, kazıma kullanım şartlarına aykırı).
 >
 > Sistem **hiçbir koşulda emir göndermez** ve **API anahtarı istemez/kullanmaz**; yalnızca Binance'in herkese açık
 > uç noktalarından veri okur. Strateji sonuçları için önce [`RAPOR.md`](RAPOR.md)'yi okuyun.
@@ -68,6 +72,7 @@ python tarayici.py indir --ilk 50                 # hacimce ilk 50 + geçmiş (d
 python tarayici.py backtest                       # tam doğrulama (~10-30 dk; ilk seferde indirme dahil)
 python tarayici.py backtest --hizli               # sadece temel strateji, küçük ızgara
 python tarayici.py backtest --demo                # sentetik veriyle saniyeler içinde
+python tarayici.py backtest --turev               # türev filtre deneyi (açık pozisyon, fonlama, long/short, taker; 2022+)
 ```
 
 Ne yapar (ayrıntı ve sonuçlar: `RAPOR.md`, deneme günlüğü: `DENEYLER.md`):
@@ -95,7 +100,8 @@ takibi ve geçmiş sinyal sonuçları **aynı** `strateji.hazirla` fonksiyonunu 
 | Ekran | İçerik |
 |---|---|
 | **Sinyaller** | Aktif sinyal kartları: yön, sembol, YENİ/devam, fiyat, stop, stop %, kaldıraç, pozisyon $, teminat, likidasyon, risk $, 4s rejim. Filtre: LONG/SHORT, YENİ/devam, min. 24s hacim, sembol arama; sıralama: yenilik/hacim/stop %/risk. Filtreler adres çubuğunda saklanır (yenileyince kaybolmaz). **Yaklaşanlar** sekmesi: kırılıma 0.5 ATR kalanlar. Karta dokununca grafik açılır. |
-| **Grafik** | 1s/4s mumlar, EMA200(4s) rejim çizgisi, giriş kanalı, sinyal işaretleri, giriş/stop/likidasyon çizgileri (açık pozisyonun önerilen stopu dahil). Kütüphane: TradingView Lightweight Charts™ (Apache 2.0) — **yerel dosya**, veri kendi API'mizden (`/api/mumlar?sembol=...&aralik=1h`). |
+| **Grafik** | Altında sembolün türev verileri: açık pozisyon ve değişimi, fonlama, long/short oranları, kalabalık z-skoru, taker alım/satım. 1s/4s mumlar, EMA200(4s) rejim çizgisi, giriş kanalı, sinyal işaretleri, giriş/stop/likidasyon çizgileri (açık pozisyonun önerilen stopu dahil). Kütüphane: TradingView Lightweight Charts™ (Apache 2.0) — **yerel dosya**, veri kendi API'mizden (`/api/mumlar?sembol=...&aralik=1h`). |
+| **Piyasa** | CoinGecko'dan toplam piyasa değeri, 24s değişim, BTC/ETH dominansı, stabilcoin payı ve ilk 100 coinin **ısı haritası** (1 saat / 24 saat / 7 gün; kutu boyu piyasa değeri, renk değişim). Vadelide olan coine dokununca grafiği açılır. Bilgi amaçlıdır, sinyale girmez. |
 | **Pozisyonlarım** | Borsada açtığınız pozisyonu girin (sinyaldeki "Pozisyon aç" formu doldurur). Her 1s kapanışında: gerçekleşmemiş K/Z ve R katı, önerilen takip stopu ("stopu X'e çekin"), **çıkış sinyali** (karşı kanal kırılımı), stop/likidasyon yakınlığı (mesafenin %30'undan az kaldıysa) — ekranda ve bildirimle. Not ekleme, kapatma. **Sistem emir göndermez.** |
 | **Geçmiş** | Üretilen her sinyal (zaman, sembol, yön, fiyat, stop, parametre sürümü) ve backtest ile aynı kurallarla simüle edilmiş sonucu (R, süre, çıkış nedeni). Toplam / long / short / sembol bazında istatistik, **canlı ile backtest beklentisi yan yana**. |
 | **Backtest** | Varyant karşılaştırması, özkaynak eğrisi, yıllık dilimler, ızgara, walk-forward, sembol tablosu, sağlık kontrolleri; "Yeniden çalıştır" (arka planda, ilerleme gösterir). |
@@ -209,6 +215,9 @@ Güvenilirlik için Telegram önerilir.
 | Ortam değişkeni | Anlamı |
 |---|---|
 | `PANO_PAROLA` | Pano parolası (dış arayüzde zorunlu, ≥ 12 karakter) |
+| `COINGECKO_API_KEY` | İsteğe bağlı CoinGecko demo anahtarı (hız limiti için; anahtarsız da çalışır) |
+| `CMC_API_KEY` | İsteğe bağlı CoinMarketCap anahtarı (Piyasa ekranında küresel metrikler) |
+| `COINGLASS_API_KEY` | İsteğe bağlı CoinGlass anahtarı (çoklu borsa açık pozisyon) |
 | `TG_TOKEN`, `TG_CHAT` | Telegram |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUB` | Web Push |
 

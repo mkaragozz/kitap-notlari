@@ -26,7 +26,7 @@ class SentetikBorsa(DemoBorsa):
 @pytest.fixture()
 def tarayici(tmp_path: Path):
     cfg = Ayarlar(veritabani=str(tmp_path / "t.db"), sinyal_csv=str(tmp_path / "s.csv"), websocket=False, sembol_sayisi=4,
-                 tetik_tf="1h", btc_filtre=False)
+                 tetik_tf="1h", btc_filtre=False, oi_teyit=False)
     db = DB(cfg.veritabani)
     return Tarayici(cfg, db, SentetikBorsa())
 
@@ -159,7 +159,7 @@ def test_emir_yok():
 
 def test_4s_tetik_canli(tmp_path):
     cfg = Ayarlar(veritabani=str(tmp_path / "t.db"), sinyal_csv=str(tmp_path / "s.csv"), websocket=False, sembol_sayisi=4,
-                  tetik_tf="4h", rejim_tf="4h", btc_filtre=False)
+                  tetik_tf="4h", rejim_tf="4h", btc_filtre=False, oi_teyit=False)
     t = Tarayici(cfg, DB(cfg.veritabani), SentetikBorsa())
 
     async def calis():

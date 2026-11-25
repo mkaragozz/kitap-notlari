@@ -293,5 +293,6 @@ def son_sinyaller(h: pd.DataFrame, r: RiskParam, m: MaliyetParam, p: StratejiPar
             "kapanis_r": float(son["kapanis_r"]), "yeni": bool(son[f"{on}_yeni"]) if tur == "sinyal" else False,
             "kanal_ust": float(son["kanal_ust"]), "kanal_alt": float(son["kanal_alt"]),
             "param_surum": p.surum, **rk,
+            **{k: (float(son[k]) if pd.notna(son[k]) else None) for k in ("oi_deg", "fonlama", "ls_z", "taker") if k in son.index},
         })
     return sonuc

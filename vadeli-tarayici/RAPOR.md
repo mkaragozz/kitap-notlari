@@ -39,6 +39,38 @@ Ayrıntılı tablolar: `raporlar/ozet.md` (otomatik), `raporlar/*.csv`, panoda *
 * Stop'u **mutlaka borsada** girin; sistem emir göndermez.
 * Canlı ort. R 100+ işlemden sonra hâlâ ≤ 0 ise durun.
 
+## 1b. Ek: Türev ve piyasa verileri (CoinGlass / CoinGecko / CoinMarketCap / TradingView isteği)
+
+**Kaynak kararları**
+* **TradingView kullanılmadı:** resmi veri API'si yok; sayfa kazımak kullanım şartlarına aykırı ve kırılgan.
+  "Kripto ısı haritası" siteleri CoinGecko/CMC verisinin görselleştirmesidir; panoda **Piyasa** ekranı aynı ısı
+  haritasını CoinGecko verisiyle kendisi çiziyor.
+* **CoinGlass'ın Binance verisi** (açık pozisyon, büyük trader ve tüm hesaplar long/short oranı, taker alım/satım) doğrudan
+  Binance'in herkese açık uç noktalarından alındı. 2021-12'den beri 5 dakikalık geçmişi resmi arşivde var, bu yüzden
+  **backtest edilebildi**. CoinGlass'ın kendi API'si (çoklu borsa) anahtar istediği için isteğe bağlı (`COINGLASS_API_KEY`).
+* **CoinGecko** (anahtarsız): toplam piyasa değeri, BTC/ETH dominansı, stabilcoin payı, ilk 100 coin ısı haritası.
+  **CoinMarketCap** isteğe bağlı (`CMC_API_KEY`). Bunların ücretsiz geçmişi olmadığı/kısa olduğu için **sinyale girmez**,
+  yalnız bağlam olarak gösterilir (backtest edilemeyen veri sinyale konmaz).
+
+**Sonuç (2022-01 → 2026-10, 22 sembol, maliyetler dahil, ön kayıtlı kurallar — `DENEYLER.md` §1, D10):**
+
+| | İşlem | Ort. R | Holdout 2025-26 ort. R (t) | Kârlı sembol |
+|---|---|---|---|---|
+| 4s tetik + BTC rejimi (önceki varsayılan) | 4357 | 0.083 | 0.020 (0.7) | 77% |
+| **+ açık pozisyon teyidi (yeni varsayılan)** | 2714 | **0.114** | **0.084 (1.9)** | 73% |
+| + fonlama vetosu | 4288 | 0.088 | 0.020 | 82% |
+| + long/short kalabalık filtresi | 4276 | 0.086 | 0.023 | 77% |
+| + taker teyidi | 3188 | 0.071 | 0.035 | 59% |
+| 1s şartname stratejisi + en iyi türev filtresi | 8822 | −0.011 | 0.023 | 32% |
+
+* **Kırılımda açık pozisyonun artıyor olması** (yeni para girişi) işe yarayan tek filtre oldu: işlemlerin ~%38'ini eliyor,
+  kalanların ortalaması ve son iki yıldaki sonucu belirgin biçimde daha iyi. Eşik seçimine duyarsız (3/3 ayarda daha iyi).
+* Fonlama ve taker filtreleri işe yaramadı; long/short kalabalığının etkisi gürültü düzeyinde.
+* 1 saatlik şartname stratejisini hiçbir türev verisi kâra çevirmedi.
+* **Güncel değerlendirme:** önceki "kenar son iki yılda kayboldu" bulgusu, açık pozisyon teyidi ile zayıfladı (holdout
+  +0.084 R, t 1.9). Ancak bu bir kez daha seçilmiş bir sonuç (5 filtre denendi) ve t < 2. Öneri değişmedi:
+  **önce izleme, sonra çok küçük risk.** Kanıt güçlendi ama "güvenilir kâr" seviyesinde değil.
+
 ## 2. Yöntem
 
 **Veri.** Binance USDT-M perpetual sözleşmelerinin 1 saatlik mumları ve gerçekleşmiş fonlama oranları, Binance'in resmi
@@ -301,3 +333,6 @@ kriterleri geçemedi — son dönemdeki boğa piyasasının etkisi.
   tarayıcı, pano ve pozisyon takibi gerçek Binance arşiv verisinin hızlandırılmış tekrarıyla (`--demo`) uçtan uca
   test edildi; REST/WebSocket bağlantısı kullanıcının bilgisayarında ilk çalıştırmada doğrulanmalıdır.
 * Canlı geçmiş sinyal sonuçlarında fonlama sabit (%0.01/8s, iki yönde maliyet) varsayılır.
+* Türev verisi: arşivdeki 5 dk anlık görüntülerin zaman anlamı ile canlı REST yanıtınınki aynı kabul edildi (canlıda
+  burada doğrulanamadı); mum için yalnızca kapanıştan ≥5 dk önceki görüntü kullanılır. Kısa geçmişli semboller için
+  canlıda açık pozisyon verisi yoksa filtre sinyali engeller (güvenli taraf).

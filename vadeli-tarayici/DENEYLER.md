@@ -106,3 +106,22 @@ Geçen yoksa türev verileri yalnızca **bilgi** olarak gösterilir, sinyale gir
 
 **Piyasa geneli (CoinGecko/CMC):** ücretsiz geçmişi yok/kısa olduğundan backtest edilemez → sinyale girmez,
 yalnızca panoda bağlam ve ısı haritası. **TradingView:** resmi API yok, kazıma kullanım şartlarına aykırı → kullanılmaz.
+
+### D10 — Türev filtreleri (sonuçlar; tablo: `raporlar/ozet_turev.md`)
+Dönem 2022-01 → 2026-10, taban `4s_tetik_btc`: 4357 işlem, ort. R +0.083, holdout +0.020.
+
+| Filtre | Ort. R | Holdout R (t) | İşlem | Eşikler | Kabul |
+|---|---|---|---|---|---|
+| +oi (açık pozisyon artışı) | **0.114** | **0.084 (1.9)** | 2714 | 0.105 / 0.114 / 0.119 (hepsi tabandan iyi) | ✓ |
+| +fon (fonlama vetosu) | 0.088 | 0.020 | 4288 | 0.095 / 0.088 / 0.085 | ✗ (holdout iyileşmedi) |
+| +kalabalik (L/S z-skoru) | 0.086 | 0.023 | 4276 | 0.095 / 0.086 / 0.084 | ✓ (ama etki +0.003 R) |
+| +taker | 0.071 | 0.035 | 3188 | – | ✗ |
+| +kombine (oi+fon+kalabalik) | 0.131 | 0.093 (2.0) | 2583 | – | ✓ (fon ve kalabalık katkısı küçük) |
+
+1s taban (`temel`): hiçbir filtre ortalamayı sıfırın üstüne çıkaramadı (en iyi −0.011 R). Türev verisi kenarsız stratejiyi kurtarmıyor.
+
+**Karar:** canlı varsayılana yalnız **+oi** eklendi (`oi_teyit = true`).
+* +kalabalık kuralları teknik olarak geçti, ancak iyileşme (+0.003 R) istatistiksel gürültünün çok altında; denenmemiş bir
+  "+oi +kalabalık" birleşimini canlıya koymak yerine eklenmedi. Bu, ön kayıttan bilinçli bir sapmadır (daha az filtre yönünde).
+* +kombine'nin üstünlüğü büyük ölçüde +oi'den geliyor; fonlama filtresi tek başına kabul edilmediği için birleşim seçilmedi.
+* Uyarı: +oi 2022'de tabandan kötü (−0.055 vs +0.075). Holdout iyileşmesi (t 1.9) umut verici ama kesin değil.

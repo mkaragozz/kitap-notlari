@@ -230,7 +230,7 @@ def uygulama_olustur(tarayici: Tarayici, cfg: A.Ayarlar) -> FastAPI:
         p = tarayici.p
         h = tarayici.hazir.get(s)
         if h is None:
-            h = await asyncio.to_thread(tarayici.hazirla_sembol, df)
+            h = await asyncio.to_thread(tarayici.hazirla_sembol, df, None, s)
         if aralik == p.tetik_tf:
             g = h.iloc[-limit:]  # strateji görünümü: kanal + sinyal işaretleri
         else:
@@ -392,6 +392,15 @@ def uygulama_olustur(tarayici: Tarayici, cfg: A.Ayarlar) -> FastAPI:
         try:
             rp = json.loads(yol.read_text())
             ad = next((k for k, x in rp["varyantlar"].items() if x.get("surum") == tarayici.p.surum), None)
+            ty = yol.parent / "turev.json"
+            if ad is None and ty.exists():  # türev filtreli varyantlar ayrı deneyde (2022+)
+                tr = json.loads(ty.read_text())
+                for tad, x in tr["tabanlar"].items():
+                    for fad, f in x["filtreler"].items():
+                        if f.get("surum") == tarayici.p.surum:
+                            return {"kaynak": rp["olusturma"], "demo": rp.get("demo"), "surum": f["surum"],
+                                    "varyant": f"{tad} {fad} (2022+)", "eslesme": True, "genel": f["r"],
+                                    "long": None, "short": None, "holdout": f["holdout"]}
             v = rp["varyantlar"][ad or "temel"]
             o = v["ozet"]
             return {"kaynak": rp["olusturma"], "demo": rp.get("demo"), "surum": v.get("surum"), "varyant": ad or "temel",

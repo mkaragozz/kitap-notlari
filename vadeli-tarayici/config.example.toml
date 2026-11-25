@@ -22,6 +22,12 @@ atr_kat = 3.0
 ema_n = 200
 btc_filtre = true       # true: LONG yalnız BTC 4s > EMA200 iken, SHORT yalnız altındayken
 yon = "ikisi"           # "ikisi" | "long" | "short"
+# Türev konumlanma filtreleri (Binance açık pozisyon / fonlama / long-short / taker; DENEYLER.md §1)
+oi_teyit = true         # kırılımda açık pozisyon son oi_n mumda artmış olmalı (deneyde kabul edilen tek filtre)
+oi_n = 6
+fonlama_esik = 0.0      # 0 = kapalı (deneyde kabul edilmedi)
+kalabalik_z = 0.0       # 0 = kapalı (etkisi gürültü düzeyinde)
+taker_teyit = false     # deneyde kabul edilmedi
 
 [maliyet]
 komisyon = 0.0005       # taker, yön başına

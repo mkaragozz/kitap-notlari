@@ -40,7 +40,7 @@ class Borsa:
         hedef = (int(simdi // 3600) + 1) * 3600 + gecikme_sn
         await asyncio.sleep(max(0.5, hedef - simdi))
 
-    def metrik(self, sembol: str) -> pd.DataFrame:
+    def metrik(self, sembol: str, alanlar: tuple[str, ...] | None = None) -> pd.DataFrame:
         """Saatlik türev konumlanma verisi (turev.METRIK_SUTUN)."""
         return pd.DataFrame()
 
@@ -64,8 +64,8 @@ class BinanceBorsa(Borsa):
         self.rest = veri.BinanceREST()
         self._metrik = BinanceMetrikREST(self.rest)
 
-    def metrik(self, sembol: str) -> pd.DataFrame:
-        return self._metrik.metrik(sembol)
+    def metrik(self, sembol: str, alanlar: tuple[str, ...] | None = None) -> pd.DataFrame:
+        return self._metrik.metrik(sembol, alanlar) if alanlar else self._metrik.metrik(sembol)
 
     def fonlama(self, sembol: str) -> pd.Series:
         return self.rest.fonlama(sembol, int(time.time() * 1000) - 30 * 86_400_000)
@@ -166,7 +166,7 @@ class DemoBorsa(Borsa):
             d = d.iloc[-toplam:]
         return d
 
-    def metrik(self, sembol: str) -> pd.DataFrame:
+    def metrik(self, sembol: str, alanlar: tuple[str, ...] | None = None) -> pd.DataFrame:
         yol = veri.VARSAYILAN_ONBELLEK / f"{sembol}_metrik_1h.csv"
         if not yol.exists():
             return pd.DataFrame()
