@@ -73,6 +73,7 @@ function ekranGoster() {
   if (ad === "sinyaller") { filtreleriYukle(p); sinyalleriCiz(); }
   if (ad === "grafik") { const s = p.get("sembol"); durum.aralik = p.get("aralik") === "4h" ? "4h" : "1h"; grafikAc(s); }
   if (ad === "pozisyonlar") pozisyonlariYukle(p);
+  if (ad === "piyasa") { durum.haritaD = p.get("d") || "d24s"; $("#haritaVadeli").checked = p.get("vadeli") === "1"; piyasaYukle(); }
   if (ad === "gecmis") gecmisYukle();
   if (ad === "backtest") backtestYukle(p.get("varyant"));
   if (ad === "ayarlar") ayarlariYukle();
@@ -267,6 +268,85 @@ async function grafikAc(sembol, sessiz = false) {
   $("#grafikBilgi").textContent = `${v.sembol} · ${v.aralik === "1h" ? "1 saat" : "4 saat"} · EMA${v.ema_n}(4s) · kanal ${v.giris_n} · ATR ${fmt.f(v.atr)}`
     + (a ? ` · aktif: ${a.yon} (${a.tur === "yaklasan" ? "yaklaşan" : a.yeni ? "YENİ" : "devam"})` : "");
   if (!sessiz) g.chart.timeScale().fitContent();
+  turevYukle(sembol);
+}
+
+// ------------------------------------------------------------------ türev verisi (grafik altı)
+async function turevYukle(sembol) {
+  const kap = $("#turevKutu");
+  let v;
+  try { v = await api(`/api/turev?sembol=${encodeURIComponent(sembol)}`); }
+  catch { kap.replaceChildren(); $("#turevNot").textContent = ""; return; }
+  if (!v.veri) { kap.replaceChildren(); $("#turevNot").textContent = "Türev verisi yok."; return; }
+  const x = v.veri;
+  const kart = (k, deger, ipucu, sinif) => el("div", { class: "kart", title: ipucu }, el("span", {}, k), el("b", { class: sinif || "" }, deger));
+  kap.replaceChildren(
+    kart("Açık pozisyon", fmt.usd(x.oi) + " $", "Binance USDT-M toplam açık pozisyon"),
+    kart(`OI değişimi (${v.tf === "4h" ? "6×4s" : "6×1s"})`, fmt.y(x.oi_deg), "Pozitif: yeni pozisyon açılıyor", isaretSinif(x.oi_deg)),
+    kart("Fonlama (son)", v.fonlama == null ? "-" : (v.fonlama * 100).toFixed(4) + "%", "8 saatlik; pozitif = long'lar öder"),
+    kart("Long/short hesap", fmt.d(x.ls_hesap), "Tüm hesaplarda long/short oranı"),
+    kart("Kalabalık (z)", fmt.d(x.ls_z), "> +1.5: long tarafı aşırı kalabalık; < −1.5: short kalabalık"),
+    kart("Büyük trader L/S", fmt.d(x.top_ls), "En büyük hesapların pozisyon oranı"),
+    kart("Taker alım/satım", fmt.d(x.taker), "> 1: agresif alıcılar baskın"));
+  $("#turevNot").textContent = `Türev verisi: ${v.kaynak}. Son: ${fmt.zaman(v.zaman)}. Sinyale etkisi RAPOR.md'deki deneye göre belirlenir.`;
+}
+
+// ------------------------------------------------------------------ piyasa (CoinGecko / ısı haritası)
+$$("#haritaDonem button").forEach((b) => b.addEventListener("click", () => { durum.haritaD = b.dataset.d; piyasaRotaYaz(); haritaCiz(); }));
+$("#haritaVadeli").addEventListener("change", () => { piyasaRotaYaz(); haritaCiz(); });
+function piyasaRotaYaz() {
+  const p = new URLSearchParams({ d: durum.haritaD });
+  if ($("#haritaVadeli").checked) p.set("vadeli", "1");
+  rotaYaz("piyasa", p);
+}
+
+async function piyasaYukle() {
+  let v;
+  try { v = await api("/api/piyasa?n=100"); }
+  catch (e) { $("#piyasaNot").textContent = "Piyasa verisi alınamadı: " + e.message; return; }
+  durum.piyasa = v;
+  const g = v.genel;
+  const kart = (k, deger, sinif) => el("div", { class: "kart" }, el("span", {}, k), el("b", { class: sinif || "" }, deger));
+  const yuzde = (x) => (x == null ? "-" : x.toFixed(1) + "%");
+  $("#piyasaGenel").replaceChildren(...(g ? [
+    kart("Toplam piyasa değeri", fmt.usd(g.toplam_piyasa_degeri) + " $"),
+    kart("24s değişim", g.degisim_24s == null ? "-" : g.degisim_24s.toFixed(2) + "%", isaretSinif(g.degisim_24s)),
+    kart("24s hacim", fmt.usd(g.toplam_hacim) + " $"),
+    kart("BTC dominansı", yuzde(g.btc_dominans)),
+    kart("ETH dominansı", yuzde(g.eth_dominans)),
+    kart("Stabilcoin payı", yuzde(g.stabil_pay))] : [el("p", { class: "soluk" }, "Küresel veri yok (CoinGecko'ya ulaşılamadı).")]));
+  $("#piyasaNot").textContent = `Isı haritası: ${v.harita_kaynak}; kutu boyu piyasa değeriyle, renk seçili dönemdeki değişimle orantılı. `
+    + `Kaynaklar: CoinGecko ${v.kaynaklar.coingecko ? "✓" : "✗"}, CoinMarketCap ${v.kaynaklar.coinmarketcap ? "✓" : "anahtar yok"}, `
+    + `CoinGlass ${v.kaynaklar.coinglass ? "✓" : "anahtar yok"}. ${v.not}`;
+  haritaCiz();
+}
+
+function haritaCiz() {
+  const v = durum.piyasa;
+  if (!v) return;
+  const d = durum.haritaD || "d24s";
+  $$("#haritaDonem button").forEach((b) => b.classList.toggle("secili", b.dataset.d === d));
+  let liste = v.isi_haritasi.filter((x) => !x.stabil && x.piyasa_degeri);
+  if ($("#haritaVadeli").checked) liste = liste.filter((x) => x.vadeli);
+  if (!liste.length) { $("#isiHaritasi").replaceChildren(el("p", { class: "harita-bos" }, "Gösterilecek veri yok.")); return; }
+  const enb = Math.max(...liste.map((x) => Math.sqrt(x.piyasa_degeri)));
+  const olcek = d === "d1s" ? 2 : d === "d24s" ? 8 : 20;
+  const renk = (p) => {
+    if (p == null) return "#5a6470";
+    const k = Math.max(-1, Math.min(1, p / olcek));
+    const a = 0.35 + 0.65 * Math.abs(k);
+    return k >= 0 ? `rgba(38,166,154,${a})` : `rgba(239,83,80,${a})`;
+  };
+  $("#isiHaritasi").replaceChildren(...liste.map((x) => {
+    const oran = Math.sqrt(x.piyasa_degeri) / enb;
+    const k = el("div", { class: "karo" + (oran > 0.35 ? " buyuk" : ""), title: `${x.ad}: ${fmt.f(x.fiyat)} $`,
+      onclick: () => { if (x.vadeli) location.hash = `#/grafik?sembol=${encodeURIComponent(x.sembol + "USDT")}`; } },
+      el("b", {}, x.sembol), el("span", {}, x[d] == null ? "-" : (x[d] > 0 ? "+" : "") + x[d].toFixed(2) + "%"));
+    k.style.flexBasis = Math.round(60 + 340 * oran) + "px";
+    k.style.minHeight = Math.round(48 + 90 * oran) + "px";
+    k.style.background = renk(x[d]);
+    return k;
+  }));
 }
 
 // ------------------------------------------------------------------ pozisyonlar
@@ -426,6 +506,19 @@ async function backtestYukle(varyant) {
   tablo("#btSembol", [["Sembol", (r) => r.sembol], ["Başlangıç", (r) => r.baslangic], ["Toplam", (r) => fmt.y(r.toplam_getiri), (r) => isaretSinif(r.toplam_getiri)],
     ["Yıllık", (r) => fmt.y(r.yillik_getiri)], ["Max DD", (r) => fmt.y(r.max_dusus)], ["Sharpe", (r) => fmt.d(r.sharpe)], ["İşlem", (r) => r.islem],
     ["Kazanma", (r) => fmt.y(r.kazanma)], ["PF", (r) => fmt.d(r.profit_factor)], ["Ort. R", (r) => fmt.d(r.ort_r, 3)], ["Likid.", (r) => r.likidasyon], ["Al-tut", (r) => fmt.y(r.al_tut, 0)]], vr.semboller);
+  const tv = v.turev;
+  if (tv) {
+    $("#btTurevNot").textContent = `Dönem ${tv.donem[0]} → ${tv.donem[1]} (türev verisi 2021-12'den beri). Kabul: tabandan daha yüksek ort. R, ≥4/5 yılda daha iyi, holdout'ta daha iyi, eşiklerin ≥2/3'ü daha iyi, işlem ≥ %40.`;
+    const satirlar = [];
+    for (const [tad, x] of Object.entries(tv.tabanlar)) {
+      satirlar.push({ ad: `${tad} (taban)`, v: x.taban, k: null });
+      for (const [fad, f] of Object.entries(x.filtreler)) satirlar.push({ ad: `${tad} ${fad}`, v: f, k: f.kriter });
+    }
+    tablo("#btTurev", [["Varyant", (r) => r.ad], ["İşlem", (r) => r.v.r.islem], ["Ort. R", (r) => fmt.d(r.v.r.ort_r, 3), (r) => isaretSinif(r.v.r.ort_r)],
+      ["t", (r) => fmt.d(r.v.r.t, 1)], ["Holdout R", (r) => fmt.d(r.v.holdout.ort_r, 3), (r) => isaretSinif(r.v.holdout.ort_r)],
+      ["Kârlı sembol", (r) => fmt.y(r.v.karli_sembol_orani)], ["Daha iyi yıl", (r) => (r.k ? `${r.v.yil_iyi}/5` : "-")],
+      ["Kabul", (r) => (r.k ? (r.k.hepsi ? "✓" : "✗") : "-")]], satirlar);
+  } else { $("#btTurevNot").textContent = "Deney çalıştırılmadı (python tarayici.py backtest --turev)."; tablo("#btTurev", [["-", () => "-"]], []); }
   const sg = (rp.saglik && (rp.saglik[varyant] || rp.saglik.temel)) || {};
   const sat = [];
   (sg.karistirilmis || []).forEach((x) => sat.push([`Karıştırılmış gerçek veri (tohum ${x.tohum})`, x.islem, x.ort_r]));

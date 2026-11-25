@@ -168,12 +168,12 @@ def calistir(df: pd.DataFrame, p: StratejiParam = StratejiParam(), r: RiskParam 
              m: MaliyetParam = MaliyetParam(), fonlama: pd.Series | None = None, sembol: str = "",
              btc_rejim: pd.Series | None = None, hazir: pd.DataFrame | None = None,
              baslangic: pd.Timestamp | None = None, bitis: pd.Timestamp | None = None,
-             kaydir: int = 0) -> BacktestSonuc:
+             kaydir: int = 0, ek: pd.DataFrame | None = None) -> BacktestSonuc:
     """Tek sembol backtest.
     `hazir`: önceden `hazirla` ile hesaplanmış veri (ızgara taramasında hız için).
     `baslangic/bitis`: göstergeler tüm veride ısınır, işlemler sadece bu aralıkta açılır (dilim/walk-forward).
     `kaydir`: SAĞLIK KONTROLÜ: sinyalleri k mum kaydırır (+1 = bir mum geç, -1 = bir mum erken = gelecek bilgisi)."""
-    h = hazir if hazir is not None else hazirla(df, p, btc_rejim)
+    h = hazir if hazir is not None else hazirla(df, p, btc_rejim, ek)
     m = _fonlama_modu(m, fonlama)
     if baslangic is not None or bitis is not None:
         h = h.loc[baslangic:bitis]

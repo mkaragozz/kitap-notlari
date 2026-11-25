@@ -40,6 +40,14 @@ class Borsa:
         hedef = (int(simdi // 3600) + 1) * 3600 + gecikme_sn
         await asyncio.sleep(max(0.5, hedef - simdi))
 
+    def metrik(self, sembol: str) -> pd.DataFrame:
+        """Saatlik türev konumlanma verisi (turev.METRIK_SUTUN)."""
+        return pd.DataFrame()
+
+    def fonlama(self, sembol: str) -> pd.Series:
+        """Gerçekleşmiş fonlama oranları (son ~30 gün)."""
+        return pd.Series(dtype=float)
+
     async def kline_akisi(self, semboller: list[str], geri_cagir: Callable[[str, list], None],
                           durum: dict) -> None:
         """Kapanan mumları geri_cagir(sembol, [t,o,h,l,c,v,qv]) ile iletir. Kopunca yeniden bağlanır."""
@@ -51,7 +59,16 @@ class BinanceBorsa(Borsa):
     WS = "wss://fstream.binance.com/stream?streams="
 
     def __init__(self) -> None:
+        from .turev import BinanceMetrikREST
+
         self.rest = veri.BinanceREST()
+        self._metrik = BinanceMetrikREST(self.rest)
+
+    def metrik(self, sembol: str) -> pd.DataFrame:
+        return self._metrik.metrik(sembol)
+
+    def fonlama(self, sembol: str) -> pd.Series:
+        return self.rest.fonlama(sembol, int(time.time() * 1000) - 30 * 86_400_000)
 
     def evren(self, n: int) -> list[dict]:
         return self.rest.evren(n)
@@ -104,6 +121,8 @@ class DemoBorsa(Borsa):
         self.hiz = hiz
         self.veri: dict[str, pd.DataFrame] = {}
         for yol in sorted(onbellek.glob("*_1h.csv")):
+            if "_metrik" in yol.name:
+                continue
             s = yol.name.split("_")[0]
             try:
                 df = veri._csv_oku(yol)
@@ -146,6 +165,21 @@ class DemoBorsa(Borsa):
         if toplam:
             d = d.iloc[-toplam:]
         return d
+
+    def metrik(self, sembol: str) -> pd.DataFrame:
+        yol = veri.VARSAYILAN_ONBELLEK / f"{sembol}_metrik_1h.csv"
+        if not yol.exists():
+            return pd.DataFrame()
+        m = veri._csv_oku(yol)
+        sinir = pd.Timestamp(self.simdi_ms(), unit="ms", tz="UTC").floor("h")
+        return m[m.index < sinir].iloc[-24 * 30:]
+
+    def fonlama(self, sembol: str) -> pd.Series:
+        yol = veri.VARSAYILAN_ONBELLEK / f"{sembol}_fonlama.csv"
+        if not yol.exists():
+            return pd.Series(dtype=float)
+        f = veri._csv_oku(yol).iloc[:, 0]
+        return f[f.index <= pd.Timestamp(self.simdi_ms(), unit="ms", tz="UTC")].iloc[-100:]
 
     async def sonraki_kapanisi_bekle(self, gecikme_sn: float) -> None:
         await asyncio.sleep(self.hiz)

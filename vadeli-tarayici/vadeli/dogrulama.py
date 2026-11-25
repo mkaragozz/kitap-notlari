@@ -30,6 +30,8 @@ DEMO_RAPOR_DIZINI = KOK / "raporlar_demo"  # sentetik deneme raporu gerçek rapo
 
 # ------------------------------------------------------------------ veri seti
 _VERI: dict[str, tuple[pd.DataFrame, pd.Series]] = {}
+_METRIK: dict[str, pd.DataFrame] = {}
+_BASLANGIC: pd.Timestamp | None = None  # işlemler yalnızca bu tarihten sonra (göstergeler öncesinde ısınır)
 
 
 def veri_seti(semboller: list[str], bitis: str = "2026-10", demo: bool = False) -> dict[str, tuple[pd.DataFrame, pd.Series]]:
@@ -73,7 +75,11 @@ def _is(args):
         if p.tetik_tf != "1h":
             b = veri.yeniden_ornekle(b, p.tetik_tf)
         btc = hazirla(b, replace(p, btc_filtre=False, hacim_kat=0, vol_min=0, vol_max=0))["rejim"]
-    s = calistir(df, p, r, m, fonlama=f, sembol=sembol, btc_rejim=btc, kaydir=kaydir)
+    ek = None
+    if p.turev_gerekli or _METRIK:
+        from . import turev
+        ek = turev.ozellikler(_METRIK.get(sembol), f, df.index, p.tetik_tf, oi_n=p.oi_n)
+    s = calistir(df, p, r, m, fonlama=f, sembol=sembol, btc_rejim=btc, kaydir=kaydir, ek=ek, baslangic=_BASLANGIC)
     isl = s.islemler
     if not isl.empty:
         isl = isl[["giris_zaman", "cikis_zaman", "yon", "r", "net", "neden", "mum", "fonlama", "komisyon"]].copy()
@@ -82,9 +88,11 @@ def _is(args):
     return sembol, s.metrik, isl, gunluk
 
 
-def _havuz_baslat(d):
-    global _VERI
+def _havuz_baslat(d, metrik=None, baslangic=None):
+    global _VERI, _METRIK, _BASLANGIC
     _VERI = d
+    _METRIK = metrik or {}
+    _BASLANGIC = baslangic
 
 
 def toplu_calistir(d: dict, p: StratejiParam, r: RiskParam, m: MaliyetParam, kaydir: int = 0,
@@ -98,8 +106,8 @@ def toplu_calistir(d: dict, p: StratejiParam, r: RiskParam, m: MaliyetParam, kay
     return {s: {"metrik": mt, "islemler": isl, "gunluk": g} for s, mt, isl, g in sonuc}
 
 
-def havuz(d: dict, n: int | None = None) -> ProcessPoolExecutor:
-    return ProcessPoolExecutor(n or max(1, (os.cpu_count() or 2)), initializer=_havuz_baslat, initargs=(d,))
+def havuz(d: dict, n: int | None = None, metrik: dict | None = None, baslangic=None) -> ProcessPoolExecutor:
+    return ProcessPoolExecutor(n or max(1, (os.cpu_count() or 2)), initializer=_havuz_baslat, initargs=(d, metrik, baslangic))
 
 
 # ------------------------------------------------------------------ özetler

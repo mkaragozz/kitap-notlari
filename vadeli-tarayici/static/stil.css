@@ -80,3 +80,12 @@ details[open] summary { margin-bottom: 10px; }
   .sekmeler a { padding: 8px 10px; font-size: 14px; }
   .filtre select, .filtre input { flex: 1 1 45%; }
 }
+
+/* ---------- Piyasa: ısı haritası ---------- */
+.harita { display: flex; flex-wrap: wrap; gap: 3px; }
+.karo { flex-grow: 1; min-width: 64px; min-height: 52px; border-radius: 6px; padding: 4px 6px; color: #fff; cursor: pointer;
+  display: flex; flex-direction: column; justify-content: center; overflow: hidden; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+.karo b { font-size: 13px; } .karo span { font-size: 12px; opacity: .95; }
+.karo.buyuk b { font-size: 18px; } .karo.buyuk span { font-size: 14px; }
+.harita-bos { color: var(--soluk); }
+label.kutu { display: flex; align-items: center; gap: 6px; }

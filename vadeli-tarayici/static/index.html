@@ -24,6 +24,7 @@
 <nav class="sekmeler" id="sekmeler">
   <a href="#/sinyaller" data-sekme="sinyaller">Sinyaller</a>
   <a href="#/grafik" data-sekme="grafik">Grafik</a>
+  <a href="#/piyasa" data-sekme="piyasa">Piyasa</a>
   <a href="#/pozisyonlar" data-sekme="pozisyonlar">Pozisyonlarım</a>
   <a href="#/gecmis" data-sekme="gecmis">Geçmiş</a>
   <a href="#/backtest" data-sekme="backtest">Backtest</a>
@@ -79,8 +80,23 @@
     </div>
     <div id="grafikBilgi" class="soluk"></div>
     <div id="grafik" class="grafik"></div>
+    <div id="turevKutu" class="istat"></div>
+    <p id="turevNot" class="not"></p>
     <p class="not">Turuncu: EMA(4s) rejim çizgisi · mavi kesikli: giriş kanalı (önceki N mum) · yatay çizgiler: giriş / stop / likidasyon.
       Grafik kütüphanesi: TradingView Lightweight Charts™ (Apache 2.0, yerel dosya; veri kendi API'mizden).</p>
+  </section>
+
+  <!-- PİYASA -->
+  <section id="s-piyasa" class="ekran gizli">
+    <div id="piyasaGenel" class="istat"></div>
+    <div class="filtre">
+      <div class="dugmeler" id="haritaDonem">
+        <button data-d="d1s">1 saat</button><button data-d="d24s" class="secili">24 saat</button><button data-d="d7g">7 gün</button>
+      </div>
+      <label class="kutu soluk"><input type="checkbox" id="haritaVadeli"> yalnız Binance vadelide olanlar</label>
+    </div>
+    <div id="isiHaritasi" class="harita"></div>
+    <p id="piyasaNot" class="not"></p>
   </section>
 
   <!-- POZİSYONLAR -->
@@ -137,6 +153,9 @@
     <div class="tablo-kap"><table id="btWF"></table></div>
     <h3>Sembol bazında</h3>
     <div class="tablo-kap"><table id="btSembol"></table></div>
+    <h3>Türev verisi filtre deneyi (açık pozisyon, fonlama, long/short, taker)</h3>
+    <p id="btTurevNot" class="soluk"></p>
+    <div class="tablo-kap"><table id="btTurev"></table></div>
     <h3>Sağlık kontrolleri</h3>
     <div class="tablo-kap"><table id="btSaglik"></table></div>
   </section>

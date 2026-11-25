@@ -57,6 +57,7 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--semboller", nargs="*")
     b.add_argument("--bitis", default="2026-10", help="son tam ay (YYYY-MM)")
     b.add_argument("--izgara", nargs="*", default=None, help="ızgara + walk-forward yapılacak varyantlar (varsayılan: hepsi)")
+    b.add_argument("--turev", action="store_true", help="türev konumlanma filtresi deneyi (açık pozisyon, fonlama, long/short, taker)")
 
     i = alt.add_parser("indir", help="geçmiş veriyi indir (data.binance.vision)")
     i.add_argument("--semboller", nargs="*")
@@ -68,6 +69,12 @@ def main(argv: list[str] | None = None) -> int:
         _log_kur("INFO", KOK / "loglar" / "backtest.log")
         from vadeli import rapor_uret
 
+        if a.turev:
+            from vadeli import rapor_turev
+
+            rapor_turev.uret()
+            print((rapor_uret.D.RAPOR_DIZINI / "ozet_turev.md").read_text())
+            return 0
         izg = tuple(a.izgara) if a.izgara is not None else tuple(rapor_uret.varyantlar())
         rp = rapor_uret.uret(demo=a.demo, semboller=a.semboller, hizli=a.hizli, bitis=a.bitis, izgara_varyantlari=izg)
         print((rapor_uret.D.RAPOR_DIZINI / "ozet.md").read_text())

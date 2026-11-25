@@ -36,11 +36,24 @@ class StratejiParam:
     vol_max: float = 0.0       # >0 ise: ATR/fiyat en çok bu (aşırı oynak piyasayı ele)
     btc_filtre: bool = False   # True: LONG yalnız BTC rejimi +1, SHORT yalnız BTC rejimi -1 iken
     yon: str = "ikisi"         # "ikisi" | "long" | "short"
+    # Türev konumlanma filtreleri (vadeli/turev.py; veri 2021-12'den beri). 0/False = kapalı.
+    oi_teyit: bool = False     # kırılımda açık pozisyon son oi_n mumda artmış olmalı (yeni para girişi)
+    oi_n: int = 6
+    fonlama_esik: float = 0.0  # >0: LONG fonlama > eşik ise atla (kalabalık long), SHORT fonlama < -eşik ise atla
+    kalabalik_z: float = 0.0   # >0: LONG long/short hesap oranı z > eşik ise atla, SHORT z < -eşik ise atla
+    taker_teyit: bool = False  # LONG taker alım/satım > 1, SHORT < 1 olmalı
+
+    @property
+    def turev_gerekli(self) -> bool:
+        return bool(self.oi_teyit or self.fonlama_esik or self.kalabalik_z or self.taker_teyit)
 
     @property
     def surum(self) -> str:
-        """Parametre sürümü: aynı parametre = aynı kısa özet (sinyal kayıtlarında saklanır)."""
-        return "p" + hashlib.sha1(json.dumps(asdict(self), sort_keys=True).encode()).hexdigest()[:8]
+        """Parametre sürümü: aynı parametre = aynı kısa özet (sinyal kayıtlarında saklanır).
+        Varsayılan değerdeki alanlar özete girmez: yeni alan eklemek eski sürümleri değiştirmez."""
+        varsayilan = _VARSAYILAN
+        d = {k: v for k, v in asdict(self).items() if k in _ESKI_ALANLAR or v != varsayilan.get(k)}
+        return "p" + hashlib.sha1(json.dumps(d, sort_keys=True).encode()).hexdigest()[:8]
 
     def ozet(self) -> str:
         s = f"{self.tetik_tf} tetik {self.giris_n}/{self.cikis_n}, ATR{self.atr_n}x{self.atr_kat}, EMA{self.ema_n}({self.rejim_tf})"
@@ -52,7 +65,22 @@ class StratejiParam:
             s += ", BTC rejim"
         if self.yon != "ikisi":
             s += f", sadece {self.yon}"
+        if self.oi_teyit:
+            s += f", OI↑({self.oi_n})"
+        if self.fonlama_esik:
+            s += f", fonlama<{self.fonlama_esik * 100:.2f}%"
+        if self.kalabalik_z:
+            s += f", kalabalık z<{self.kalabalik_z}"
+        if self.taker_teyit:
+            s += ", taker teyit"
         return s
+
+
+_ESKI_ALANLAR = {"giris_n", "cikis_n", "atr_n", "atr_kat", "ema_n", "tetik_tf", "rejim_tf", "hacim_kat", "vol_min",
+                 "vol_max", "btc_filtre", "yon"}
+
+
+_VARSAYILAN = asdict(StratejiParam())
 
 
 @dataclass(frozen=True)
@@ -109,7 +137,8 @@ def rejim_hizala(df: pd.DataFrame, tetik_tf: str, rejim_tf: str, ema_n: int) -> 
     return hiz
 
 
-def hazirla(df: pd.DataFrame, p: StratejiParam = StratejiParam(), btc_rejim: pd.Series | None = None) -> pd.DataFrame:
+def hazirla(df: pd.DataFrame, p: StratejiParam = StratejiParam(), btc_rejim: pd.Series | None = None,
+            ek: pd.DataFrame | None = None) -> pd.DataFrame:
     """Tek ve ortak sinyal fonksiyonu. Girdi: kapanmış mumlar (tetik_tf). Çıktı: göstergeler + sinyaller.
 
     Sütunlar:
@@ -154,6 +183,28 @@ def hazirla(df: pd.DataFrame, p: StratejiParam = StratejiParam(), btc_rejim: pd.
         b = btc_rejim.reindex(df.index).ffill().fillna(0)
         filtre_l &= b == 1
         filtre_s &= b == -1
+    if ek is not None:  # türev özellikleri (turev.ozellikler, aynı index'e hizalı, look-ahead'siz)
+        for c in ek.columns:
+            out[c] = ek[c].reindex(df.index)
+    if p.turev_gerekli:
+        if ek is None:
+            raise ValueError("Türev filtreleri için ek (turev.ozellikler) gerekli")
+        if p.oi_teyit:  # teyit filtresi: veri yoksa işlem yok
+            k = (out["oi_deg"] > 0).fillna(False)
+            filtre_l &= k
+            filtre_s &= k
+        if p.fonlama_esik:  # veto filtresi: veri yoksa engellemez
+            f = out["fonlama"]
+            filtre_l &= ~(f > p.fonlama_esik).fillna(False)
+            filtre_s &= ~(f < -p.fonlama_esik).fillna(False)
+        if p.kalabalik_z:
+            z = out["ls_z"]
+            filtre_l &= ~(z > p.kalabalik_z).fillna(False)
+            filtre_s &= ~(z < -p.kalabalik_z).fillna(False)
+        if p.taker_teyit:
+            t = out["taker"]
+            filtre_l &= (t > 1).fillna(False)
+            filtre_s &= (t < 1).fillna(False)
     if p.yon == "short":
         filtre_l &= False
     if p.yon == "long":

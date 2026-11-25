@@ -80,3 +80,29 @@ Hiçbiri geçmezse sonuç "canlıya uygun değil" olarak raporlanır.
 * Seçilen varyantın parametreleri (20/10/3×ATR/EMA200) ızgaradaki en iyi değerlere çekilmedi (ör. 55/20/4×ATR
   daha yüksek R gösteriyor); bu, test verisine bakarak ayar olurdu. Walk-forward zaten bu tür seçimin görülmemiş
   veride avantaj sağlamadığını gösteriyor (2025–2026'da seçilen kombinasyon medyanın altında kaldı).
+
+---
+
+## 1. Ön kayıt — türev konumlanma verileri (sonuçlar görülmeden yazıldı, 2026-11-25)
+
+**Soru:** CoinGlass benzeri konumlanma verileri (açık pozisyon, fonlama, long/short kalabalığı, taker baskısı) sinyalleri
+iyileştiriyor mu? Veri: Binance arşivi `metrics` (5 dk, 2021-12'den beri) + gerçek fonlama. Bu yüzden karşılaştırma
+dönemi **2022-01 → 2026-10** (5 yıllık dilim), holdout yine **2025-01 → 2026-10**. Göstergeler 2020'den ısınır.
+
+**Taban:** `4s_tetik_btc` (canlı varsayılan) ve karşılaştırma için `temel` (1s). Her filtre tabana tek tek eklenir:
+
+| Ad | Filtre | Gerekçe |
+|---|---|---|
+| +oi | kırılımda açık pozisyon son 6 mumda artmış | fiyat + yeni para = gerçek kırılım |
+| +fon | LONG fonlama > %0.05/8s ise atla; SHORT < −%0.05 ise atla | kalabalık tarafa geç binmemek |
+| +kalabalik | LONG long/short hesap oranı z > 1.5 ise atla; SHORT z < −1.5 ise atla | perakende kalabalığına karşı |
+| +taker | LONG taker alım/satım > 1, SHORT < 1 | kırılım mumunda agresif taraf teyidi |
+| +kombine | +oi +fon +kalabalik | tek birleşim denemesi |
+
+**Kabul kuralı (canlı varsayılana eklenmesi için hepsi):** aynı dönemde tabana göre (a) ort. R daha yüksek,
+(b) 5 yılın en az 4'ünde daha iyi, (c) holdout'ta daha iyi, (d) eşik taramasında 3 eşiğin en az 2'si tabandan iyi
+(oi_n 3/6/12, fonlama %0.03/%0.05/%0.10, z 1/1.5/2), (e) işlem sayısı tabanın en az %40'ı.
+Geçen yoksa türev verileri yalnızca **bilgi** olarak gösterilir, sinyale girmez.
+
+**Piyasa geneli (CoinGecko/CMC):** ücretsiz geçmişi yok/kısa olduğundan backtest edilemez → sinyale girmez,
+yalnızca panoda bağlam ve ısı haritası. **TradingView:** resmi API yok, kazıma kullanım şartlarına aykırı → kullanılmaz.

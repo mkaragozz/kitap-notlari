@@ -260,6 +260,66 @@ def uygulama_olustur(tarayici: Tarayici, cfg: A.Ayarlar) -> FastAPI:
                        "rejim_tf": p.rejim_tf,
                        "aktif": [x for x in tarayici.aktif + tarayici.yaklasan if x["sembol"] == s]})
 
+    # ---------------------------------------------------------- piyasa bağlamı ve türev verileri
+    from .piyasa import PiyasaBaglami
+    from . import turev as _turev
+
+    piyasa = PiyasaBaglami()
+    turev_onbellek: dict[str, tuple[float, dict]] = {}
+
+    @app.get("/api/piyasa")
+    async def piyasa_ozet(n: int = Query(100, ge=10, le=250)):
+        ozet = await asyncio.to_thread(piyasa.ozet)
+        harita = await asyncio.to_thread(piyasa.cg.isi_haritasi, n)
+        kaynak = "CoinGecko"
+        if not harita:  # CoinGecko yoksa: izlenen Binance vadeli sembollerinden kendi ısı haritamız
+            kaynak = "Binance vadeli (izlenen semboller)"
+            for e in tarayici.evren:
+                df = tarayici.mumlar.get(e["sembol"])
+                if df is None or len(df) < 170:
+                    continue
+                c = df["close"]
+                harita.append({"sembol": e["sembol"].removesuffix("USDT"), "ad": e["sembol"], "fiyat": float(c.iloc[-1]),
+                               "piyasa_degeri": e["hacim24"], "hacim": e["hacim24"],
+                               "d1s": float(c.iloc[-1] / c.iloc[-2] - 1) * 100, "d24s": float(c.iloc[-1] / c.iloc[-25] - 1) * 100,
+                               "d7g": float(c.iloc[-1] / c.iloc[-169] - 1) * 100, "stabil": False})
+        vadeli = {e["sembol"].removesuffix("USDT") for e in tarayici.evren}
+        for h in harita:
+            h["vadeli"] = h["sembol"] in vadeli
+        return _temiz({**ozet, "isi_haritasi": harita, "harita_kaynak": kaynak})
+
+    @app.get("/api/turev")
+    async def turev_veri(sembol: str = Query(..., max_length=30)):
+        try:
+            s = veri.sembol_dogrula(sembol)
+        except ValueError as e:
+            raise HTTPException(400, str(e))
+        kayit = turev_onbellek.get(s)
+        if kayit and time.time() - kayit[0] < 300:
+            return kayit[1]
+        try:
+            m = await asyncio.to_thread(tarayici.borsa.metrik, s)
+        except Exception as e:
+            raise HTTPException(502, f"türev verisi alınamadı: {type(e).__name__}")
+        if m is None or m.empty:
+            return {"sembol": s, "veri": None}
+        tf = tarayici.p.tetik_tf
+        idx = (m.index if tf == "1h" else m.resample(tf, label="left", closed="left", origin="epoch").last().index)
+        o = _turev.ozellikler(m, None, idx, tf, oi_n=tarayici.p.oi_n, z_n=min(180, max(20, len(idx) - 1)))
+        son = o.dropna(subset=["oi"]).iloc[-1] if o["oi"].notna().any() else None
+        try:
+            f = await asyncio.to_thread(tarayici.borsa.fonlama, s)
+            fonlama = float(f.iloc[-1]) if len(f) else None
+        except Exception:
+            fonlama = None
+        cevap = _temiz({"sembol": s, "zaman": son.name.isoformat() if son is not None else None, "tf": tf,
+                        "veri": None if son is None else {k: (float(son[k]) if pd.notna(son[k]) else None)
+                                                          for k in ("oi", "oi_deg", "ls_hesap", "ls_z", "top_ls", "taker")},
+                        "fonlama": fonlama, "seri_oi": [[int(t.timestamp()), float(v)] for t, v in m["oi"].dropna().iloc[-500:].items()],
+                        "kaynak": "Binance herkese açık futures/data (CoinGlass'taki Binance verisiyle aynı ham veri)"})
+        turev_onbellek[s] = (time.time(), cevap)
+        return cevap
+
     # ---------------------------------------------------------- pozisyonlar
     @app.get("/api/pozisyonlar")
     async def pozisyonlar():
@@ -360,7 +420,9 @@ def uygulama_olustur(tarayici: Tarayici, cfg: A.Ayarlar) -> FastAPI:
         yol = rapor_yolu()
         if not yol.exists():
             return {"rapor": None, "calisma": bt_durum}
-        return Response(content=b'{"calisma":' + json.dumps(bt_durum).encode() + b',"rapor":' + yol.read_bytes() + b"}",
+        ty = yol.parent / "turev.json"
+        turev_b = ty.read_bytes() if ty.exists() else b"null"
+        return Response(content=b'{"calisma":' + json.dumps(bt_durum).encode() + b',"turev":' + turev_b + b',"rapor":' + yol.read_bytes() + b"}",
                         media_type="application/json")
 
     @app.post("/api/backtest/calistir")
