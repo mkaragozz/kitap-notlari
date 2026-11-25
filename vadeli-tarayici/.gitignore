@@ -7,3 +7,4 @@ loglar/
 sinyaller*.csv
 config.toml
 .env
+raporlar_demo/
