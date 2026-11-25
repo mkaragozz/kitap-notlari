@@ -25,9 +25,11 @@ class Ayarlar:
     atr_n: int = 14
     atr_kat: float = 3.0
     ema_n: int = 200
-    tetik_tf: str = "1h"
+    # Varsayılan: doğrulamada ön kayıtlı kriterleri geçen "4s_tetik_btc" varyantı (RAPOR.md).
+    # Şartnamedeki orijinal 1s tetik için: tetik_tf = "1h", btc_filtre = false
+    tetik_tf: str = "4h"
     rejim_tf: str = "4h"
-    btc_filtre: bool = False
+    btc_filtre: bool = True
     yon: str = "ikisi"
     # maliyet
     komisyon: float = 0.0005

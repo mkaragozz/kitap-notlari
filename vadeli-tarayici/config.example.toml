@@ -11,15 +11,16 @@ mmr = 0.005             # bakım teminatı oranı (temkinli)
 sembol_sayisi = 50      # hacme göre ilk N USDT-M perpetual
 
 [strateji]
-# Varsayılan = şartnamedeki strateji. RAPOR.md'deki sonuçlara bakmadan değiştirmeyin.
-tetik_tf = "1h"         # "1h" veya "4h"
+# Varsayılan = doğrulamayı geçen "4s_tetik_btc" varyantı (RAPOR.md). Şartnamedeki orijinal strateji
+# (1s tetik, BTC filtresi yok) gerçek veride kenar GÖSTERMEDİ; onu denemek için tetik_tf="1h", btc_filtre=false.
+tetik_tf = "4h"         # "1h" veya "4h"
 rejim_tf = "4h"
 giris_n = 20
 cikis_n = 10
 atr_n = 14
 atr_kat = 3.0
 ema_n = 200
-btc_filtre = false      # true: LONG yalnız BTC 4s > EMA200 iken, SHORT yalnız altındayken
+btc_filtre = true       # true: LONG yalnız BTC 4s > EMA200 iken, SHORT yalnız altındayken
 yon = "ikisi"           # "ikisi" | "long" | "short"
 
 [maliyet]

@@ -5,6 +5,10 @@ ve risk/kaldıraç hesabını gösteren sistem: **backtest + doğrulama**, **can
 açılan web panosu (PWA)**.
 
 > ⚠️ **Kaldıraç zarar riskini büyütür; stop'u borsada gir. Yatırım tavsiyesi değildir.**
+> **Doğrulama sonucu (özet):** şartnamedeki 1s-tetik strateji gerçek veride maliyetlerden sonra kenar göstermedi.
+> Varsayılan olarak doğrulamayı geçen **4s tetik + BTC rejim filtresi** varyantı kullanılır; ancak onun da 2025-2026
+> kenarı istatistiksel olarak sıfırdan ayırt edilemiyor. Ayrıntı: `RAPOR.md`.
+>
 > Sistem **hiçbir koşulda emir göndermez** ve **API anahtarı istemez/kullanmaz**; yalnızca Binance'in herkese açık
 > uç noktalarından veri okur. Strateji sonuçları için önce [`RAPOR.md`](RAPOR.md)'yi okuyun.
 
@@ -40,7 +44,7 @@ cp config.example.toml config.toml        # isteğe bağlı; yoksa varsayılanla
 python tarayici.py tara --hesap 1000
 ```
 
-* Terminalde her 1 saatlik mum kapanışından ~5 sn sonra renkli sinyal tablosu basılır; yeni sinyalde zil çalar.
+* Terminalde her 1 saatlik mum kapanışından ~5 sn sonra tarama yapılır (pozisyonlar her saat değerlendirilir); varsayılan stratejide yeni sinyaller 4 saatlik mum kapanışlarında (UTC 00, 04, 08, …) oluşur. Yeni sinyalde zil çalar.
 * Pano: **http://127.0.0.1:8000** (yalnızca bu bilgisayardan erişilebilir).
 * İlk açılışta her sembol için ~3000 saatlik geçmiş indirilir (1–2 dk). Sonraki taramalarda yalnızca yeni mumlar
   eklenir; veriler `veri/tarayici.db` (SQLite) içinde saklanır, yeniden başlatınca tekrar indirilmez.
@@ -73,7 +77,7 @@ Ne yapar (ayrıntı ve sonuçlar: `RAPOR.md`, deneme günlüğü: `DENEYLER.md`)
 | Gerçek veri | Binance USDT-M **resmi arşivi** (data.binance.vision) 1s mumlar 2020-01'den beri + **gerçek fonlama oranları**; `veri_onbellek/` altına CSV olarak önbelleklenir |
 | Metrikler | toplam/yıllık getiri, max düşüş, Sharpe, işlem sayısı, kazanma, profit factor, long/short, çıkış nedenleri, likidasyon, al-tut |
 | Dilimli tutarlılık | 2020…2026 her yıl ayrı |
-| Parametre sağlamlığı | 60 kombinasyonluk ızgara; kârlı kombinasyon oranı ve medyan |
+| Parametre sağlamlığı | 54 kombinasyonluk ızgara (giriş 10/20/40/55 × çıkış 5/10/20 × ATR 2/3/4 × EMA 100/200, çıkış<giriş); kârlı kombinasyon oranı ve medyan |
 | Walk-forward | 2 yıl eğitimde seç → sonraki yıl görülmemiş veride test (2022–2026) |
 | Çoklu sembol | 22 uzun geçmişli sembol + güncel ilk 50, sembol bazında tablo |
 | Sağlık | getirileri karıştırılmış gerçek veri, rastgele yürüyüş, ±1 mum kaydırma, maliyet duyarlılığı |

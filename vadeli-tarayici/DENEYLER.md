@@ -36,3 +36,47 @@ Hiçbiri geçmezse sonuç "canlıya uygun değil" olarak raporlanır.
 ---
 
 ## Deneme kayıtları
+
+### D1 — Rastgele yürüyüş üretecinde sahte kenar (motor hatası değil, test verisi hatası)
+* **Ne:** İlk sağlık testinde maliyetsiz rastgele yürüyüşte (kenarsız veri) işlem başı +0.09 R çıktı; rastgele girişlerde bile.
+* **Neden araştırıldı:** Kenarsız veride kâr = sızıntı şüphesi.
+* **Sonuç:** Üreteç her mumu 4 alt adımla oluşturuyordu; stop "tam stop fiyatından" dolduğunda gerçek yolun stopu
+  aşan kısmı yok sayılıyor ve stoplar sistematik olarak lehte doluyordu. Alt adım 60'a çıkarıldı → etki kayboldu.
+  Ders: gerçek piyasada da stoplar kayar; bu yüzden stop dolumlarına da %0.03 kayma uygulanıyor.
+
+### D2 — Şartname stratejisi (temel) gerçek veride
+* **Sonuç:** ort. R −0.005 (t −0.7), 3/7 yıl pozitif, %45 sembol kârlı, ızgaranın %35'i pozitif, walk-forward −0.014,
+  holdout −0.002. **Kriterleri geçmedi.** Maliyetsiz +0.054 R: kırılım etkisi var ama 1s'te maliyetleri karşılamıyor.
+  Short tarafı toplamda −165 R, long +45 R.
+
+### D3 — 4s_tetik
+* **Neden:** Daha az ama daha büyük hareketli işlem → maliyet/stop oranı düşer.
+* **Sonuç:** +0.078 R (t 3.7), 6/7 yıl, %86 sembol, ızgara %100, WF +0.050 (3/5), holdout +0.011. **Geçti.**
+
+### D4 — genis_cikis (20 kanal, 4×ATR)
+* **Sonuç:** +0.001 R, holdout −0.003. Geçmedi. (Izgarası temel ile aynı kombinasyonları kapsadığından ızgara/WF aynıdır.)
+
+### D5 — hacim_filtre (kırılım mumu hacmi > 1.5× ortalama)
+* **Sonuç:** +0.001 R, 5/7 yıl, ızgara %65, WF −0.007. Geçmedi. İşlem sayısını %15 azalttı, kaliteyi anlamlı artırmadı.
+
+### D6 — vol_filtre (ATR/fiyat ≥ %0.4)
+* **Sonuç:** −0.006 R. Geçmedi. 22 sembolde filtre neredeyse hiç işlem elemedi (bu semboller zaten oynak).
+
+### D7 — btc_rejim (1s tetik)
+* **Sonuç:** −0.006 R, 2/7 yıl. Geçmedi.
+
+### D8 — sadece_long
+* **Sonuç:** +0.004 R, 4/7 yıl; 2022–2024 ağır zarar, 2025–2026 pozitif (holdout +0.034). Geçmedi.
+  Son dönemdeki iyi görünüm boğa piyasasından; seçilseydi tipik "son veriye uydurma" olurdu.
+
+### D9 — 4s_tetik_btc
+* **Sonuç:** +0.095 R (t 4.0), 7/7 yıl, %91 sembol, ızgara %100, WF +0.079 (4/5), holdout +0.020 (t 0.7). **Geçti.**
+  Ön kayıt kuralı (birden fazla geçerse walk-forward'a göre seç) gereği **seçildi** ve canlı varsayılan yapıldı.
+  Güncel ilk 50'de: %64 sembol kârlı (≥1.5 yıl geçmişlilerde %88), ort. R +0.091; 2025+ dönemi +0.040 (t 1.3).
+* **Uyarı:** 2025–2026 kenarı istatistiksel olarak sıfırdan ayırt edilemiyor; 8 varyant arasından seçim yanlılığı var.
+  Bu yüzden "canlıya uygun" kriterini geçmesine rağmen gerçek parayla yalnız çok küçük riskle/izleme amaçlı öneriliyor.
+
+### Yapılmayanlar (bilinçli)
+* Seçilen varyantın parametreleri (20/10/3×ATR/EMA200) ızgaradaki en iyi değerlere çekilmedi (ör. 55/20/4×ATR
+  daha yüksek R gösteriyor); bu, test verisine bakarak ayar olurdu. Walk-forward zaten bu tür seçimin görülmemiş
+  veride avantaj sağlamadığını gösteriyor (2025–2026'da seçilen kombinasyon medyanın altında kaldı).
