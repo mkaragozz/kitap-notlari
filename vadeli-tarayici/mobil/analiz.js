@@ -6,9 +6,19 @@
 import { tara, spotAl, havuz, el } from "./tarama.js";
 import * as F from "./formasyon.js";
 
-const TF = { "4h": { ad: "4 Saat", ms: 4 * 3600e3, limit: 300 },
+const TF = { "3d": { ad: "3 Günlük", ms: 3 * 86400e3, limit: 300, ofs: 86400e3 },
+  "1w": { ad: "Haftalık", ms: 7 * 86400e3, limit: 300, ofs: 4 * 86400e3 }, "4h": { ad: "4 Saat", ms: 4 * 3600e3, limit: 300 },
   "1d": { ad: "Günlük", ms: 86400e3, limit: 300 } };
 const MALIYET = 0.0015;
+// İki bölüm (kullanıcı isteği): 4 saat · günlük ve 3 gün · haftalık; her birinde "teyitli" = küçük TF sinyali + büyük TF trendi
+const TEYIT = { "4h": "1d", "3d": "1w" };
+const BOLUM = {
+  kisa: { sekmeler: [["1d", "Günlük"], ["4h", "4 Saat"], ["t4h", "4s + Günlük teyitli"]] },
+  uzun: { sekmeler: [["1w", "Haftalık"], ["3d", "3 Günlük"], ["t3d", "3g + Haftalık teyitli"]] },
+};
+const SEKMELER = ["1d", "4h", "t4h", "1w", "3d", "t3d", "alarm"];
+const teyitli = (s) => s.startsWith("t");
+const kucuk = (s) => (teyitli(s) ? s.slice(1) : s);
 const ALARM_ANAHTAR = "analiz:alarmlar";
 
 // ------------------------------------------------------------------ biçim
@@ -66,7 +76,7 @@ function ist(ad, tf, yon, k) {
 // ------------------------------------------------------------------ tarama
 const ONB = {}; // tf -> {kapanis, sonuc}
 async function tfTara(semboller, tf, ilerleme, zorla) {
-  const kapanis = Math.floor(Date.now() / TF[tf].ms);
+  const kapanis = Math.floor((Date.now() - (TF[tf].ofs || 0)) / TF[tf].ms); // Binance hizası: 3g 1970-01-02, hafta Pazartesi
   const k = `analiz:${tf}`;
   if (!zorla) {
     if (ONB[tf] && ONB[tf].kapanis === kapanis && ONB[tf].n === semboller.length) return ONB[tf].sonuc;
@@ -159,12 +169,14 @@ export function alarmIzle() {
 // ------------------------------------------------------------------ arayüz
 const YON_AD = { 1: "AL", "-1": "SAT" };
 export function ekranKur(kok) {
-  const d = { sekme: "1d", yon: "", dogrulanmis: false, minHacim: 1e7, pazar: "", veri: {}, evren: null, detay: null, ...oku() };
+  const d = { sekme: "1d", bolum: "kisa", yon: "", dogrulanmis: false, minHacim: 1e7, pazar: "", veri: {}, evren: null, detay: null, ...oku() };
   const durum = el("p", { class: "soluk" });
   const icerik = el("div");
   const sekBtn = (k, t) => el("button", { "data-s": k, onclick: () => { d.sekme = k; d.detay = null; yaz(d); yukle(); } }, t);
-  const sekmeler = el("div", { class: "altsekme analiz-sekme" }, sekBtn("1d", "Günlük"), sekBtn("4h", "4 Saat"),
-    sekBtn("2tf", "4s + Günlük teyitli"), sekBtn("alarm", "🔔 Alarmlar"));
+  const bolBtn = (k, t) => el("button", { "data-b": k, onclick: () => { d.bolum = k; d.sekme = k === "alarm" ? "alarm" : BOLUM[k].sekmeler[0][0];
+    d.detay = null; yaz(d); yukle(); } }, t);
+  const bolumler = el("div", { class: "bolumler" }, bolBtn("kisa", "4 Saat · Günlük"), bolBtn("uzun", "3 Gün · Haftalık"), bolBtn("alarm", "🔔 Alarmlar"));
+  const sekmeler = el("div", { class: "altsekme analiz-sekme" });
   const yonSec = el("select", { "aria-label": "Yön", onchange: (e) => { d.yon = e.target.value; yaz(d); ciz(); } },
     el("option", { value: "" }, "Al + Sat"), el("option", { value: "1" }, "Yalnız AL"), el("option", { value: "-1" }, "Yalnız SAT"));
   const dogSec = el("label", { class: "kutu" }, el("input", { type: "checkbox", onchange: (e) => { d.dogrulanmis = e.target.checked; yaz(d); ciz(); } }),
@@ -175,7 +187,7 @@ export function ekranKur(kok) {
     el("option", { value: "" }, "Spot + vadeli"), el("option", { value: "vadeli" }, "Vadelide olanlar"), el("option", { value: "spot" }, "Yalnız spot"));
   const filtre = el("div", { class: "filtre" }, yonSec, hacSec, pazarSec, dogSec,
     el("button", { class: "kucuk ikincil", onclick: () => { d.veri = {}; yukle(true); } }, "↻"));
-  kok.replaceChildren(sekmeler, filtre, durum, icerik);
+  kok.replaceChildren(bolumler, sekmeler, filtre, durum, icerik);
   document.addEventListener("analiz-alarm", () => { if (d.sekme === "alarm") ciz(); });
 
   async function evren() {
@@ -191,7 +203,7 @@ export function ekranKur(kok) {
       durum.textContent = "Coin listesi alınıyor…";
       const ev = await evren();
       const semboller = ev.map((x) => x.sembol);
-      const tfler = d.sekme === "2tf" ? ["1d", "4h"] : [d.sekme];
+      const tfler = teyitli(d.sekme) ? [TEYIT[kucuk(d.sekme)], kucuk(d.sekme)] : [d.sekme];
       for (const tf of tfler) {
         if (d.veri[tf] && !zorla) continue;
         d.veri[tf] = await tfTara(semboller, tf, (i, n) => { if (i % 10 === 0 || i === n) durum.textContent = `${TF[tf].ad}: ${i}/${n} coin taranıyor…`; }, zorla);
@@ -203,7 +215,7 @@ export function ekranKur(kok) {
   function satirlar() {
     const ev = new Map((d.evren?.satirlar || []).map((x) => [x.sembol, x]));
     const out = [];
-    const tfAd = d.sekme === "2tf" ? "4h" : d.sekme;
+    const tfAd = kucuk(d.sekme);
     const v = d.veri[tfAd];
     if (!v) return out;
     for (const [s, x] of Object.entries(v)) {
@@ -212,8 +224,8 @@ export function ekranKur(kok) {
       for (const sg of x.sinyaller) {
         if (d.yon && String(sg.yon) !== d.yon) continue;
         let anahtar = sg.ad, tf = tfAd;
-        if (d.sekme === "2tf") {   // 4s sinyali + 4s ve günlük trend aynı yönde (DENEYLER.md §6)
-          const t1 = d.veri["1d"]?.[s]?.trend;
+        if (teyitli(d.sekme)) {   // küçük zaman dilimi sinyali + kendi ve büyük zaman dilimi trendi aynı yönde (DENEYLER.md §6-7)
+          const t1 = d.veri[TEYIT[tfAd]]?.[s]?.trend;
           if (!(x.trend === sg.yon && t1 === sg.yon)) continue;
           anahtar = sg.ad + "+2tf";
         }
@@ -241,7 +253,7 @@ export function ekranKur(kok) {
         el("div", {}, el("span", { class: "yon-rozet " + (sat ? "sat" : "al") }, YON_AD[x.yon]), " ",
           el("b", { class: "coin-ad" }, x.sembol.replace(/USDT$/, "")), x.meta.vadeli ? el("i", { class: "rozet-v" }, "V") : null),
         x.dog ? el("span", { class: "yildiz", title: "Geçmiş testte kuralları geçti" }, "★ doğrulanmış") : null),
-      el("div", { class: "form-ad" }, F.AD[x.ad], el("span", { class: "soluk" }, ` · ${TF[x.tf].ad}${d.sekme === "2tf" ? " · günlük trend teyitli" : ""}`)),
+      el("div", { class: "form-ad" }, F.AD[x.ad], el("span", { class: "soluk" }, ` · ${TF[x.tf].ad}${teyitli(d.sekme) ? ` · ${TF[TEYIT[x.tf]].ad.toLowerCase()} trend teyitli` : ""}`)),
       el("div", { class: "isabetler" }, st("1:1", "Yakın hedef"), st("1:2", "Uzak hedef"), st("seviye", "Seviye hedefi")),
       h ? el("div", { class: "fiyatlar" },
         el("div", {}, el("span", {}, "Giriş ~"), el("b", {}, fiyatMetin(h.giris))),
@@ -255,24 +267,26 @@ export function ekranKur(kok) {
   }
 
   function ciz() {
+    $$("button", bolumler).forEach((b) => b.classList.toggle("secili", b.dataset.b === d.bolum));
+    sekmeler.replaceChildren(...(d.bolum === "alarm" ? [] : BOLUM[d.bolum].sekmeler.map(([k, t]) => sekBtn(k, t))));
     $$("button", sekmeler).forEach((b) => b.classList.toggle("secili", b.dataset.s === d.sekme));
     yonSec.value = d.yon; hacSec.value = String(d.minHacim); pazarSec.value = d.pazar; dogSec.firstChild.checked = d.dogrulanmis;
     filtre.classList.toggle("gizli", d.sekme === "alarm" || !!d.detay);
     if (d.detay) return detayCiz(d.detay);
     if (d.sekme === "alarm") { durum.textContent = ""; return alarmCiz(); }
     const s = satirlar();
-    const tfAd = d.sekme === "2tf" ? "4h" : d.sekme;
+    const tfAd = kucuk(d.sekme);
     if (!d.veri[tfAd]) { icerik.replaceChildren(); return; }
     const z = Object.values(d.veri[tfAd])[0]?.zaman;
     durum.textContent = `${Object.keys(d.veri[tfAd]).length} coin · ${s.length} sinyal` + (z ? ` · son kapanan ${TF[tfAd].ad.toLowerCase()} mum: ${new Date(z + TF[tfAd].ms).toLocaleString("tr-TR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}` : "");
     const bilgi = el("details", { class: "bilgi" }, el("summary", {}, "Bu oranlar ne demek?"),
-      el("p", {}, "Her oran, bu sinyal geçmişte (2021-2026, 181 coin) çıktığında fiyatın stoptan önce hedefe ulaşma oranıdır. ",
+      el("p", {}, "Her oran, bu sinyal geçmişte (181 coin; 4s·günlük 2021-2026, 3g·haftalık 2019-2026) çıktığında fiyatın stoptan önce hedefe ulaşma oranıdır. ",
         "Yakın hedef = stop kadar uzak (1:1), uzak hedef = stopun 2 katı (1:2), seviye hedefi = sonraki direnç/destek. ",
         "\"Rastgele\" aynı kurallarla rastgele girişin oranıdır: sinyal ancak rastgeleden yüksekse işe yarar. ",
         "★ doğrulanmış = önceden yazılmış sıkı testi geçti (yeterli olay, anlamlı fark, son iki yılda da tuttu, maliyet sonrası kâr). ",
         "Hiçbir sinyal %80'e ulaşmadı; en iyileri %55-62."));
     icerik.replaceChildren(bilgi, s.length ? el("div", { class: "kartlar" }, s.slice(0, 120).map(sinyalKarti))
-      : el("p", { class: "soluk" }, d.sekme === "2tf" ? "Şu an günlük trendle teyitli 4 saatlik sinyal yok." : "Bu mumda sinyal yok."));
+      : el("p", { class: "soluk" }, teyitli(d.sekme) ? `Şu an ${TF[TEYIT[tfAd]].ad.toLowerCase()} trendle teyitli ${TF[tfAd].ad.toLowerCase()} sinyal yok.` : "Bu mumda sinyal yok."));
   }
 
   async function detayCiz(sembol) {
@@ -282,7 +296,7 @@ export function ekranKur(kok) {
     durum.textContent = "";
     await istatistikYukle();
     const bloklar = [];
-    for (const tf of ["1d", "4h"]) {
+    for (const tf of d.bolum === "uzun" ? ["1w", "3d"] : ["1d", "4h"]) {
       let m;
       try { m = await mumlar(sembol, tf); } catch { continue; }
       const sv = F.seviyeler(m, 3);
@@ -322,7 +336,7 @@ export function ekranKur(kok) {
       el("label", {}, "Coin", el("input", { name: "sembol", value: sembol ? sembol.replace(/USDT$/, "") : "", placeholder: "BTC", maxlength: 20, required: true })),
       el("label", {}, "Seviye", el("input", { name: "seviye", type: "number", step: "any", min: "0", required: true })),
       el("label", {}, "Yön", el("select", { name: "yon" }, el("option", { value: "yukari" }, "Yukarı geçince"), el("option", { value: "asagi" }, "Aşağı inince"))),
-      el("label", {}, "Teyit mumu", el("select", { name: "tf" }, ["4h", "1d"].map((t) => el("option", { value: t }, TF[t].ad)))),
+      el("label", {}, "Teyit mumu", el("select", { name: "tf" }, ["4h", "1d", "3d", "1w"].map((t) => el("option", { value: t }, TF[t].ad)))),
       el("button", { type: "submit" }, "Alarm kur"));
     return f;
   }
@@ -353,7 +367,8 @@ export function ekranKur(kok) {
 }
 
 const $$ = (s, k = document) => [...k.querySelectorAll(s)];
-function oku() { try { const x = JSON.parse(localStorage.getItem("analiz:ayar") || "{}"); return { sekme: ["1d", "4h", "2tf", "alarm"].includes(x.sekme) ? x.sekme : "1d", yon: x.yon || "",
+function oku() { try { const x = JSON.parse(localStorage.getItem("analiz:ayar") || "{}"); return { sekme: SEKMELER.includes(x.sekme) ? x.sekme : "1d",
+  bolum: ["kisa", "uzun", "alarm"].includes(x.bolum) ? x.bolum : "kisa", yon: x.yon || "",
   dogrulanmis: !!x.dogrulanmis, minHacim: x.minHacim ?? 1e7, pazar: x.pazar || "" }; } catch { return {}; } }
-function yaz(d) { try { localStorage.setItem("analiz:ayar", JSON.stringify({ sekme: d.sekme, yon: d.yon, dogrulanmis: d.dogrulanmis,
+function yaz(d) { try { localStorage.setItem("analiz:ayar", JSON.stringify({ sekme: d.sekme, bolum: d.bolum, yon: d.yon, dogrulanmis: d.dogrulanmis,
   minHacim: d.minHacim, pazar: d.pazar })); } catch { /* yok */ } }

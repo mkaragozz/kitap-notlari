@@ -228,3 +228,8 @@ th:first-child, td:first-child { background: var(--bg); }
   .isabet b { font-size: 18px; }
 }
 .alarm .ust-satir { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.bolumler { display: grid; grid-template-columns: 1fr 1fr auto; gap: 0; background: var(--kart2); border: 1px solid var(--kenar);
+  border-radius: 14px; padding: 4px; margin-bottom: 10px; }
+.bolumler button { background: transparent; color: var(--soluk); border: 0; border-radius: 10px; font-weight: 600; padding: 10px 8px; }
+.bolumler button.secili { background: var(--vurgu); color: var(--vurgu-yazi); box-shadow: var(--golge); }
+@media (max-width: 520px) { .bolumler { grid-template-columns: 1fr 1fr; } .bolumler button[data-b="alarm"] { grid-column: 1 / -1; } }

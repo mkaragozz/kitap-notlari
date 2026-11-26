@@ -30,7 +30,8 @@ log = logging.getLogger(__name__)
 ARSIV = "https://data.binance.vision"
 ARSIV_LISTE = "https://s3-ap-northeast-1.amazonaws.com/data.binance.vision"
 SUTUNLAR = ["open", "high", "low", "close", "volume", "quote_volume"]
-ARALIK_MS = {"1m": 60_000, "5m": 300_000, "15m": 900_000, "1h": 3_600_000, "4h": 14_400_000, "1d": 86_400_000}
+ARALIK_MS = {"1m": 60_000, "5m": 300_000, "15m": 900_000, "1h": 3_600_000, "4h": 14_400_000, "1d": 86_400_000,
+             "3d": 259_200_000, "1w": 604_800_000}
 VARSAYILAN_ONBELLEK = Path(__file__).resolve().parent.parent / "veri_onbellek"
 
 _SEMBOL_RE = re.compile(r"^[A-Z0-9]{2,30}$")
@@ -78,8 +79,15 @@ def yeniden_ornekle(df: pd.DataFrame, aralik: str) -> pd.DataFrame:
     Son dilim eksikse (içindeki saatlerin hepsi gelmemişse) atılır; kısmi mum asla kullanılmaz."""
     if df.empty:
         return df.copy()
-    kural = f"{int(aralik[:-1]) * 24}h" if aralik.endswith("d") else aralik  # günlük = 24h (epoch hizası = UTC gece yarısı)
-    g = df.resample(kural, label="left", closed="left", origin="epoch")
+    # Binance hizası (arşivden doğrulandı): gün = UTC gece yarısı; hafta = Pazartesi 00:00 UTC;
+    # 3 gün = 1970-01-02'den itibaren 72 saatlik dilimler (ör. 2026-10-23, 26, 29)
+    if aralik == "1w":
+        kural, koken = "168h", pd.Timestamp("1970-01-05", tz="UTC")
+    elif aralik == "3d":
+        kural, koken = "72h", pd.Timestamp("1970-01-02", tz="UTC")
+    else:
+        kural, koken = (f"{int(aralik[:-1]) * 24}h" if aralik.endswith("d") else aralik), "epoch"
+    g = df.resample(kural, label="left", closed="left", origin=koken)
     out = pd.DataFrame({
         "open": g["open"].first(), "high": g["high"].max(), "low": g["low"].min(),
         "close": g["close"].last(), "volume": g["volume"].sum(), "quote_volume": g["quote_volume"].sum(),

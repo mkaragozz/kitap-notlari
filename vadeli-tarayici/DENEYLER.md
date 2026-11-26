@@ -327,3 +327,18 @@ Kullanıcı isteği: 4s/günlük bölümüyle aynı prensiple ikinci bölüm: 3 
   Teyit = 3g sinyali + 3g trend ve haftalık trend aynı yönde (yalnız tamamlanmış haftalık mum).
 * Beklenti (önceden yazıyorum): olay sayıları küçük olacak (haftalıkta birçok sinyal < 300 olay); bunlar kabul edilemez,
   yalnız bilgi olarak gösterilir.
+
+### D18 — 4s + günlük teyidi (§6 sonuçları)
+120 testin 7'si kabul edildi (çoğu SAT, 1:2 hedef). Teyit, seviye hedefinde isabeti rastgeleye göre ~8 puan artırıyor
+(ör. MACD +teyit long %54 vs %43) ama seviye hedefleri yakın kaldığı için maliyet sonrası ortalama R çoğunlukla negatif.
+
+### D19 — 3 günlük ve haftalık (§7 sonuçları, `raporlar/formasyon_uzun.json`)
+181 kripto, 2019-01 → 2026-10. **Dikkat:** bu zaman dilimlerinde rastgele AL girişinin isabeti bile yüksek (haftalık 1:1
+%59, 3g %53) çünkü dönemde güçlü boğa yılları var ve evren **bugün hâlâ büyük olan coinler** (hayatta kalma yanlılığı uzun
+vadede daha da etkili). Bu yüzden asıl ölçü rastgeleye göre farktır.
+* 357 testin **16'sı kabul** edildi. Öne çıkanlar: haftalık ters çekiç AL (1:1 %64 vs %59, holdout %62), 3g üçgen aşağı
+  kırılımı SAT (seviye hedefi %61 vs %48, holdout %68), 3g RSI dönüşü AL (%60 vs %53), 3g MACD AL.
+* **Haftalık RSI 30 üstüne dönüş AL: 1:1 hedefte %80.7** (270 olay, 123 farklı hafta; holdout %74; rastgele %59).
+  Testlerde %80'e ulaşan tek sinyal. 300 olay eşiğinin altında kaldığı için kabul **edilmedi** (kural değiştirilmedi).
+  Başarısız olduğu dönemler sert çöküşler (2024-Ç4 %17, 2025-Ç4 %43). Stop haftalık 1.5×ATR olduğu için geniştir
+  (çoğu zaman %20-40) ve işlem aylarca sürebilir.

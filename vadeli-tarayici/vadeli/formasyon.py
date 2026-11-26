@@ -365,23 +365,34 @@ def hizala(kucuk_index: pd.DatetimeIndex, kucuk_tf: str, buyuk: pd.DataFrame, bu
 
 
 # ------------------------------------------------------------------ araştırma
+# İki bölüm: kısa (1s kaynak → 1s/4s/günlük; teyit 4s+günlük) ve uzun (günlük kaynak 2017+ → 3g/haftalık; teyit 3g+haftalık)
+TEYIT_CIFT = {"4h": "1d", "3d": "1w"}
+BASLANGIC_UZUN = pd.Timestamp("2019-01-01", tz="UTC")
+
+
 def _sembol_isle(args):
-    s, yol = args
+    s, yol, mod = args
     df1 = veri._csv_oku(yol)
     df1 = df1[df1.index < pd.Timestamp("2026-11-01", tz="UTC")]
     sonuc = []
-    tfler = {"1h": df1, "4h": veri.yeniden_ornekle(df1, "4h"), "1d": veri.yeniden_ornekle(df1, "1d")}
+    if mod == "uzun":
+        tfler = {"3d": veri.yeniden_ornekle(df1, "3d"), "1w": veri.yeniden_ornekle(df1, "1w")}
+        bas, en_az = BASLANGIC_UZUN, 80
+    else:
+        tfler = {"1h": df1, "4h": veri.yeniden_ornekle(df1, "4h"), "1d": veri.yeniden_ornekle(df1, "1d")}
+        bas, en_az = BASLANGIC, 300
     trendler = {tf: trend(d) for tf, d in tfler.items()}
     for tf, df in tfler.items():
-        if len(df) < 300:
+        if len(df) < en_az:
             continue
         S = sinyaller(df)
-        donem = (df.index >= BASLANGIC)
+        donem = (df.index >= bas)
         hold = df.index >= HOLDOUT
-        if tf == "4h":  # 4s sinyali + 4s ve günlük trend aynı yönde (DENEYLER.md §6)
-            t1d4 = hizala(df.index, "4h", tfler["1d"], "1d", trendler["1d"])
-            teyit2_l = (trendler["4h"] == 1) & (t1d4 == 1)
-            teyit2_s = (trendler["4h"] == -1) & (t1d4 == -1)
+        if tf in TEYIT_CIFT:  # küçük zaman dilimi sinyali + kendi ve büyük zaman dilimi trendi aynı yönde (DENEYLER.md §6-7)
+            b = TEYIT_CIFT[tf]
+            tb = hizala(df.index, tf, tfler[b], b, trendler[b])
+            teyit2_l = (trendler[tf] == 1) & (tb == 1)
+            teyit2_s = (trendler[tf] == -1) & (tb == -1)
         if tf == "1h":
             t4 = hizala(df.index, "1h", tfler["4h"], "4h", trendler["4h"])
             t1d = hizala(df.index, "1h", tfler["1d"], "1d", trendler["1d"])
@@ -397,7 +408,7 @@ def _sembol_isle(args):
                 for ad, (ml, ms) in S.items():
                     m = (ml if yon == 1 else ms) & temel
                     sonuc.append({**kayit, "sinyal": ad, **_say(durum, r, m, hold)})
-                    if tf == "4h":
+                    if tf in TEYIT_CIFT:
                         mt = m & (teyit2_l if yon == 1 else teyit2_s)
                         sonuc.append({**kayit, "sinyal": ad + "+2tf", **_say(durum, r, mt, hold)})
                     if tf == "1h":
@@ -413,7 +424,8 @@ def _say(durum, r, m, hold) -> dict:
             "r_top_h": float(np.nansum(r[mh]))}
 
 
-def uret(semboller: int | None = None) -> dict:
+def uret(semboller: int | None = None, mod: str = "kisa") -> dict:
+    """mod="kisa": 1s/4s/günlük (raporlar/formasyon.json); mod="uzun": 3g/haftalık (raporlar/formasyon_uzun.json)."""
     from concurrent.futures import ProcessPoolExecutor
     from .tarama import SPOT_ONBELLEK, varlik_turu
 
@@ -423,7 +435,11 @@ def uret(semboller: int | None = None) -> dict:
         s = yol.name.split("_")[0]
         if s[:-4].endswith("B") and varlik_turu(s[:-4], np.array([2.0, 3.0])) != "kripto":
             continue
-        isler.append((s, yol))
+        if mod == "uzun":
+            yol = SPOT_ONBELLEK / f"{s}_1d.csv"
+            if not yol.exists():
+                continue
+        isler.append((s, yol, mod))
     if semboller:
         isler = isler[:semboller]
     satirlar = []
@@ -445,18 +461,42 @@ def uret(semboller: int | None = None) -> dict:
         sd = math.sqrt(max(x.r_kare / x.n - ort_r ** 2, 0))
         z = (p - p0) / math.sqrt(p0 * (1 - p0) / x.n)
         kabul = bool(x.n >= 300 and z >= 3.5 and ph is not None and x.n_h >= 30 and ph > p0h and ort_r > 0)
-        kayitlar.append({"sinyal": x.sinyal, "ad": AD.get(x.sinyal.split("+")[0], (x.sinyal,))[0] + (" (3 zaman dilimi teyitli)" if x.sinyal.endswith("+3tf") else " (4s + günlük teyitli)" if x.sinyal.endswith("+2tf") else ""),
+        kayitlar.append({"sinyal": x.sinyal, "ad": AD.get(x.sinyal.split("+")[0], (x.sinyal,))[0] + (" (3 zaman dilimi teyitli)" if x.sinyal.endswith("+3tf") else (" (4s + günlük teyitli)" if x.tf == "4h" else " (3g + haftalık teyitli)") if x.sinyal.endswith("+2tf") else ""),
                          "aile": AD.get(x.sinyal.split("+")[0], ("", "?"))[1], "tf": x.tf, "yon": x.yon, "k": x.k,
                          "n": int(x.n), "isabet": p, "rastgele": p0, "fark": p - p0, "z": z, "ort_r": ort_r,
                          "t_r": ort_r / (sd / math.sqrt(x.n)) if sd > 0 else 0.0,
                          "n_h": int(x.n_h), "isabet_h": ph, "rastgele_h": p0h, "ort_r_h": x.r_top_h / x.n_h if x.n_h else None,
                          "kabul": kabul})
     sonuc = {"olusturma": time.strftime("%Y-%m-%d", time.gmtime()), "sembol": len(isler),
-             "donem": "2021-01 → 2026-10", "holdout": "2025-01 → 2026-10",
+             "donem": "2019-01 → 2026-10" if mod == "uzun" else "2021-01 → 2026-10", "holdout": "2025-01 → 2026-10",
              "tanim": f"Giriş: sinyalden sonraki mumun açılışı. Stop {STOP_ATR}×ATR(14), hedef k×stop. Önce hedef = doğru. "
                       f"{UFUK} mumda sonuçsuz kalanlar sayılmaz. Maliyet: %{MALIYET * 100:.2f}/yön (spot).",
              "taban": [{"tf": tf, "yon": y, "k": k, "isabet": r.dogru / r.n, "n": int(r.n)} for (tf, y, k), r in taban.iterrows()],
              "sinyaller": sorted(kayitlar, key=lambda x: (-x["isabet"]))}
-    (KOK / "raporlar" / "formasyon.json").write_text(json.dumps(sonuc, ensure_ascii=False))
+    (KOK / "raporlar" / ("formasyon_uzun.json" if mod == "uzun" else "formasyon.json")).write_text(json.dumps(sonuc, ensure_ascii=False))
     log.info("formasyon araştırması: %d sembol, %.0fs", len(isler), time.time() - t0)
     return sonuc
+
+
+def uygulama_istatistigi() -> dict:
+    """Telefon/pano için kompakt istatistik: mobil/formasyon_istatistik.json (1 saatlik hariç; kullanıcı kararı)."""
+    s, taban, meta = {}, {}, {}
+    for ad in ("formasyon.json", "formasyon_uzun.json"):
+        yol = KOK / "raporlar" / ad
+        if not yol.exists():
+            continue
+        r = json.loads(yol.read_text())
+        meta[ad] = {"donem": r["donem"], "sembol": r["sembol"], "olusturma": r["olusturma"]}
+        for x in r["sinyaller"]:
+            if x["tf"] == "1h":
+                continue
+            s[f'{x["sinyal"]}|{x["tf"]}|{x["yon"]}|{x["k"]}'] = [
+                x["n"], round(x["isabet"], 4), round(x["rastgele"], 4), round(x["ort_r"], 4),
+                None if x["isabet_h"] is None else round(x["isabet_h"], 4), int(x["kabul"])]
+        for t in r["taban"]:
+            if t["tf"] != "1h":
+                taban[f'{t["tf"]}|{t["yon"]}|{t["k"]}'] = round(t["isabet"], 4)
+    out = {"kaynaklar": meta, "alanlar": ["n", "isabet", "rastgele", "ort_r", "isabet_holdout", "dogrulanmis"],
+           "taban": taban, "s": s}
+    (KOK / "mobil" / "formasyon_istatistik.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")))
+    return out
