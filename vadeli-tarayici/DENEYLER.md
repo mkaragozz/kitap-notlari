@@ -130,3 +130,58 @@ Dönem 2022-01 → 2026-10, taban `4s_tetik_btc`: 4357 işlem, ort. R +0.083, ho
 Telefon sürümünün eşdeğerlik testi, arşivde birkaç saat açık pozisyonun **0** yazıldığını ortaya çıkardı (sonsuz değişim →
 filtre yanlışlıkla "geçti"). İki tarafta da 0/negatif açık pozisyon "veri yok" sayıldı ve deney yeniden çalıştırıldı:
 +oi 2714 → 2708 işlem, ort. R 0.114 → 0.115, holdout 0.084 → 0.087. Karar değişmedi.
+
+---
+
+## 2. Ön kayıt — geliştirme turu 2 (sonuçlar görülmeden yazıldı, 2026-11-26)
+
+**Bağlam ve dürüstlük notu.** Şimdiye kadar 8 + 5 = 13 varyant denendi; 2025-26 holdout'u da artık "görülmüş" veridir.
+Bu turda denenen her şey aynı veride ek bir deneme sayılır, dolayısıyla eşik daha sıkı tutulur ve **asıl hakem
+ileri testtir** (§3). Analizler yine **2026-10 sonuna kadar** veriyle yapılır; **2026-11-01 sonrası hiçbir analizde
+kullanılmaz**, ileri teste ayrılmıştır.
+
+**Taban:** canlı varsayılan `4s_tetik_btc +oi` (4s tetik 20/10, ATR14×3, EMA200(4s), BTC rejimi, OI↑(6)).
+Dönem 2022-01 → 2026-10 (açık pozisyon verisi 2021-12'den beri), 5 yıllık dilim, holdout 2025-01 → 2026-10.
+
+**Kenar varyantları (her biri tabana tek tek eklenir):**
+
+| Ad | Değişiklik | Gerekçe (önsel) | Eşik taraması |
+|---|---|---|---|
+| +rs | LONG yalnız coinin son 42 4s-mumluk (7 gün) getirisi BTC'ninkinden yüksekse; SHORT yalnız düşükse. BTC'nin kendisinde filtre nötr. | Kriptoda kesitsel momentum (güçlü coin güçlü kalır) literatürde belgelenmiş; kırılımı "lider" coinlerde almak | 21 / 42 / 84 mum |
+| +basabas | Fiyat lehte +1R gittiğinde stop giriş fiyatına (+iki yön maliyet) çekilir; sonra normal ATR takibi sürer | Kazanmaya başlayan işlemin zarara dönmesini önlemek (trend takibinde zararlı da olabilir; bu yüzden test) | 1.0 / 1.5 / 2.0 R |
+| 1g_tetik | Tetik ve rejim **günlük** mum (20/10 kanal, ATR14×3, EMA200 günlük, BTC rejimi günlük, OI↑ 6 gün) | 1s→4s geçişi maliyet payını düşürüp sonucu iyileştirdi; aynı mantık bir adım daha | giriş kanalı 10 / 20 / 40 |
+
+**Kabul kuralı (canlı varsayılana eklenmesi için hepsi):** tabana göre (a) ort. R daha yüksek **ve fark ≥ +0.02 R**
+(çoklu deneme payı), (b) 5 yılın en az 4'ünde daha iyi, (c) holdout'ta daha iyi, (d) 3 eşiğin en az 2'si tabandan iyi,
+(e) işlem sayısı tabanın en az %40'ı. Birden fazla geçerse yalnız tüm dönem iyileşmesi en büyük olan eklenir;
+birleşimler bu turda denenmez. Hiçbiri geçmezse varsayılan değişmez.
+
+**Kenar dışı kontroller (karar kuralı farklı):**
+* **K1 — Hayatta kalma yanlılığı:** 2022-01'de arşivde hacimce ilk 60 içinde olup bugün listeden çıkmış/işlem görmeyen
+  semboller tabanla çalıştırılır. Ort. R ≤ 0 çıkarsa bu, raporda "ana set sonuçları iyimser" uyarısı olarak yazılır
+  (strateji değişmez; ileri test eşiği değişmez).
+* **K2 — Tek hesap portföy simülasyonu:** şimdiye kadar her sembol ayrı alt hesaptı. Gerçekte tek hesapta aynı anda
+  çok sayıda (çoğu aynı yönde, korelasyonlu) pozisyon açılır. 22 sembol tek ortak özkaynakla, işlem başına %1 riskle
+  simüle edilir; toplam açık risk tavanı **yok / 8R / 5R / 3R** karşılaştırılır (tavan doluyken yeni sinyal atlanır).
+  **Seçim kuralı getiriye göre değil:** yıllık getiri / max düşüş oranı en iyi olan tavan varsayılan yapılır; eşitlikte
+  daha düşük max düşüş. Bu bir risk ayarıdır, kenar iddiası değildir.
+
+## 3. Ön kayıt — ileri test (2026-11-26)
+
+**Amaç:** hiçbir analizde kullanılmamış veride stratejinin gerçek performansını ölçmek ve "devam / dur" kararını
+önceden yazılmış kurala bağlamak.
+
+* **Dondurulmuş strateji:** §2 sonucu belirlenen canlı varsayılan; sürüm kodu (`param_surum`) rapora yazılır.
+  Parametre değişirse ileri test sıfırdan başlar (eski sürümün kaydı ayrı tutulur).
+* **Başlangıç:** 2026-11-01 00:00 UTC (analizlerde kullanılmayan ilk an). **Evren:** ana set 22 sembol (doğrulanan set).
+* **Kaynak:** Binance resmi arşivi (günlük ZIP'ler, ertesi gün yayınlanır) — bilgisayarın açık olmasından bağımsız,
+  herkes tarafından yeniden üretilebilir. Canlı tarayıcının kendi kaydı (Geçmiş ekranı) ayrıca gösterilir.
+* **Beklenti:** tabanın 2022-2026 ort. R'si ve işlem başı R standart sapması (backtest raporundan).
+* **Kurallar (her işlem kapanınca yeniden hesaplanır):**
+  1. **< 50 işlem:** "erken" — karar yok.
+  2. **Uyarı bandı:** kümülatif R, beklenen kümülatif R − 2σ√n çizgisinin altına düşerse "uyarı" (backtest beklentisiyle
+     uyumsuz).
+  3. **100. işlemde:** ort. R ≤ 0 ise **DUR** (strateji ileri testte kenar göstermedi).
+  4. **200. işlemde:** ort. R > 0 ve uyarı bandının üstündeyse "küçük riskle canlı uygun" (%0.25–0.5/işlem);
+     aksi hâlde DUR.
+  5. Kararlar yalnızca bu kurallarla verilir; ara sonuçlara bakarak parametre değiştirilmez.
