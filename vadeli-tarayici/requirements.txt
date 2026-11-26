@@ -2,6 +2,7 @@
 numpy>=1.26
 pandas>=2.1
 requests>=2.31
+tomli>=2.0; python_version < "3.11"   # config.toml okuma (3.11+ içinde hazır)
 ccxt>=4.2            # Binance USDT-M herkese açık REST (anahtar yok)
 websockets>=12.0     # fstream kline akışı
 fastapi>=0.110

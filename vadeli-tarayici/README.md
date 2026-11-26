@@ -34,6 +34,21 @@ açılan web panosu (PWA)**.
 
 Gerekenler: **Python 3.10+** (3.11+ önerilir), internet. Windows, macOS ve Linux'ta çalışır.
 
+### En kolay yol: tek tıkla başlat
+1. Python'u https://www.python.org/downloads/ adresinden kurun. **Windows'ta ilk ekrandaki "Add python.exe to PATH"
+   kutusunu işaretleyin.**
+2. `vadeli-tarayici` klasöründe:
+   * **Windows:** `baslat.bat` dosyasına çift tıklayın. "Windows bilgisayarınızı korudu" uyarısı çıkarsa
+     *Ek bilgi → Yine de çalıştır*.
+   * **Mac:** `baslat.command` dosyasına **sağ tıklayıp → Aç** deyin (ilk seferde "bilinmeyen geliştirici" uyarısı için).
+     Sonraki seferlerde çift tıklamak yeterli.
+3. İlk açılışta kurulum birkaç dakika sürer ve hesap büyüklüğünüz sorulur (sonra `config.toml`'dan veya panodaki
+   Ayarlar'dan değişir). Pano tarayıcıda kendiliğinden açılır. Siyah pencere açık kaldıkça tarama sürer.
+4. Telefondan erişim için (Tailscale, bkz. §5A): `baslat.bat --host 100.x.y.z` veya `config.toml` içinde
+   `host = "100.x.y.z"` yazın.
+
+### Elle kurulum
+
 ```bash
 cd vadeli-tarayici
 python -m venv .venv
