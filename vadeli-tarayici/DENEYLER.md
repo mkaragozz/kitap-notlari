@@ -370,7 +370,8 @@ Bu modeller "bağlam içi öğrenme" yapar: eğitim tablosunu bağlam olarak al�
 
 **Özellikler (yalnız satırın mum kapanışında bilinen; hepsi sayısal):** sinyal türü kodu ve yön (A), RSI14, kendi ve bir
 üst zaman diliminin trendi, ATR/fiyat, 5/20/60 mum getiri, hacim / 20 mum ortalaması, en yakın direnç ve desteğe uzaklık
-(ATR cinsinden), 20 mumluk kanal içindeki konum, BTC trendi ve 20 mum getirisi, 1 yıllık zirveden uzaklık.
+(ATR cinsinden), 20 mumluk kanal içindeki konum, BTC trendi ve 20 mum getirisi, 250 mumluk zirveden uzaklık (telefonun da
+  hesaplayabilmesi için; çalıştırmadan önce düzeltildi).
 
 **Değerlendirme (zaman sıralı, geleceğe bakmadan):** her test yılı Y için yalnız Y'den önceki olaylar bağlam/eğitim olur
 (bağlam modelleri için en yeni 3 000 olay; sınıflar dengelenmez), Y yılının olayları (en çok 2 000, rastgele) test edilir.

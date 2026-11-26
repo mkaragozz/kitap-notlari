@@ -599,7 +599,7 @@ def uygulama_olustur(tarayici: Tarayici, cfg: A.Ayarlar) -> FastAPI:
         return sun
 
     for _ad in ("tema.js", "tarama.js", "tarama_baslat.js", "tarama_istatistik.json", "analiz.js", "formasyon.js", "strateji.js",
-                "formasyon_istatistik.json"):
+                "formasyon_istatistik.json", "meta.js", "meta_model.json"):
         app.add_api_route(f"/static/{_ad}", _ortak(_ad), methods=["GET"])
 
     app.mount("/static", StaticFiles(directory=STATIK), name="static")
