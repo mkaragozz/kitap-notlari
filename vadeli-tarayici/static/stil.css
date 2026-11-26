@@ -101,3 +101,48 @@ details[open] summary { margin-bottom: 10px; }
 .karo.buyuk b { font-size: 18px; } .karo.buyuk span { font-size: 14px; }
 .harita-bos { color: var(--soluk); }
 label.kutu { display: flex; align-items: center; gap: 6px; }
+
+/* ---------- Sinyaller: özet şeridi ---------- */
+.ozet-serit { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
+.ozet-serit > * { background: var(--kart); border: 1px solid var(--kenar); border-radius: 10px; padding: 8px 10px;
+  color: var(--yazi); text-decoration: none; min-width: 0; }
+.ozet-serit span { display: block; font-size: 11px; color: var(--soluk); }
+.ozet-serit b { display: block; font-size: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ozet-serit i { display: block; font-style: normal; font-size: 11px; color: var(--soluk); }
+.acik-risk.dolu { border-color: var(--kirmizi); } .acik-risk.dolu i { color: var(--kirmizi); font-weight: 600; }
+.ileri-link.d-dur { border-color: var(--kirmizi); } .ileri-link.d-uygun { border-color: var(--yesil); }
+@media (max-width: 520px) { .ozet-serit { grid-template-columns: 1fr 1fr; } }
+
+/* ---------- Sinyal kartı: borsaya girilecekler ---------- */
+.borsa-kutu { border: 1px dashed var(--kenar); border-radius: 8px; padding: 8px 10px; margin: 4px 0 8px; cursor: default; }
+.borsa-baslik { font-size: 12px; font-weight: 600; color: var(--soluk); margin-bottom: 4px; }
+.borsa-adim { margin: 0 0 6px; padding-left: 18px; font-size: 12px; }
+.borsa-satir { display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 2px 8px; font-size: 14px; }
+.borsa-satir span { color: var(--soluk); font-size: 12px; }
+.borsa-satir b { font-variant-numeric: tabular-nums; font-size: 16px; }
+.borsa-satir i { grid-column: 2 / 4; font-style: normal; font-size: 11px; color: var(--soluk); margin-top: -2px; margin-bottom: 4px; }
+button.kopya { min-height: 32px; min-width: 40px; padding: 2px 8px; background: var(--kart); color: var(--yazi); border-color: var(--kenar); }
+
+/* ---------- İleri test ---------- */
+.ileri-ust { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ileri-ust h3 { margin: 0; }
+.ileri-ust button { margin-left: auto; }
+.karar { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: var(--kenar); }
+.karar.d-dur { background: var(--kirmizi); color: #fff; } .karar.d-uygun { background: var(--yesil); color: #fff; }
+.karar.d-izle { background: var(--mavi); color: #fff; } .karar.d-erken { background: var(--kenar); color: var(--yazi); }
+.karar-metin { margin: 8px 0; }
+.ilerleme { position: relative; height: 8px; border-radius: 4px; background: var(--kenar); overflow: hidden; }
+.ilerleme div { height: 100%; background: var(--vurgu); }
+.ilerleme i { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--bg); }
+.ilerleme-etiket { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; margin: 2px 0 10px; }
+.ilerleme-etiket span:nth-child(2) { text-align: left; margin-left: -6px; }
+.ilerleme-etiket span:nth-child(3) { text-align: center; } .ilerleme-etiket span:nth-child(4) { text-align: right; }
+.ileri-grafik { width: 100%; height: auto; max-height: 260px; display: block; margin: 6px 0; }
+.ileri-grafik .bant { fill: var(--soluk); opacity: .15; stroke: none; }
+.ileri-grafik .beklenen { fill: none; stroke: var(--soluk); stroke-dasharray: 5 4; stroke-width: 1.5; }
+.ileri-grafik .gercek { fill: none; stroke: var(--mavi); stroke-width: 2.5; stroke-linejoin: round; }
+.ileri-grafik .sifir { stroke: var(--kenar); stroke-width: 1; }
+.ileri-grafik .eksen { fill: var(--soluk); font-size: 11px; }
+.istat .kart span + span { margin-top: 2px; }
+.etiketler { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.etiket.dis { background: transparent; border: 1px solid var(--sari); color: var(--sari); }

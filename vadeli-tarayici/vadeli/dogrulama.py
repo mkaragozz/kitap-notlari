@@ -71,20 +71,26 @@ def _is(args):
     if karistir is not None:
         df = veri.getiri_karistir(df, karistir)
     btc = None
-    if p.btc_filtre:
+    btc_k = None
+    if p.btc_filtre or p.rs_n:
         b = _VERI["BTCUSDT"][0]
         if p.tetik_tf != "1h":
             b = veri.yeniden_ornekle(b, p.tetik_tf)
+        if p.rs_n and sembol != "BTCUSDT":
+            btc_k = b["close"]
+    if p.btc_filtre:
         btc = hazirla(b, replace(p, btc_filtre=False, hacim_kat=0, vol_min=0, vol_max=0, oi_teyit=False,
                                  fonlama_esik=0.0, kalabalik_z=0.0, taker_teyit=False))["rejim"]
     ek = None
     if p.turev_gerekli or _METRIK:
         from . import turev
         ek = turev.ozellikler(_METRIK.get(sembol), f, df.index, p.tetik_tf, oi_n=p.oi_n)
-    s = calistir(df, p, r, m, fonlama=f, sembol=sembol, btc_rejim=btc, kaydir=kaydir, ek=ek, baslangic=_BASLANGIC)
+    s = calistir(df, p, r, m, fonlama=f, sembol=sembol, btc_rejim=btc, kaydir=kaydir, ek=ek, baslangic=_BASLANGIC,
+                 btc_kapanis=btc_k)
     isl = s.islemler
     if not isl.empty:
-        isl = isl[["giris_zaman", "cikis_zaman", "yon", "r", "net", "neden", "mum", "fonlama", "komisyon"]].copy()
+        isl = isl[["giris_zaman", "cikis_zaman", "yon", "r", "net", "neden", "mum", "fonlama", "komisyon", "giris",
+                   "ilk_stop", "cikis_fiyat"]].copy()
         isl["sembol"] = sembol
     gunluk = s.ozkaynak.resample("1D").last().dropna()
     return sembol, s.metrik, isl, gunluk
@@ -140,13 +146,13 @@ def r_ozet(isl: pd.DataFrame) -> dict:
     """İşlem başına R özeti. t: ortalama R'nin sıfırdan farkı için t istatistiği (|t| < 2 ≈ anlamsız).
     Not: aynı anda açık, korelasyonlu işlemler yüzünden gerçek belirsizlik t'nin ima ettiğinden büyüktür."""
     if isl.empty:
-        return {"islem": 0, "ort_r": 0.0, "toplam_r": 0.0, "kazanma": 0.0, "pf_r": 0.0, "t": 0.0}
+        return {"islem": 0, "ort_r": 0.0, "toplam_r": 0.0, "kazanma": 0.0, "pf_r": 0.0, "t": 0.0, "sd": 0.0}
     k = isl.loc[isl["r"] > 0, "r"].sum()
     z = -isl.loc[isl["r"] <= 0, "r"].sum()
     sd = float(isl["r"].std()) if len(isl) > 2 else 0.0
     return {"islem": int(len(isl)), "ort_r": float(isl["r"].mean()), "toplam_r": float(isl["r"].sum()),
             "kazanma": float((isl["r"] > 0).mean()), "pf_r": float(k / z) if z > 0 else float("inf"),
-            "t": float(isl["r"].mean() / (sd / math.sqrt(len(isl)))) if sd > 0 else 0.0}
+            "t": float(isl["r"].mean() / (sd / math.sqrt(len(isl)))) if sd > 0 else 0.0, "sd": sd}
 
 
 def sembol_tablosu(sonuc: dict) -> pd.DataFrame:

@@ -1,5 +1,5 @@
 /* Service worker: arayüz kabuğunu önbellekler (çevrimdışı açılış), API'yi asla önbelleklemez, Web Push gösterir. */
-const SURUM = "vt-2";
+const SURUM = "vt-3";
 const KABUK = ["/", "/static/stil.css", "/static/uygulama.js", "/static/lib/lightweight-charts.standalone.production.js",
   "/static/ikon.svg", "/static/ikon-192.png", "/static/ikon-512.png", "/manifest.json"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(SURUM).then((c) => c.addAll(KABUK))); self.skipWaiting(); });

@@ -183,6 +183,10 @@ def arsivden_mumlar(sembol: str, aralik: str = "1h", baslangic: str = "2020-01",
     son_ay = pd.Period(bitis, "M") if bitis else (simdi.to_period("M") - 1)
     parcalar = [eski]
     var_olan = _ay_kumesi(eski.index) | _bos_aylar(yol)
+    if len(eski):  # son ay günlük ZIP'lerle kısmen doldurulmuş olabilir: tamamlanmamışsa yeniden indir
+        son = eski.index[-1]
+        if son + pd.Timedelta(milliseconds=ARALIK_MS[aralik]) < (son.tz_localize(None).to_period("M") + 1).to_timestamp().tz_localize("UTC"):
+            var_olan.discard(son.strftime("%Y-%m"))
     eksik = [a for a in _aylar(baslangic, son_ay.to_timestamp()) if a not in var_olan]
     bos = _bos_aylar(yol)
     # Sembolün işlem görmeye başladığından önceki aylar 404 döner: sorun değil, kaydedilir.
@@ -359,9 +363,15 @@ class BinanceREST:
 
 def gecmis_yukle(sembol: str, baslangic: str = "2020-01", bitis: str | None = None,
                  onbellek: Path = VARSAYILAN_ONBELLEK) -> tuple[pd.DataFrame, pd.Series]:
-    """Backtest için 1s mum + gerçek fonlama (önbellekli)."""
-    return (arsivden_mumlar(sembol, "1h", baslangic, bitis, onbellek=onbellek),
-            arsivden_fonlama(sembol, baslangic, bitis, onbellek=onbellek))
+    """Backtest için 1s mum + gerçek fonlama (önbellekli). `bitis` (YYYY-MM) verilirse o ayın sonunda kesilir:
+    önbellekte ileri test için indirilmiş daha yeni günler olsa bile backtest'e sızmaz."""
+    df = arsivden_mumlar(sembol, "1h", baslangic, bitis, onbellek=onbellek)
+    f = arsivden_fonlama(sembol, baslangic, bitis, onbellek=onbellek)
+    if bitis:
+        son = (pd.Period(bitis, "M") + 1).to_timestamp().tz_localize("UTC")
+        df = df[df.index < son]
+        f = f[f.index < son] if len(f) else f
+    return df, f
 
 
 # ---------------------------------------------------------------- sentetik veri

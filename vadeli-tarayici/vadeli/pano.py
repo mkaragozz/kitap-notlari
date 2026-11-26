@@ -462,6 +462,55 @@ def uygulama_olustur(tarayici: Tarayici, cfg: A.Ayarlar) -> FastAPI:
         asyncio.create_task(izle())
         return bt_durum
 
+    # ---------------------------------------------------------- ileri test (DENEYLER.md §3)
+    it_durum: dict = {"calisiyor": False}
+    it_yol = RAPOR_DIZINI / "ileri_test.json"
+
+    async def ileri_test_baslat() -> dict:
+        if it_durum.get("calisiyor"):
+            raise HTTPException(409, "zaten çalışıyor")
+        it_durum.update(calisiyor=True, baslangic=time.time(), kod=None)
+
+        async def izle():
+            proc = await asyncio.create_subprocess_exec(sys.executable, str(KOK / "tarayici.py"), "ileri-test",
+                                                        stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL,
+                                                        cwd=str(KOK))
+            await proc.wait()
+            it_durum.update(calisiyor=False, kod=proc.returncode, bitis=time.time())
+            tarayici.yayinci.yayinla("ileri_test", it_durum)
+
+        asyncio.create_task(izle())
+        return it_durum
+
+    @app.get("/api/ileri-test")
+    async def ileri_test_al():
+        rp = it_yol.read_bytes() if it_yol.exists() else b"null"
+        return Response(content=b'{"calisma":' + json.dumps(it_durum).encode() + b',"rapor":' + rp + b"}",
+                        media_type="application/json")
+
+    @app.post("/api/ileri-test/calistir")
+    async def ileri_test_calistir():
+        if not tarayici.borsa.canli and not (veri.VARSAYILAN_ONBELLEK / "BTCUSDT_1h.csv").exists():
+            raise HTTPException(400, "demo modunda arşiv önbelleği yok")
+        return await ileri_test_baslat()
+
+    async def ileri_test_gunluk():
+        """Binance arşivi günlük dosyaları ertesi gün ~01-02 UTC'de yayınlar: her gün 03 UTC'den sonra bir kez güncelle."""
+        while True:
+            try:
+                simdi = time.gmtime()
+                bugun = time.strftime("%Y-%m-%d", simdi)
+                son = json.loads(it_yol.read_text()).get("olusturma", "")[:10] if it_yol.exists() else ""
+                if tarayici.borsa.canli and simdi.tm_hour >= 3 and son != bugun and not it_durum.get("calisiyor"):
+                    await ileri_test_baslat()
+            except Exception as e:  # sessizce sonraki saate
+                log.warning("ileri test otomatik güncelleme: %s", e)
+            await asyncio.sleep(3600)
+
+    @app.on_event("startup")
+    async def _ileri_test_zamanla():
+        asyncio.create_task(ileri_test_gunluk())
+
     # ---------------------------------------------------------- ayarlar
     @app.get("/api/ayarlar")
     async def ayarlar_al():

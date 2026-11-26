@@ -25,6 +25,10 @@ from .db import DB
 from .strateji import StratejiParam, hazirla, likidasyon_fiyati, son_sinyaller
 
 log = logging.getLogger(__name__)
+# Doğrulanan ana set (RAPOR.md). Bu set dışındaki coinlerde kenar çok daha zayıf (2022 evreni testi, DENEYLER.md D14).
+ANA_SET = frozenset(["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT", "DOGEUSDT", "ADAUSDT", "LINKUSDT", "LTCUSDT",
+                     "AVAXUSDT", "DOTUSDT", "TRXUSDT", "BCHUSDT", "ETCUSDT", "ATOMUSDT", "FILUSDT", "AAVEUSDT", "XLMUSDT",
+                     "NEARUSDT", "UNIUSDT", "ZECUSDT", "SANDUSDT"])
 SAAT_MS = 3_600_000
 YAKINLIK = 0.30  # mesafenin %30'undan az kaldıysa uyar
 
@@ -245,7 +249,7 @@ class Tarayici:
             if df.index[-1] < beklenen_son or h.index[-1] < beklenen_tf:  # bayat veriyle sinyal üretme
                 continue
             for x in son_sinyaller(h, self.r, self.m, self.p):
-                x.update(sembol=s, hacim24=hacim.get(s, 0.0), tetik_tf=self.p.tetik_tf,
+                x.update(sembol=s, hacim24=hacim.get(s, 0.0), tetik_tf=self.p.tetik_tf, ana_set=s in ANA_SET,
                          yas_saat=round((simdi - (int(h.index[-1].timestamp() * 1000) + self.tf_ms)) / SAAT_MS, 2))
                 if x["tur"] == "sinyal":
                     aktif.append(x)

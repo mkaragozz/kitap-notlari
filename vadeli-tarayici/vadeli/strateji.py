@@ -42,6 +42,9 @@ class StratejiParam:
     fonlama_esik: float = 0.0  # >0: LONG fonlama > eşik ise atla (kalabalık long), SHORT fonlama < -eşik ise atla
     kalabalik_z: float = 0.0   # >0: LONG long/short hesap oranı z > eşik ise atla, SHORT z < -eşik ise atla
     taker_teyit: bool = False  # LONG taker alım/satım > 1, SHORT < 1 olmalı
+    # Geliştirme turu 2 (DENEYLER.md §2). 0 = kapalı.
+    rs_n: int = 0              # >0: LONG yalnız coinin son rs_n mumluk getirisi BTC'ninkinden yüksekse (SHORT tersi)
+    basabas_r: float = 0.0     # >0: kapanış lehte bu kadar R gidince stop girişe (+maliyet) çekilir
 
     @property
     def turev_gerekli(self) -> bool:
@@ -73,6 +76,10 @@ class StratejiParam:
             s += f", kalabalık z<{self.kalabalik_z}"
         if self.taker_teyit:
             s += ", taker teyit"
+        if self.rs_n:
+            s += f", RS>BTC({self.rs_n})"
+        if self.basabas_r:
+            s += f", başabaş@{self.basabas_r}R"
         return s
 
 
@@ -138,7 +145,7 @@ def rejim_hizala(df: pd.DataFrame, tetik_tf: str, rejim_tf: str, ema_n: int) -> 
 
 
 def hazirla(df: pd.DataFrame, p: StratejiParam = StratejiParam(), btc_rejim: pd.Series | None = None,
-            ek: pd.DataFrame | None = None) -> pd.DataFrame:
+            ek: pd.DataFrame | None = None, btc_kapanis: pd.Series | None = None) -> pd.DataFrame:
     """Tek ve ortak sinyal fonksiyonu. Girdi: kapanmış mumlar (tetik_tf). Çıktı: göstergeler + sinyaller.
 
     Sütunlar:
@@ -146,6 +153,8 @@ def hazirla(df: pd.DataFrame, p: StratejiParam = StratejiParam(), btc_rejim: pd.
       long_tetik/short_tetik (ham kırılım + rejim), long_sinyal/short_sinyal (filtreler dahil),
       long_yeni/short_yeni (önceki mumda tetik yoksa True), long_cikis/short_cikis (karşı kanal kırılımı),
       long_yakin/short_yakin (kanala 0.5 ATR'den az kaldı, henüz kırılmadı)
+    `btc_kapanis`: göreli güç filtresi (rs_n) için BTC kapanışları (aynı zaman dilimi). None = filtre nötr
+    (BTC'nin kendisi için kasıtlı olarak None verilir).
     """
     out = df[["open", "high", "low", "close", "volume", "quote_volume"]].copy()
     r = rejim_hizala(df, p.tetik_tf, p.rejim_tf, p.ema_n)
@@ -205,6 +214,12 @@ def hazirla(df: pd.DataFrame, p: StratejiParam = StratejiParam(), btc_rejim: pd.
             t = out["taker"]
             filtre_l &= (t > 1).fillna(False)
             filtre_s &= (t < 1).fillna(False)
+    if p.rs_n > 0 and btc_kapanis is not None:
+        b = btc_kapanis.reindex(df.index)
+        rs = (df["close"] / df["close"].shift(p.rs_n)) - (b / b.shift(p.rs_n))
+        out["rs"] = rs
+        filtre_l &= (rs > 0).fillna(False)
+        filtre_s &= (rs < 0).fillna(False)
     if p.yon == "short":
         filtre_l &= False
     if p.yon == "long":

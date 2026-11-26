@@ -45,6 +45,7 @@ class PozisyonTakip:
     komisyon: float = 0.0
     mum_sayisi: int = 0
     en_iyi: float = 0.0      # pozisyon lehine görülen en uç fiyat (MFE için)
+    basabas_r: float = 0.0   # >0: kapanış lehte bu kadar R gidince stop girişe (+iki yön maliyet) çekilir
 
     def __post_init__(self) -> None:
         self.ilk_stop = self.ilk_stop or self.stop
@@ -95,6 +96,11 @@ class PozisyonTakip:
                 self.fonlama += self.yon * fonlama_orani * notional
         if math.isfinite(atr):
             self.stop = self.onerilen_stop(c, atr)
+        if self.basabas_r > 0:
+            mesafe = abs(self.giris - self.ilk_stop)
+            if mesafe > 0 and self.yon * (c - self.giris) >= self.basabas_r * mesafe:
+                bb = self.giris * (1 + self.yon * 2 * self.maliyet.tek_yon)
+                self.stop = max(self.stop, bb) if self.yon == 1 else min(self.stop, bb)
         if cikis_sinyali:
             self.bekleyen_cikis = True
 
@@ -121,7 +127,7 @@ def pozisyon_ac(yon: int, acilis: float, atr_sinyal: float, zaman: pd.Timestamp,
     rk = risk_hesapla(giris, stop, yon, r, m, ozkaynak=ozkaynak)
     poz = PozisyonTakip(yon=yon, giris=giris, adet=rk["adet"], stop=stop, likidasyon=rk["likidasyon"],
                         teminat=rk["teminat"], risk_usdt=rk["risk_usdt"], kaldirac=rk["kaldirac"],
-                        giris_zaman=zaman, atr_kat=p.atr_kat, maliyet=m)
+                        giris_zaman=zaman, atr_kat=p.atr_kat, maliyet=m, basabas_r=p.basabas_r)
     poz.komisyon = rk["notional"] * m.komisyon
     return poz
 
@@ -168,12 +174,12 @@ def calistir(df: pd.DataFrame, p: StratejiParam = StratejiParam(), r: RiskParam 
              m: MaliyetParam = MaliyetParam(), fonlama: pd.Series | None = None, sembol: str = "",
              btc_rejim: pd.Series | None = None, hazir: pd.DataFrame | None = None,
              baslangic: pd.Timestamp | None = None, bitis: pd.Timestamp | None = None,
-             kaydir: int = 0, ek: pd.DataFrame | None = None) -> BacktestSonuc:
+             kaydir: int = 0, ek: pd.DataFrame | None = None, btc_kapanis: pd.Series | None = None) -> BacktestSonuc:
     """Tek sembol backtest.
     `hazir`: önceden `hazirla` ile hesaplanmış veri (ızgara taramasında hız için).
     `baslangic/bitis`: göstergeler tüm veride ısınır, işlemler sadece bu aralıkta açılır (dilim/walk-forward).
     `kaydir`: SAĞLIK KONTROLÜ: sinyalleri k mum kaydırır (+1 = bir mum geç, -1 = bir mum erken = gelecek bilgisi)."""
-    h = hazir if hazir is not None else hazirla(df, p, btc_rejim, ek)
+    h = hazir if hazir is not None else hazirla(df, p, btc_rejim, ek, btc_kapanis)
     m = _fonlama_modu(m, fonlama)
     if baslangic is not None or bitis is not None:
         h = h.loc[baslangic:bitis]

@@ -99,7 +99,14 @@ python tarayici.py backtest                       # tam doğrulama (~10-30 dk; i
 python tarayici.py backtest --hizli               # sadece temel strateji, küçük ızgara
 python tarayici.py backtest --demo                # sentetik veriyle saniyeler içinde
 python tarayici.py backtest --turev               # türev filtre deneyi (açık pozisyon, fonlama, long/short, taker; 2022+)
+python tarayici.py backtest --tur2                # tur 2: göreli güç, başabaş stop, günlük tetik, hayatta kalma, tek hesap
+python tarayici.py ileri-test                     # ileri test: 2026-11-01'den beri dondurulmuş strateji (arşiv, ~2-5 dk)
 ```
+
+**İleri test** (`DENEYLER.md` §3): dondurulmuş strateji, hiçbir analizde kullanılmamış veride (2026-11-01'den beri,
+22 sembol) Binance arşivinden hesaplanır. Bilgisayarın açık kalmasına bağlı değildir. Tarayıcı açıksa her gün 03 UTC'den
+sonra kendiliğinden güncellenir. Panoda **Geçmiş → İleri test**: karar (ERKEN / İZLE / DUR / UYGUN), kümülatif R ve
+beklenti bandı. Karar kuralları önceden yazıldı; 100. işlemde ortalama ≤ 0 ise DUR.
 
 Ne yapar (ayrıntı ve sonuçlar: `RAPOR.md`, deneme günlüğü: `DENEYLER.md`):
 
@@ -125,11 +132,11 @@ takibi ve geçmiş sinyal sonuçları **aynı** `strateji.hazirla` fonksiyonunu 
 
 | Ekran | İçerik |
 |---|---|
-| **Sinyaller** | Aktif sinyal kartları: yön, sembol, YENİ/devam, fiyat, stop, stop %, kaldıraç, pozisyon $, teminat, likidasyon, risk $, 4s rejim. Filtre: LONG/SHORT, YENİ/devam, min. 24s hacim, sembol arama; sıralama: yenilik/hacim/stop %/risk. Filtreler adres çubuğunda saklanır (yenileyince kaybolmaz). **Yaklaşanlar** sekmesi: kırılıma 0.5 ATR kalanlar. Karta dokununca grafik açılır. |
+| **Sinyaller** | Üstte özet şeridi: sonraki mum kapanışına kalan süre, aktif sinyal sayısı, **açık pozisyon / tavan (5)**, ileri test durumu. Her kartta **"Binance'e girilecekler"**: marjin/kaldıraç, emir türü, kopyalanabilir miktar ve stop fiyatı. Doğrulanan 22'lik setin dışındaki coinler **"ana set dışı"** etiketi taşır (bu coinlerde backtest kenarı çok zayıf); "Yalnız ana set" filtresi. Aktif sinyal kartları: yön, sembol, YENİ/devam, fiyat, stop, stop %, kaldıraç, pozisyon $, teminat, likidasyon, risk $, 4s rejim. Filtre: LONG/SHORT, YENİ/devam, min. 24s hacim, sembol arama; sıralama: yenilik/hacim/stop %/risk. Filtreler adres çubuğunda saklanır (yenileyince kaybolmaz). **Yaklaşanlar** sekmesi: kırılıma 0.5 ATR kalanlar. Karta dokununca grafik açılır. |
 | **Grafik** | Altında sembolün türev verileri: açık pozisyon ve değişimi, fonlama, long/short oranları, kalabalık z-skoru, taker alım/satım. 1s/4s mumlar, EMA200(4s) rejim çizgisi, giriş kanalı, sinyal işaretleri, giriş/stop/likidasyon çizgileri (açık pozisyonun önerilen stopu dahil). Kütüphane: TradingView Lightweight Charts™ (Apache 2.0) — **yerel dosya**, veri kendi API'mizden (`/api/mumlar?sembol=...&aralik=1h`). |
 | **Piyasa** | CoinGecko'dan toplam piyasa değeri, 24s değişim, BTC/ETH dominansı, stabilcoin payı ve ilk 100 coinin **ısı haritası** (1 saat / 24 saat / 7 gün; kutu boyu piyasa değeri, renk değişim). Vadelide olan coine dokununca grafiği açılır. Bilgi amaçlıdır, sinyale girmez. |
 | **Pozisyonlarım** | Borsada açtığınız pozisyonu girin (sinyaldeki "Pozisyon aç" formu doldurur). Her 1s kapanışında: gerçekleşmemiş K/Z ve R katı, önerilen takip stopu ("stopu X'e çekin"), **çıkış sinyali** (karşı kanal kırılımı), stop/likidasyon yakınlığı (mesafenin %30'undan az kaldıysa) — ekranda ve bildirimle. Not ekleme, kapatma. **Sistem emir göndermez.** |
-| **Geçmiş** | Üretilen her sinyal (zaman, sembol, yön, fiyat, stop, parametre sürümü) ve backtest ile aynı kurallarla simüle edilmiş sonucu (R, süre, çıkış nedeni). Toplam / long / short / sembol bazında istatistik, **canlı ile backtest beklentisi yan yana**. |
+| **Geçmiş** | **İleri test** kartı (karar, ilerleme, kümülatif R grafiği, kurallar, işlemler, "Şimdi güncelle"). Altında üretilen her sinyal (zaman, sembol, yön, fiyat, stop, parametre sürümü) ve backtest ile aynı kurallarla simüle edilmiş sonucu (R, süre, çıkış nedeni). Toplam / long / short / sembol bazında istatistik, **canlı ile backtest beklentisi yan yana**. |
 | **Backtest** | Varyant karşılaştırması, özkaynak eğrisi, yıllık dilimler, ızgara, walk-forward, sembol tablosu, sağlık kontrolleri; "Yeniden çalıştır" (arka planda, ilerleme gösterir). |
 | **Ayarlar** | Hesap, risk %, max kaldıraç, sembol sayısı, bildirim kanalları. Sonraki taramada devreye girer. |
 

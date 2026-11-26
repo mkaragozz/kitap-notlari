@@ -51,12 +51,14 @@
 
   <!-- SİNYALLER -->
   <section id="s-sinyaller" class="ekran gizli">
+    <div id="ozetSerit" class="ozet-serit"></div>
     <div class="altsekme">
       <button data-alt="aktif" class="secili">Aktif <span id="sayAktif" class="rozet">0</span></button>
       <button data-alt="yaklasan">Yaklaşanlar <span id="sayYaklasan" class="rozet">0</span></button>
     </div>
     <div class="filtre">
       <select id="fYon" aria-label="Yön"><option value="">Tüm yönler</option><option>LONG</option><option>SHORT</option></select>
+      <select id="fSet" aria-label="Coin seti"><option value="">Tüm coinler</option><option value="ana">Yalnız ana set (doğrulanan 22)</option></select>
       <select id="fEtiket" aria-label="Etiket"><option value="">YENİ + devam</option><option value="YENI">Yalnız YENİ</option><option value="DEVAM">Yalnız devam</option></select>
       <select id="fHacim" aria-label="Minimum 24s hacim">
         <option value="0">Hacim: hepsi</option><option value="50000000">≥ 50M $</option><option value="200000000">≥ 200M $</option>
@@ -129,6 +131,7 @@
 
   <!-- GEÇMİŞ -->
   <section id="s-gecmis" class="ekran gizli">
+    <div id="ileriTest" class="kart ileri"></div>
     <div id="gecmisOzet"></div>
     <h3>Sembol bazında</h3>
     <div class="tablo-kap"><table id="gecmisSembol"></table></div>

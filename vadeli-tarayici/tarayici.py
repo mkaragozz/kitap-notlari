@@ -6,6 +6,7 @@
   python tarayici.py backtest                    gerçek veriyle tam doğrulama, raporlar/ altına yazar
   python tarayici.py backtest --demo             sentetik veriyle hızlı deneme
   python tarayici.py indir --semboller BTCUSDT ETHUSDT    geçmiş veriyi önbelleğe indir
+  python tarayici.py ileri-test                  ileri test: 2026-11-01'den beri dondurulmuş strateji (arşiv verisi)
 
 Sistem hiçbir koşulda emir göndermez ve API anahtarı kullanmaz.
 """
@@ -32,6 +33,7 @@ def _log_kur(seviye: str = "INFO", dosya: Path | None = None) -> None:
     isleyiciler.append(konsol)
     logging.basicConfig(level=getattr(logging, seviye), handlers=isleyiciler,
                         format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    logging.getLogger("urllib3").setLevel(logging.ERROR)  # paralel indirmede "pool is full" gürültüsü
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -63,6 +65,10 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--bitis", default="2026-10", help="son tam ay (YYYY-MM)")
     b.add_argument("--izgara", nargs="*", default=None, help="ızgara + walk-forward yapılacak varyantlar (varsayılan: hepsi)")
     b.add_argument("--turev", action="store_true", help="türev konumlanma filtresi deneyi (açık pozisyon, fonlama, long/short, taker)")
+    b.add_argument("--tur2", action="store_true", help="geliştirme turu 2: göreli güç, başabaş stop, günlük tetik, "
+                                                       "hayatta kalma, tek hesap portföy (DENEYLER.md §2)")
+
+    alt.add_parser("ileri-test", help="ileri test sonucunu arşivden yeniden hesapla (DENEYLER.md §3)")
 
     i = alt.add_parser("indir", help="geçmiş veriyi indir (data.binance.vision)")
     i.add_argument("--semboller", nargs="*")
@@ -74,6 +80,12 @@ def main(argv: list[str] | None = None) -> int:
         _log_kur("INFO", KOK / "loglar" / "backtest.log")
         from vadeli import rapor_uret
 
+        if a.tur2:
+            from vadeli import rapor_tur2
+
+            rapor_tur2.uret()
+            print((rapor_uret.D.RAPOR_DIZINI / "ozet_tur2.md").read_text())
+            return 0
         if a.turev:
             from vadeli import rapor_turev
 
@@ -84,6 +96,12 @@ def main(argv: list[str] | None = None) -> int:
         rp = rapor_uret.uret(demo=a.demo, semboller=a.semboller, hizli=a.hizli, bitis=a.bitis, izgara_varyantlari=izg)
         print((rapor_uret.D.RAPOR_DIZINI / "ozet.md").read_text())
         print(f"\nRaporlar: {rapor_uret.D.RAPOR_DIZINI}  (panoda 'Backtest' sekmesi)")
+        return 0
+    if a.komut == "ileri-test":
+        _log_kur("INFO", KOK / "loglar" / "ileri_test.log")
+        from vadeli import ileri_test
+
+        print(ileri_test.metin(ileri_test.uret()))
         return 0
     if a.komut == "indir":
         _log_kur("INFO")

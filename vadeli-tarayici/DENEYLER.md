@@ -185,3 +185,58 @@ birleşimler bu turda denenmez. Hiçbiri geçmezse varsayılan değişmez.
   4. **200. işlemde:** ort. R > 0 ve uyarı bandının üstündeyse "küçük riskle canlı uygun" (%0.25–0.5/işlem);
      aksi hâlde DUR.
   5. Kararlar yalnızca bu kurallarla verilir; ara sonuçlara bakarak parametre değiştirilmez.
+
+### D12 — Tur 2 kenar varyantları (sonuçlar; tablo: `raporlar/ozet_tur2.md`)
+Taban (canlı varsayılan, 2022-01 → 2026-10): 2708 işlem, ort. R +0.115 (t 2.6), holdout +0.087, yıllık −0.055 / +0.196 / +0.208 / +0.051 / +0.129.
+
+| Varyant | İşlem | Ort. R | Holdout R | Yıllık ort. R | Eşikler | Kabul |
+|---|---|---|---|---|---|---|
+| +rs (göreli güç, 42) | 2116 | 0.107 | 0.049 | −0.019 / 0.155 / 0.279 / 0.020 / 0.087 | 0.093 / 0.107 / 0.091 | ✗ (a, b, c, d sağlanmadı) |
+| +basabas (1R) | 2714 | 0.112 | 0.087 | −0.056 / 0.190 / 0.201 / 0.054 / 0.126 | 0.112 / 0.115 / 0.115 | ✗ (etkisiz) |
+| 1g_tetik (günlük) | 451 | 0.205 (t 1.3) | 0.151 (t 0.5) | −0.155 / −0.005 / 0.652 / 0.313 / −0.053 | 0.119 / 0.205 / 0.181 | ✗ (b: 2/5 yıl, e: işlem %17) |
+
+**Karar:** hiçbiri kabul edilmedi, canlı varsayılan **değişmedi** (`p8abf0564`).
+* Göreli güç filtresi işlemleri azalttı ama kaliteyi artırmadı; holdout'ta tabandan kötü.
+* Başabaş stop neredeyse hiç devreye girmedi (3×ATR takip eden stop +1R'ye gelindiğinde zaten girişe yakın).
+* Günlük tetik yüksek ortalama gösteriyor ama sonuç tek bir yıla (2024, +0.65 R) dayanıyor; 5 yılın 3'ünde negatif ve işlem
+  sayısı t-istatistiği için çok az. "Ortalama yüksek" görünmesi bu turdaki en tehlikeli tuzaktı; kural sayesinde alınmadı.
+
+### D13 — K2: tek hesap portföy simülasyonu
+Eski raporlardaki portföy, 22 ayrı alt hesabın eşit ağırlıklı ortalamasıydı (her işlem fiilen toplam sermayenin
+%1/22'sini riske ediyordu). **Tek hesapta %1 risk/işlem çok farklı bir tablo veriyor:**
+
+* Aynı anda açık pozisyon: ortalama **9**, en fazla **22** (hepsi). İşlemlerin %65'i başka bir işlemle aynı 4s mumda açılıyor.
+* Tavansız, %1 risk: yıllık %31 ama **max düşüş %55** (2022: −%29).
+* Tavanlı sonuçlar, aynı anda gelen sinyallerden hangisinin alındığına çok bağlı (5R tavanında yıllık %15–%28). Bu yüzden
+  sıra 20 kez karıştırılıp **medyan** kullanıldı (ön kayıttaki tek sıralı hesap bu keyfiliği yansıtmıyordu; düzeltme kuralı
+  değiştirmiyor, yalnız gürültüyü azaltıyor).
+
+| Tavan (%1 risk) | Alınan işlem | Yıllık (medyan) | Max DD | Yıllık/DD |
+|---|---|---|---|---|
+| yok | 2708 | %30.9 | −%55.0 | 0.56 |
+| 8R | 840 | %16.6 | −%38.2 | 0.44 |
+| **5R** | 468 | %21.3 | −%26.4 | **0.81** |
+| 3R | 282 | %7.3 | −%18.8 | 0.39 |
+
+**Karar (ön kayıtlı kural):** 5R tavanı. Panoya "Açık pozisyon / tavan: N / 5" göstergesi eklendi; tavan doluyken yeni
+sinyale girilmemesi öneriliyor. Ek (betimleyici, seçim yok): işlem başı risk düşürmek de benzer getiri/düşüş oranı veriyor —
+%0.5 risk + 5R tavan: yıllık ~%11.5, max DD ~−%14; %0.25 risk tavansız: ~%14 / −%17.
+**En önemli pratik sonuç:** önceki raporun "−%4.9 max düşüş" rakamı tek hesapta %1 riskle geçerli değil.
+
+### D14 — K1: hayatta kalma yanlılığı (2022-01'de bilinebilecek evren)
+2022-01 arşiv hacmine göre ilk 60 sözleşme (o gün bilinebilecek liste; sonradan listeden çıkan LUNA, MATIC, EOS, SXP, ANT
+dahil), taban strateji, 2022-01 → 2026-10:
+
+* **Tüm evren: 6574 işlem, ort. R +0.062 (t 2.8), holdout +0.048 (t 1.6), %60 sembol kârlı.** Ana sette +0.115.
+* Ana set dışında kalan 38 sembol: **+0.025 R** (3866 işlem), holdout +0.016.
+* Listeden çıkanlar: +0.109 R (282 işlem) — ön kayıtlı kural (≤ 0 ise uyarı) tetiklenmedi.
+
+**Yorum:** asıl yanlılık listeden çıkanlarda değil, **"bugün hâlâ büyük olan coinler" seçiminde**. Önsel olarak seçilmiş
+bir evrende kenar ana setteki değerin yaklaşık yarısı; ana set dışındaki coinlerde maliyetlerden sonra neredeyse sıfır.
+Strateji değişmedi (kural gereği). Panoda ana set dışı coinlerin sinyallerine **"ana set dışı"** etiketi ve "Yalnız ana set"
+filtresi eklendi. İleri test zaten yalnız ana sette yürüyor.
+
+### D15 — İleri test başladı
+`python tarayici.py ileri-test` (pano: Geçmiş → İleri test, açık tarayıcı her gün 03 UTC sonrası kendiliğinden günceller).
+İlk sonuç (2026-11-01 → 11-25, 22 sembol): 16 kapanan işlem, ort. R +0.365, toplam +5.8 R, 3 açık. Kural gereği **erken**
+(< 50 işlem): bu sayı hiçbir şey kanıtlamaz; tek işlemin R standart sapması ~2.3.

@@ -136,6 +136,7 @@ function sseBaslat() {
     if (rota().ad === "pozisyonlar") pozisyonlariYukle();
   });
   es.addEventListener("backtest", () => { if (rota().ad === "backtest") backtestYukle(); });
+  es.addEventListener("ileri_test", () => { ileriTestYukle(); toast("İleri test güncellendi"); });
   es.onerror = () => { durum.sseBagli = false; $("#baglanti").className = "nokta kirmizi";
     $("#baglanti").title = "Bağlantı koptu — yeniden deneniyor"; };
 }
@@ -144,6 +145,7 @@ function sseBaslat() {
 function filtreleriYukle(p) {
   $("#fYon").value = p.get("yon") || "";
   $("#fEtiket").value = p.get("etiket") || "";
+  $("#fSet").value = p.get("set") || "";
   $("#fHacim").value = p.get("hacim") || "0";
   $("#fAra").value = p.get("ara") || "";
   $("#fSirala").value = p.get("sirala") || "yenilik";
@@ -154,6 +156,7 @@ function filtreleriKaydet() {
   const p = new URLSearchParams();
   if ($("#fYon").value) p.set("yon", $("#fYon").value);
   if ($("#fEtiket").value) p.set("etiket", $("#fEtiket").value);
+  if ($("#fSet").value) p.set("set", $("#fSet").value);
   if ($("#fHacim").value !== "0") p.set("hacim", $("#fHacim").value);
   if ($("#fAra").value.trim()) p.set("ara", $("#fAra").value.trim());
   if ($("#fSirala").value !== "yenilik") p.set("sirala", $("#fSirala").value);
@@ -161,7 +164,7 @@ function filtreleriKaydet() {
   rotaYaz("sinyaller", p);
   sinyalleriCiz();
 }
-["#fYon", "#fEtiket", "#fHacim", "#fSirala"].forEach((s) => $(s).addEventListener("change", filtreleriKaydet));
+["#fYon", "#fSet", "#fEtiket", "#fHacim", "#fSirala"].forEach((s) => $(s).addEventListener("change", filtreleriKaydet));
 $("#fAra").addEventListener("input", filtreleriKaydet);
 $$(".altsekme button").forEach((b) => b.addEventListener("click", () => { durum.alt = b.dataset.alt; filtreleriKaydet();
   $$(".altsekme button").forEach((x) => x.classList.toggle("secili", x === b)); }));
@@ -169,12 +172,13 @@ $$(".altsekme button").forEach((b) => b.addEventListener("click", () => { durum.
 async function sinyalleriYukle() {
   try {
     durum.sinyaller = await api("/api/sinyaller");
+    try { durum.acikPoz = (await api("/api/pozisyonlar")).pozisyonlar.filter((x) => x.durum === "acik").length; } catch { /* yok */ }
     durumYaz(durum.sinyaller.durum);
     $("#tetikTf").textContent = durum.sinyaller.tetik_tf === "4h" ? "4s" : "1s";
     $("#paramMetin").textContent = "Strateji: " + (durum.sinyaller.param || "");
     const dl = $("#sembolListe");
     dl.replaceChildren(...durum.sinyaller.evren.map((e) => el("option", { value: e.sembol })));
-    if (rota().ad === "sinyaller") sinyalleriCiz();
+    if (rota().ad === "sinyaller") { sinyalleriCiz(); ozetSeritCiz(); }
   } catch (e) { console.warn(e); }
 }
 
@@ -184,7 +188,8 @@ function sinyalleriCiz() {
   $("#sayYaklasan").textContent = yaklasan.length;
   let liste = (durum.alt === "aktif" ? aktif : yaklasan).slice();
   const yon = $("#fYon").value, et = $("#fEtiket").value, hac = Number($("#fHacim").value), ara = $("#fAra").value.trim().toUpperCase();
-  liste = liste.filter((x) => (!yon || x.yon === yon) && (!et || (et === "YENI" ? x.yeni : !x.yeni))
+  const set = $("#fSet").value;
+  liste = liste.filter((x) => (!set || x.ana_set !== false) && (!yon || x.yon === yon) && (!et || (et === "YENI" ? x.yeni : !x.yeni))
     && (x.hacim24 || 0) >= hac && (!ara || x.sembol.includes(ara)));
   const sir = $("#fSirala").value;
   const anahtar = { yenilik: (x) => [x.yeni ? 0 : 1, -(x.hacim24 || 0)], hacim: (x) => [-(x.hacim24 || 0)],
@@ -200,7 +205,9 @@ function sinyalKarti(x) {
   const kart = el("div", { class: `kart sinyal ${x.yon}`, tabindex: 0, onclick: () => { location.hash = `#/grafik?sembol=${encodeURIComponent(x.sembol)}`; } },
     el("div", { class: "ust-satir" },
       el("h3", {}, el("span", { class: "yon-" + x.yon }, x.yon), " ", x.sembol),
-      yaklasan ? el("span", { class: "etiket" }, "0.5 ATR kala") : el("span", { class: "etiket" + (x.yeni ? " yeni" : "") }, x.yeni ? "YENİ" : "devam")),
+      el("span", { class: "etiketler" },
+        x.ana_set === false ? el("span", { class: "etiket dis", title: "Bu coin doğrulanan 22'lik ana sette değil. Ana set dışındaki coinlerde backtest kenarı çok zayıf (+0.025 R/işlem)." }, "ana set dışı") : null,
+        yaklasan ? el("span", { class: "etiket" }, "0.5 ATR kala") : el("span", { class: "etiket" + (x.yeni ? " yeni" : "") }, x.yeni ? "YENİ" : "devam"))),
     el("div", { class: "izgara" },
       kv(yaklasan ? "Kırılım seviyesi" : "Fiyat", fmt.f(yaklasan ? x.seviye : x.fiyat)),
       kv("Stop", fmt.f(x.stop)), kv("Stop %", fmt.d(x.stop_yuzde) + "%"),
@@ -209,11 +216,131 @@ function sinyalKarti(x) {
       kv("24s hacim", fmt.usd(x.hacim24) + " $"), kv("Sinyal mumu", fmt.zaman(x.zaman) + (x.tetik_tf === "4h" ? " (4s)" : "")),
       kv("Kapanıştan beri", x.yas_saat == null ? "-" : fmt.d(x.yas_saat, 1) + " sa"),
       x.oi_deg !== undefined ? kv("Açık poz. değişimi", fmt.y(x.oi_deg)) : null),
-    yaklasan ? null : el("button", { class: "kucuk", onclick: (e) => { e.stopPropagation(); pozisyonFormuDoldur(x); } }, "Pozisyon aç"));
+    yaklasan ? null : borsaKutusu(x),
+    yaklasan ? null : el("button", { class: "kucuk", onclick: (e) => { e.stopPropagation(); pozisyonFormuDoldur(x); } }, "Girdim, kaydet"));
   kart.addEventListener("keydown", (e) => { if (e.key === "Enter") kart.click(); });
   return kart;
 }
 const kv = (k, v) => el("div", {}, el("span", {}, k), el("b", {}, v));
+
+// Borsaya elle girilecek değerler: kopyala düğmeli. Miktar adet cinsinden (Binance "Boyut" alanı, coin birimi).
+function kopyalanir(etiket, deger, aciklama) {
+  const d = el("button", { class: "kopya", type: "button", title: "Kopyala", onclick: async (e) => {
+    e.stopPropagation();
+    try { await navigator.clipboard.writeText(deger); toast(`${etiket} kopyalandı: ${deger}`, 2500); }
+    catch { toast(`${etiket}: ${deger}`, 6000); }
+  } }, "⧉");
+  return el("div", { class: "borsa-satir" }, el("span", {}, etiket), el("b", {}, deger), d, aciklama ? el("i", {}, aciklama) : null);
+}
+const sayiMetin = (x, basamak) => { if (x == null || !isFinite(x)) return "-";
+  const n = basamak ?? (Math.abs(x) >= 100 ? 2 : Math.abs(x) >= 1 ? 4 : 6); return Number(x).toFixed(n).replace(/\.?0+$/, ""); };
+function borsaKutusu(x) {
+  const yon = x.yon === "LONG" ? "Al / Long" : "Sat / Short";
+  return el("div", { class: "borsa-kutu", onclick: (e) => e.stopPropagation() },
+    el("div", { class: "borsa-baslik" }, "Binance'e girilecekler"),
+    el("ol", { class: "borsa-adim" },
+      el("li", {}, `Marjin: İzole · Kaldıraç ${fmt.d(x.kaldirac, 0)}x`),
+      el("li", {}, `Piyasa emri (Market) · ${yon}`),
+      el("li", {}, "Hemen ardından Stop-Market emri (Reduce-only / Pozisyonu kapat)")),
+    kopyalanir("Miktar", sayiMetin(x.adet), `≈ ${fmt.usd(x.notional)} $`),
+    kopyalanir("Stop", sayiMetin(x.stop), `${fmt.d(x.stop_yuzde)}% uzakta`),
+    el("p", { class: "not" }, `Risk ≈ ${fmt.d(x.risk_usdt)} $ (stop + komisyon). Backtest girişi sinyalden sonraki mumun açılışında varsayar; çok geç girerseniz sonuç farklı olabilir.`));
+}
+
+// Tek hesapta toplam açık risk tavanı (RAPOR.md §1c: işlemlerin çoğu aynı anda, aynı yönde açılıyor)
+const ACIK_TAVAN = 5;
+// Sinyaller ekranı üst şeridi: sonraki mum kapanışı + ileri test durumu
+function ozetSeritCiz() {
+  const kap = $("#ozetSerit"); if (!kap) return;
+  const tf = durum.sinyaller.tetik_tf === "4h" ? 4 : 1;
+  const sanal = durum.sinyaller.durum?.sanal_saat;
+  const simdi = sanal ? new Date(sanal).getTime() : Date.now();
+  const adim = tf * 3600e3, sonraki = Math.floor(simdi / adim) * adim + adim, kalan = Math.max(0, sonraki - simdi);
+  const sa = Math.floor(kalan / 3600e3), dk = Math.floor((kalan % 3600e3) / 60e3);
+  const it = durum.ileriTest;
+  const itMetin = it ? `${it.karar.durum === "dur" ? "DUR" : it.karar.durum === "uygun" ? "uygun" : it.karar.durum === "erken" ? "erken" : "izle"} · ${it.ozet.islem} işlem · ort. R ${fmt.d(it.ozet.ort_r, 3)}` : "henüz hesaplanmadı";
+  kap.replaceChildren(
+    el("div", {}, el("span", {}, "Sonraki sinyal kontrolü"), el("b", {}, `${sa} sa ${dk} dk`),
+      el("i", {}, `${tf === 4 ? "4s" : "1s"} mum kapanışı ${new Date(sonraki).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}`)),
+    el("div", {}, el("span", {}, "Aktif sinyal"), el("b", {}, String(durum.sinyaller.aktif.length)),
+      el("i", {}, `${durum.sinyaller.yaklasan.length} yaklaşan`)),
+    el("a", { href: "#/pozisyonlar", class: "acik-risk" + ((durum.acikPoz ?? 0) >= ACIK_TAVAN ? " dolu" : "") },
+      el("span", {}, "Açık pozisyon / tavan"), el("b", {}, `${durum.acikPoz ?? 0} / ${ACIK_TAVAN}`),
+      el("i", {}, (durum.acikPoz ?? 0) >= ACIK_TAVAN ? "Tavan dolu: yeni sinyale girme" : "Tek hesapta en fazla 5 açık pozisyon")),
+    el("a", { href: "#/gecmis", class: "ileri-link " + (it ? "d-" + it.karar.durum : "") }, el("span", {}, "İleri test"), el("b", {}, itMetin),
+      el("i", {}, it ? `${it.baslangic.slice(0, 10)}'den beri · ayrıntı →` : "Geçmiş → İleri test")));
+}
+setInterval(() => { if (rota().ad === "sinyaller") ozetSeritCiz(); }, 30e3);
+
+// ------------------------------------------------------------------ ileri test
+function svg(etiket, oz = {}) { const e = document.createElementNS("http://www.w3.org/2000/svg", etiket);
+  for (const [k, v] of Object.entries(oz)) e.setAttribute(k, v); return e; }
+
+function ileriGrafik(egri) {
+  const G = 640, Y = 220, sol = 40, sag = 10, ust = 10, alt = 24;
+  const s = svg("svg", { viewBox: `0 0 ${G} ${Y}`, class: "ileri-grafik", role: "img",
+    "aria-label": "Kümülatif R ve beklenti bandı" });
+  if (!egri.length) return s;
+  const n = egri.length, xs = (i) => sol + (G - sol - sag) * (n === 1 ? 0.5 : (i - 1) / (n - 1));
+  const tum = egri.flatMap((e) => [e.kum_r, e.alt ?? e.kum_r, e.ust ?? e.kum_r, 0]);
+  const mn = Math.min(...tum), mx = Math.max(...tum), aralik = mx - mn || 1;
+  const ys = (v) => ust + (Y - ust - alt) * (1 - (v - mn) / aralik);
+  const yol = (f) => egri.map((e, k) => `${k ? "L" : "M"}${xs(e.n).toFixed(1)},${ys(f(e)).toFixed(1)}`).join("");
+  if (egri[0].alt != null) {
+    const bant = yol((e) => e.ust) + egri.slice().reverse().map((e) => `L${xs(e.n).toFixed(1)},${ys(e.alt).toFixed(1)}`).join("") + "Z";
+    s.appendChild(svg("path", { d: bant, class: "bant" }));
+    s.appendChild(svg("path", { d: yol((e) => e.beklenen), class: "beklenen" }));
+  }
+  s.appendChild(svg("line", { x1: sol, x2: G - sag, y1: ys(0), y2: ys(0), class: "sifir" }));
+  s.appendChild(svg("path", { d: yol((e) => e.kum_r), class: "gercek" }));
+  for (const v of [mn, 0, mx]) { const t = svg("text", { x: sol - 4, y: ys(v) + 4, class: "eksen", "text-anchor": "end" });
+    t.textContent = (v > 0 ? "+" : "") + v.toFixed(1); s.appendChild(t); }
+  const t = svg("text", { x: G - sag, y: Y - 6, class: "eksen", "text-anchor": "end" }); t.textContent = `${n} işlem`; s.appendChild(t);
+  return s;
+}
+
+async function ileriTestYukle() {
+  let v; try { v = await api("/api/ileri-test"); } catch { return; }
+  const kap = $("#ileriTest"), rp = v.rapor, c = v.calisma || {};
+  durum.ileriTest = rp;
+  const dugme = el("button", { class: "kucuk ikincil", disabled: c.calisiyor || null, onclick: async () => {
+    try { await api("/api/ileri-test/calistir", { method: "POST" }); toast("İleri test güncelleniyor (1-3 dk)…"); ileriTestYukle(); }
+    catch (e) { toast(e.message); } } }, c.calisiyor ? "Güncelleniyor…" : "Şimdi güncelle");
+  if (!rp) {
+    kap.replaceChildren(el("h3", {}, "İleri test"), el("p", { class: "soluk" },
+      "Henüz hesaplanmadı. Dondurulmuş strateji 2026-11-01'den beri hiçbir analizde kullanılmamış veride Binance arşivinden hesaplanır."), dugme);
+    return;
+  }
+  const o = rp.ozet, b = rp.beklenti, k = rp.karar;
+  const ilerleme = Math.min(1, o.islem / 200);
+  kap.replaceChildren(
+    el("div", { class: "ileri-ust" }, el("h3", {}, "İleri test"), el("span", { class: "karar d-" + k.durum },
+      { erken: "ERKEN", izle: "İZLE", dur: "DUR", uygun: "UYGUN" }[k.durum] || k.durum), dugme),
+    el("p", { class: "karar-metin" }, k.metin),
+    el("div", { class: "ilerleme", title: `${o.islem}/200 işlem` }, el("div", { style: `width:${(ilerleme * 100).toFixed(1)}%` }),
+      el("i", { style: "left:25%" }), el("i", { style: "left:50%" })),
+    el("div", { class: "ilerleme-etiket soluk" }, el("span", {}, "0"), el("span", {}, "50"), el("span", {}, "100: ilk karar"), el("span", {}, "200: son karar")),
+    el("div", { class: "istat" },
+      el("div", { class: "kart" }, el("span", {}, "Kapanan işlem"), el("b", {}, String(o.islem)),
+        rp.beklenen_islem ? el("span", {}, `beklenen ~${Math.round(rp.beklenen_islem)}`) : null),
+      el("div", { class: "kart" }, el("span", {}, "Ort. R"), el("b", { class: isaretSinif(o.ort_r) }, fmt.d(o.ort_r, 3)),
+        b ? el("span", {}, `backtest ${fmt.d(b.ort_r, 3)}`) : null),
+      el("div", { class: "kart" }, el("span", {}, "Toplam R"), el("b", { class: isaretSinif(o.toplam_r) }, fmt.d(o.toplam_r, 1)),
+        el("span", {}, `%1 riskle ≈ ${fmt.d(o.toplam_r, 1)}%`)),
+      el("div", { class: "kart" }, el("span", {}, "Kazanma"), el("b", {}, fmt.y(o.kazanma)), el("span", {}, `açık: ${rp.acik.length}`))),
+    ileriGrafik(rp.egri),
+    el("p", { class: "not" }, "Mavi: gerçekleşen kümülatif R · kesikli: backtest beklentisi · gri bant: beklenti ± 2σ√n. "
+      + `Strateji ${rp.strateji} (${rp.surum}), ${rp.evren.length} sembol, veri ${fmt.zaman(rp.son_veri)} UTC'ye kadar `
+      + `(Binance arşivi bir gün gecikmeli). Güncelleme: ${rp.olusturma}.`),
+    el("details", {}, el("summary", {}, "Kurallar (önceden yazıldı) ve işlemler"),
+      el("ul", {}, rp.kurallar.map((x) => el("li", {}, x))),
+      el("div", { class: "tablo-kap" }, (() => { const t = el("table", { id: "ileriTablo" }); return t; })())));
+  tablo("#ileriTablo", [["Sembol", (r) => r.sembol], ["Yön", (r) => r.yon, (r) => "yon-" + r.yon],
+    ["Giriş", (r) => fmt.zaman(r.giris_zaman)], ["Çıkış", (r) => (r.neden === "donem_sonu" ? "açık" : fmt.zaman(r.cikis_zaman))],
+    ["Neden", (r) => (r.neden === "donem_sonu" ? "-" : r.neden)], ["R", (r) => fmt.d(r.r), (r) => isaretSinif(r.r)]],
+    [...rp.acik, ...rp.islemler]);
+  if (rota().ad === "sinyaller") ozetSeritCiz();
+}
 
 // ------------------------------------------------------------------ grafik
 function grafikOlustur() {
@@ -449,7 +576,8 @@ async function gecmisYukle() {
     el("p", { class: "soluk" }, "Her sinyalin sonucu backtest ile aynı çıkış kurallarıyla (sonraki açılışta giriş, 3×ATR takip eden stop, karşı kanal) simüle edilir. "
       + (bt ? `Backtest: ${bt.demo ? "DEMO (sentetik) " : ""}rapor ${fmt.zaman(bt.kaynak)}, varyant ${bt.varyant} (sürüm ${bt.surum}). Canlı parametre sürümü: ${v.param_surum}`
         + (bt.eslesme ? " — eşleşiyor." : " — EŞLEŞMİYOR: canlı parametrelerin backtesti yok, karşılaştırma yaklaşıktır.") : "Backtest raporu yok (python tarayici.py backtest).")),
-    el("div", { class: "tablo-kap" }, t), uyari);
+    el("div", { class: "tablo-kap" }, t), ...(uyari ? [uyari] : []));
+  ileriTestYukle();
   tablo("#gecmisSembol", [["Sembol", (r) => r[0]], ["İşlem", (r) => r[1].islem], ["Kazanma", (r) => fmt.y(r[1].kazanma)],
     ["Ort. R", (r) => fmt.d(r[1].ort_r, 3), (r) => isaretSinif(r[1].ort_r)], ["Toplam R", (r) => fmt.d(r[1].toplam_r, 2)]],
     Object.entries(s.sembol).filter(([, x]) => x.islem));
@@ -642,6 +770,7 @@ async function baslat() {
   sseBaslat();
   kurBandiGoster();
   await sinyalleriYukle();
+  ileriTestYukle();
   ekranGoster();
   setInterval(sinyalleriYukle, 60000); // SSE kaçırılırsa yedek
 }

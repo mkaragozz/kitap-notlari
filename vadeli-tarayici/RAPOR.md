@@ -71,6 +71,41 @@ Ayrıntılı tablolar: `raporlar/ozet.md` (otomatik), `raporlar/*.csv`, panoda *
   +0.087 R, t 1.9). Ancak bu bir kez daha seçilmiş bir sonuç (5 filtre denendi) ve t < 2. Öneri değişmedi:
   **önce izleme, sonra çok küçük risk.** Kanıt güçlendi ama "güvenilir kâr" seviyesinde değil.
 
+## 1c. Geliştirme turu 2 ve ileri test (2026-11-26)
+
+Ayrıntı: `DENEYLER.md` §2–§3 ve D12–D15 (kurallar sonuçlardan önce yazılıp kaydedildi), tablolar `raporlar/ozet_tur2.md`.
+
+**1. Yeni kenar varyantlarının hiçbiri kabul edilmedi; strateji değişmedi.** Göreli güç filtresi, başabaş stop ve günlük
+tetik denendi. Günlük tetik en yüksek ortalamayı gösterdi (+0.205 R), ama bu tek bir yıldan (2024) geliyor. 5 yılın 3'ünde
+negatif, işlem sayısı da çok az. Önceden yazılan kural onu eledi.
+
+**2. Tek hesap gerçeği: risk eski raporun gösterdiğinden çok büyük.** Eski portföy rakamları 22 ayrı alt hesabın
+ortalamasıydı. Gerçekte tek hesapta aynı anda ortalama **9** (en çok 22) pozisyon açık oluyor; çoğu aynı yönde.
+
+| İşlem başı risk | Açık pozisyon tavanı | Yıllık (medyan) | Max düşüş |
+|---|---|---|---|
+| %1 | yok | %31 | **−%55** |
+| %1 | 5 | %21 | −%26 |
+| %0.5 | 5 | %11.5 | −%14 |
+| %0.25 | 5 | %6 | −%7 |
+
+Önceden yazılan kural **en fazla 5 açık pozisyonu** seçti. Panoda "Açık pozisyon / tavan" göstergesi var; tavan doluyken
+yeni sinyale girmeyin. Tavanla sinyallerin çoğu atlanır ve hangilerinin alındığı şansa bağlıdır. Bu yüzden yıllık sonuç
+geniş bir aralıkta oynar (%1 riskte %15–%28).
+
+**3. Hayatta kalma yanlılığı: ana set sonuçları yaklaşık iki kat iyimser.** Ana set bugün hâlâ büyük olan coinlerden
+seçilmişti. 2022 başında bilinebilecek ilk 60 coinde işlem başına sonuç **+0.062 R** (ana sette +0.115). Ana set dışındaki
+coinlerde sonuç **+0.025 R**, yani maliyetlerden sonra neredeyse sıfır. Panoda bu coinlerin sinyalleri **"ana set dışı"**
+olarak işaretleniyor ve "Yalnız ana set" filtresi eklendi.
+
+**4. İleri test başladı.** Dondurulmuş strateji, hiçbir analizde kullanılmamış veride (2026-11-01'den beri, 22 sembol)
+Binance arşivinden her gün yeniden hesaplanıyor. Bilgisayarın açık kalması gerekmiyor. Karar kuralları önceden yazıldı:
+100. işlemde ortalama ≤ 0 ise DUR; 200. işlemde pozitif ve beklenti bandı içindeyse küçük riskle canlı uygun.
+İlk sonuç: 16 işlem, +0.365 R. Bu erken bir sonuç ve henüz anlamlı değil.
+
+**Güncellenmiş öneri:** ileri test 100 işleme ulaşana kadar (yaklaşık 2–3 ay) gerçek para yok. Sonra en fazla **%0.25–0.5
+risk/işlem**, **en çok 5 açık pozisyon** ve yalnız ana set. Gerçekçi beklenti, iyimser backtest'in yarısı kadardır.
+
 ## 2. Yöntem
 
 **Veri.** Binance USDT-M perpetual sözleşmelerinin 1 saatlik mumları ve gerçekleşmiş fonlama oranları, Binance'in resmi
