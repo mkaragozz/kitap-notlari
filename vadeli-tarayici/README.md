@@ -1,4 +1,4 @@
-# Vadeli Sinyal Tarayıcı (Binance USDT-M)
+# BORSA VERİ ANALİSTİ — kripto borsa verisi analizi ve vadeli sinyal tarayıcı (Binance)
 
 Binance USDT-M perpetual vadeli piyasasında hacme göre ilk 50 sözleşmeyi izleyen, LONG/SHORT sinyallerini
 ve risk/kaldıraç hesabını gösteren sistem: **backtest + doğrulama**, **canlı tarayıcı**, **telefon ve bilgisayardan
