@@ -63,7 +63,8 @@ def test_agac_degerlendirici_ayni(tmp_path):
     X.loc[rng.random(3000) < 0.1, "c"] = np.nan
     y = ((X["a"] + np.nan_to_num(X["c"]) * 0.5 + rng.normal(size=3000) * 0.5) > 0).astype(int)
     m = lgb.LGBMClassifier(n_estimators=60, num_leaves=15, verbose=-1).fit(X, y)
-    Xt = X.iloc[:200]
+    Xt = X.iloc[:200].copy()
+    Xt.loc[Xt.index[::7], "a"] = np.nan   # eğitimde eksik görmemiş sütunda eksik değer (LightGBM: 0 sayar)
     py = m.predict_proba(Xt)[:, 1]
     _kopyala(tmp_path)
     (tmp_path / "g.json").write_text(json.dumps({"model": meta.agac_json(m, list(X.columns)),

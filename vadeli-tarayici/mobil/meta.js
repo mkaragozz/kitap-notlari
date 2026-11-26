@@ -53,23 +53,26 @@ export function ozellikler(m, ust, btc, tfMs, ustMs) {
   return out;
 }
 
-// ------------------------------------------------------------------ LightGBM ağaçları (dump_model biçimi)
+// ------------------------------------------------------------------ LightGBM ağaçları (kompakt biçim, vadeli/meta.py _kompakt)
+// Yaprak = sayı; iç düğüm = [özellik, eşik, varsayılan_sol, eksik_tür(0 yok, 1 NaN, 2 sıfır), sol, sağ]
 function dugum(d, x) {
-  while (d.split_index !== undefined) {
-    const v = x[d.split_feature];
-    let sol;
-    if (Number.isNaN(v)) sol = d.missing_type === "NaN" ? d.default_left : (d.missing_type === "Zero" ? 0 <= d.threshold : d.default_left);
-    else if (d.missing_type === "Zero" && v === 0) sol = d.default_left;
-    else sol = v <= d.threshold;
-    d = sol ? d.left_child : d.right_child;
+  while (typeof d !== "number") {
+    const [f, esik, vsol, mt, sol, sag] = d;
+    const v = x[f];
+    let git;
+    // LightGBM: eksik tür "NaN" → varsayılan yön; "Zero" → 0 ve NaN varsayılan yöne; "None" → NaN, 0 sayılır
+    if (Number.isNaN(v)) git = mt === 0 ? 0 <= esik : vsol;
+    else if (mt === 2 && v === 0) git = vsol;
+    else git = v <= esik;
+    d = git ? sol : sag;
   }
-  return d.leaf_value;
+  return d;
 }
 
-/** model: {sutunlar:[...], agaclar: dump_model()["tree_info"]}; x: {ad: değer}. Döner olasılık (0-1). */
+/** model: {sutunlar:[...], agaclar:[...]}; x: {ad: değer}. Döner olasılık (0-1). */
 export function agacTahmin(model, x) {
   const v = model.sutunlar.map((k) => (x[k] === undefined || x[k] === null ? nan : x[k]));
   let s = 0;
-  for (const t of model.agaclar) s += dugum(t.tree_structure, v);
+  for (const t of model.agaclar) s += dugum(t, v);
   return 1 / (1 + Math.exp(-s));
 }

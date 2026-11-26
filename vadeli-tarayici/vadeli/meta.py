@@ -335,11 +335,31 @@ def uret(tfler=("1w", "3d", "1d", "4h"), modeller=("taban", "lojistik", "lightgb
 def agac_json(model, sutunlar_: list[str]) -> dict:
     """LightGBM modelini JS değerlendiricinin (mobil/meta.js agacTahmin) okuyacağı biçime çevirir."""
     d = model.booster_.dump_model()
-    return {"sutunlar": list(sutunlar_), "agaclar": [{"tree_structure": t["tree_structure"]} for t in d["tree_info"]]}
+    return {"sutunlar": list(sutunlar_), "bicim": 2, "agaclar": [_kompakt(t["tree_structure"]) for t in d["tree_info"]]}
+
+
+def _kompakt(dg: dict):
+    """Yaprak = sayı; iç düğüm = [özellik, eşik, varsayılan_sol(0/1), eksik_tür(0 yok, 1 NaN, 2 sıfır), sol, sağ]."""
+    if "split_index" not in dg:
+        return float(f"{dg['leaf_value']:.9g}")
+    if dg.get("decision_type", "<=") != "<=":
+        raise ValueError("yalnız sayısal (<=) bölmeler desteklenir")
+    mt = {"None": 0, "NaN": 1, "Zero": 2}[dg.get("missing_type", "None")]
+    return [dg["split_feature"], float(dg["threshold"]), int(bool(dg.get("default_left"))), mt,
+            _kompakt(dg["left_child"]), _kompakt(dg["right_child"])]
 
 
 GOREV_AD = {"A": "Sinyal kalite skoru", "B": "Yön (sonraki dönem yükselir mi)", "C": "Hacim durumu sonrası 30 gün",
             "D": "Seviye kırılımı tutar mı"}
+
+
+def _satir_anahtari(t: pd.DataFrame) -> pd.Series:
+    """Olayı tekil tanımlar: zaman + coin + (varsa) sinyal türü, yön, hacim sınıfı."""
+    k = pd.Series(t.index.astype(str), index=t.index) + "|" + t["sembol"]
+    for c in ("sinyal", "yon", "sinif"):
+        if c in t:
+            k = k + "|" + t[c].astype(str)
+    return pd.Series(k.to_numpy(), index=range(len(t)))
 
 
 def ogrenci_uret(rapor: dict | None = None, veri_cache: dict | None = None) -> dict:
@@ -367,14 +387,27 @@ def ogrenci_uret(rapor: dict | None = None, veri_cache: dict | None = None) -> d
             # tüm geçmişle skorlar; amaç taklit, doğruluk ölçümü raporda yapıldı)
             hedef = x[x.index >= x.index.max() - pd.Timedelta(days=3 * 365)]
             hedef = hedef.sample(min(6000, len(hedef)), random_state=0).sort_index()
-            egitim = x.iloc[-BAGLAM:] if ogretmen in BAGLAM_MODELLERI else x
-            p = np.clip(tahmin(ogretmen, egitim, hedef, g), 1e-3, 1 - 1e-3)
-            logit = np.log(p / (1 - p))
-            yarim = len(hedef) // 2
-            ogr = lgb.LGBMRegressor(n_estimators=150, learning_rate=0.05, num_leaves=15, min_child_samples=30,
-                                    verbose=-1).fit(hedef[cols].iloc[:yarim], logit[:yarim])
-            kor = float(np.corrcoef(1 / (1 + np.exp(-ogr.predict(hedef[cols].iloc[yarim:]))), p[yarim:])[0, 1])
-            ogr.fit(hedef[cols], logit)
+            if ogretmen == "lightgbm":   # öğretmen zaten ağaç modeli: damıtmaya gerek yok, kendisi telefona gider
+                ogr = _model("lightgbm").fit(x[cols], x["y"].to_numpy())
+                p = ogr.predict_proba(hedef[cols])[:, 1]
+                kor = 1.0
+            else:
+                # Çapraz skorlama: her olay, kendisini İÇERMEYEN bağlamla skorlanır (bağlamdaki satırı "ezberden"
+                # yanıtlamasın; öğrenci öğretmenin genelleme davranışını öğrensin).
+                kat = np.arange(len(hedef)) % 5
+                x_anahtar, h_anahtar = _satir_anahtari(x), _satir_anahtari(hedef)
+                p = np.empty(len(hedef))
+                for k in range(5):
+                    disari = x[~x_anahtar.isin(h_anahtar[kat == k]).to_numpy()]
+                    egitim = disari.iloc[-BAGLAM:] if ogretmen in BAGLAM_MODELLERI else disari
+                    p[kat == k] = tahmin(ogretmen, egitim, hedef[kat == k], g)
+                p = np.clip(p, 1e-3, 1 - 1e-3)
+                logit = np.log(p / (1 - p))
+                yarim = len(hedef) // 2
+                ogr = lgb.LGBMRegressor(n_estimators=300, learning_rate=0.05, num_leaves=31, min_child_samples=20,
+                                        verbose=-1).fit(hedef[cols].iloc[:yarim], logit[:yarim])
+                kor = float(np.corrcoef(1 / (1 + np.exp(-ogr.predict(hedef[cols].iloc[yarim:]))), p[yarim:])[0, 1])
+                ogr.fit(hedef[cols], logit)
             m = s["modeller"][ogretmen]
             out["tf"][tf][g] = {
                 "gorev": GOREV_AD[g], "durum": durum, "ogretmen": ogretmen, "ogrenci_korelasyon": round(kor, 3),

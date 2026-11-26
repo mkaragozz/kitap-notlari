@@ -386,3 +386,32 @@ maliyet sonrası ort. R'si > 0 ve tüm olayların R'sinden yüksek; (e) holdout 
 Geçemeyenler kullanıcının isteğiyle "🧪 deneysel" etiketiyle gösterilir. Birden fazla model geçerse görev×zaman dilimi
 başına AUC'si en yüksek olan seçilir. Telefon için: seçilen modelin skorları LightGBM "öğrenci" modeline damıtılıp JavaScript'e
 aktarılır; öğrenci, test verisinde öğretmenle skor korelasyonu ≥ 0.9 değilse telefonda yalnız taban gösterilir.
+
+### D20 — Tablo temel modelleri sonuçları (§9; `raporlar/meta.json`, telefon modelleri `mobil/meta_model.json`)
+TabPFN v2+ lisans onayı alınamadığı için dışarıda kaldı (kullanıcı kayıt olamadı); TabICL, TabDPT, Mitra kullanıldı.
+Tabloda test yıllarının birleşik AUC'si (parantezde holdout 2025-26). Taban = uygulamadaki isabet tablosu.
+
+| Zaman | Görev | Olay | Taban | Lojistik | LightGBM | TabICL | TabDPT | Mitra | Sonuç |
+|---|---|---|---|---|---|---|---|---|---|
+| 1w | Sinyal kalitesi | 20404 | 0.568 (0.555) | 0.562 (0.541) | 0.592 (0.623) | 0.556 (0.518) | 0.539 (0.528) | 0.536 (0.566) | ✗ (🧪 lightgbm) |
+| 1w | Yön | 8180 | 0.463 (0.441) | 0.471 (0.461) | 0.489 (0.567) | 0.490 (0.542) | 0.480 (0.536) | 0.472 (0.493) | ✗ (🧪 tabicl) |
+| 3d | Sinyal kalitesi | 61855 | 0.528 (0.519) | 0.524 (0.504) | 0.546 (0.606) | 0.524 (0.599) | 0.529 (0.579) | 0.544 (0.614) | ✗ (🧪 lightgbm) |
+| 3d | Yön | 16961 | 0.503 (0.476) | 0.494 (0.519) | 0.509 (0.546) | 0.495 (0.502) | 0.477 (0.494) | 0.473 (0.508) | ✗ (🧪 lightgbm) |
+| 3d | Seviye kırılımı | 2269 | 0.474 (0.429) | 0.556 (0.598) | 0.602 (0.645) | 0.589 (0.645) | 0.617 (0.659) | 0.605 (0.656) | ✓ tabdpt |
+| 1d | Sinyal kalitesi | 199649 | 0.502 (0.471) | 0.510 (0.476) | 0.526 (0.489) | 0.490 (0.489) | 0.483 (0.470) | 0.484 (0.474) | ✗ (🧪 lightgbm) |
+| 1d | Yön | 36943 | 0.500 (0.476) | 0.541 (0.542) | 0.539 (0.533) | 0.488 (0.496) | 0.499 (0.522) | 0.493 (0.516) | ✗ (🧪 lojistik) |
+| 1d | Hacim sonrası 30g | 49893 | 0.500 (0.421) | 0.564 (0.599) | 0.583 (0.584) | 0.474 (0.473) | 0.461 (0.471) | 0.458 (0.458) | ✓ lightgbm |
+| 1d | Seviye kırılımı | 8220 | 0.521 (0.529) | 0.541 (0.530) | 0.596 (0.583) | 0.561 (0.540) | 0.547 (0.525) | 0.545 (0.521) | ✓ lightgbm |
+| 4h | Sinyal kalitesi | 1210682 | 0.517 (0.513) | 0.518 (0.521) | 0.515 (0.513) | 0.493 (0.493) | 0.494 (0.497) | 0.496 (0.494) | ✗ (🧪 lojistik) |
+| 4h | Yön | 249766 | 0.507 (0.510) | 0.521 (0.517) | 0.518 (0.518) | 0.509 (0.504) | 0.504 (0.502) | 0.512 (0.506) | ✗ (🧪 lojistik) |
+| 4h | Seviye kırılımı | 51146 | 0.503 (0.524) | 0.525 (0.540) | 0.603 (0.625) | 0.548 (0.563) | 0.548 (0.553) | 0.533 (0.550) | ✗ (🧪 lightgbm) |
+
+* **Kabul edilen 3:** 3g seviye kırılımı (TabDPT; Mitra da geçti), günlük hacim sonrası 30g (LightGBM), günlük seviye kırılımı (LightGBM).
+* TabPFN ailesi yalnız **en küçük veride** (3g seviye kırılımı, 2 269 olay) kazandı; günlük ve 4s'te (on binlerce olay) LightGBM ve
+  hatta taban onları geçti. Makalenin iddiasıyla uyumlu: bu modeller küçük tablolarda güçlü.
+* **Yön tahmini** hiçbir zaman diliminde tutmadı (AUC 0.47-0.54): fiyat yönü bu özelliklerle öngörülemiyor.
+* **Sinyal kalitesi** son iki yılda bazı modellerde iyileşme gösterdi (3g Mitra 0.614, haftalık LightGBM 0.623) ama tüm dönemde kuralı geçmedi.
+* 4s seviye kırılımı LightGBM ile isabeti %47.5 → %57.4'e çıkardı ama maliyet sonrası ort. R hâlâ negatif (−0.058): kural (d) gereği deneysel.
+* **Telefon:** öğretmen LightGBM ise kendisi aktarıldı (birebir). TabDPT (3g seviye) öğrencisi çapraz skorlamayla bile
+  korelasyon 0.41'de kaldı (< 0.9) → kural gereği telefonda bu görev için yalnız taban. Haftalık yön (TabICL) da 0.17 → yok.
+* Ağaçlar kompakt biçimde: 12 model 2.4 MB (sıkıştırılmış 0.76 MB).

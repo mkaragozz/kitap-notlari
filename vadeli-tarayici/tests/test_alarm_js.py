@@ -43,7 +43,7 @@ console.log(JSON.stringify({ sonuc, olaylar }));
 
 
 def test_alarm_asamalari(tmp_path):
-    for ad in ("analiz.js", "tarama.js", "formasyon.js", "strateji.js"):
+    for ad in ("analiz.js", "tarama.js", "formasyon.js", "strateji.js", "meta.js"):
         (tmp_path / ad).write_text((MOBIL / ad).read_text())
     (tmp_path / "t.mjs").write_text(BETIK)
     out = json.loads(subprocess.run(["node", str(tmp_path / "t.mjs")], capture_output=True, text=True, check=True).stdout)
