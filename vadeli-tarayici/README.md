@@ -30,9 +30,35 @@ açılan web panosu (PWA)**.
 
 ---
 
+## 0. Telefon sürümü (kurulumsuz, tek bağlantı)
+
+**https://mkaragozz.github.io/kitap-notlari/vadeli/** — telefonda açın, *Ana Ekrana Ekle* deyin.
+
+* Bilgisayar gerekmez: telefon veriyi doğrudan Binance'in herkese açık uç noktalarından okur (anahtar yok, emir yok).
+* Bilgisayar sürümüyle **aynı strateji kodu** (`vadeli/strateji.js`, Python ile eşdeğerlik testi:
+  `tests/test_mobil_esdeger.py`): 4s kırılım, BTC rejimi, açık pozisyon teyidi, aynı risk/kaldıraç hesabı.
+* Sınırlar: yalnızca uygulama **açıkken** tarar (kapalıyken bildirim yok); pozisyon kayıtları yalnızca o telefonda;
+  backtest/geçmiş istatistik ekranı yok. 7/24 tarama ve Telegram için aşağıdaki bilgisayar sürümünü kullanın.
+* Binance bulunduğunuz bölgeden vadeli veriye izin vermiyorsa (HTTP 451) telefon sürümü veri alamaz.
+
 ## 1. Kurulum
 
 Gerekenler: **Python 3.10+** (3.11+ önerilir), internet. Windows, macOS ve Linux'ta çalışır.
+
+### En kolay yol: tek tıkla başlat
+1. Python'u https://www.python.org/downloads/ adresinden kurun. **Windows'ta ilk ekrandaki "Add python.exe to PATH"
+   kutusunu işaretleyin.**
+2. `vadeli-tarayici` klasöründe:
+   * **Windows:** `baslat.bat` dosyasına çift tıklayın. "Windows bilgisayarınızı korudu" uyarısı çıkarsa
+     *Ek bilgi → Yine de çalıştır*.
+   * **Mac:** `baslat.command` dosyasına **sağ tıklayıp → Aç** deyin (ilk seferde "bilinmeyen geliştirici" uyarısı için).
+     Sonraki seferlerde çift tıklamak yeterli.
+3. İlk açılışta kurulum birkaç dakika sürer ve hesap büyüklüğünüz sorulur (sonra `config.toml`'dan veya panodaki
+   Ayarlar'dan değişir). Pano tarayıcıda kendiliğinden açılır. Siyah pencere açık kaldıkça tarama sürer.
+4. Telefondan erişim için (Tailscale, bkz. §5A): `baslat.bat --host 100.x.y.z` veya `config.toml` içinde
+   `host = "100.x.y.z"` yazın.
+
+### Elle kurulum
 
 ```bash
 cd vadeli-tarayici
@@ -121,23 +147,28 @@ sunucuda (VPS) çalışır; bilgisayar ve telefon aynı web arayüzüne tarayıc
 Pano pozisyon bilgisi içerdiği için **internete şifresiz açılmaz**: dış bir adrese parolasız bağlanmaya çalışırsanız
 program başlamayı reddeder.
 
-### 5A. Bilgisayarda çalıştır + Tailscale ile telefondan bağlan (önerilen)
+### 5A. Telefonda uygulama olarak (önerilen, tek dokunuşla açılır)
 
-Port açmadan, yalnızca sizin cihazlarınızın erişebildiği özel ağ.
+Port açmadan, yalnızca **sizin cihazlarınızın** erişebildiği güvenli HTTPS adresi (Tailscale).
 
-1. Bilgisayara ve telefona **Tailscale** kurun (tailscale.com/download), ikisinde de aynı hesapla giriş yapın.
-2. Bilgisayarın Tailscale IP'sini öğrenin: `tailscale ip -4` → ör. `100.101.102.103`.
-3. Panoyu bu adreste başlatın:
-   ```bash
-   python tarayici.py tara --hesap 1000 --host 100.101.102.103
-   ```
-   (İsterseniz ek güvenlik için parola da koyun: `PANO_PAROLA` — aşağıya bakın.)
-4. Telefonda Tailscale açıkken tarayıcıda `http://100.101.102.103:8000` adresine gidin.
-5. **Ana ekrana ekleyin:** iPhone Safari → Paylaş → *Ana Ekrana Ekle*; Android Chrome → ⋮ → *Uygulamayı yükle*.
-   Pano tam ekran, uygulama gibi açılır.
+**Bir kez yapılır:**
+1. **Bilgisayara** Tailscale kurun ve giriş yapın: https://tailscale.com/download
+2. **Telefona** Tailscale uygulamasını kurun (App Store / Google Play), **aynı hesapla** giriş yapın.
+3. Bilgisayarda `baslat.bat` / `baslat.command` ile programı başlatın. Program Tailscale'i kendisi bulur,
+   panoyu `https://<bilgisayarınız>.<ağınız>.ts.net` adresinden yayınlar ve siyah pencerede bir **QR kodu** gösterir
+   (aynı kod panoda **Ayarlar → 📱 Telefona kur** kartında da var).
+   * İlk seferde Tailscale "HTTPS'i etkinleştir" onayı isteyebilir: açılan sayfada onaylayın ve programı yeniden başlatın.
+4. Telefonun kamerasıyla QR kodu okutun → pano açılır.
+5. **iPhone:** Safari'de Paylaş ⬆︎ → *Ana Ekrana Ekle*. **Android:** Chrome'da *Uygulamayı yükle* (veya ⋮ → *Ana ekrana ekle*).
 
-Not: bilgisayar uykudayken tarama durur. 7/24 için bilgisayarı uykuya almayın veya VPS kullanın.
-Alternatif: `tailscale serve --bg 8000` ile panoyu Tailnet'e HTTPS olarak yayınlayabilirsiniz (pano 127.0.0.1'de kalır).
+**Sonra:** ana ekrandaki **Vadeli** simgesine dokunmanız yeterli; tam ekran, uygulama gibi açılır. Simgeye uzun basınca
+Sinyaller / Pozisyonlarım / Piyasa kısayolları çıkar (Android). Telefonda Tailscale açık olmalı, bilgisayarda program çalışıyor olmalı.
+
+Notlar:
+* Pano bilgisayarda 127.0.0.1'de kalır; Tailscale yalnızca sizin Tailscale ağınızdaki cihazlara iletir (internete açılmaz,
+  `funnel` kullanılmaz). İstemezseniz `config.toml` → `telefon = "kapali"`.
+* Bilgisayar uykudayken tarama durur. 7/24 için uykuyu kapatın veya VPS kullanın (5B).
+* Elle: `tailscale serve --bg http://127.0.0.1:8000` aynı işi yapar.
 
 ### 5B. VPS (7/24) + HTTPS (Caddy) + parola
 

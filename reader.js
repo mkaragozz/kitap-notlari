@@ -5,16 +5,16 @@
 // - Metni seçip "Alıntılarıma aktar": kitabın Alıntılar bölümüne, renkli vurguyla; orijinal dosyadaki yeri
 //   (PDF/Word/TXT/EPUB, sayfa ya da konum) kaynak/dipnot olarak alıntıya yazılır.
 // - Sayfaya "tekrar oku" işareti ve sayfa yorumu; kaldığı yerden devam.
-import * as DB from './db.js?v=3.2';
-import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, go, fmtDateTime } from './ui.js?v=3.2';
+import * as DB from './db.js?v=3.3';
+import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, go, fmtDateTime } from './ui.js?v=3.3';
 
 export const hooks = { openQuoteEditor: null };
 
 const LIBS = {
-  pdf: 'lib/pdf.min.js?v=3.21.174',
-  pdfWorker: 'lib/pdf.worker.min.js?v=3.21.174',
+  pdf: 'lib/pdf.min.js?v=3.31.174',
+  pdfWorker: 'lib/pdf.worker.min.js?v=3.31.174',
   mammoth: 'lib/mammoth.browser.min.js?v=1.8.0',
-  jszip: 'lib/jszip.min.js?v=3.20.1',
+  jszip: 'lib/jszip.min.js?v=3.30.1',
 };
 const loaded = {};
 function loadScript(src) {

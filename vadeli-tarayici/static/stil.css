@@ -81,6 +81,18 @@ details[open] summary { margin-bottom: 10px; }
   .filtre select, .filtre input { flex: 1 1 45%; }
 }
 
+/* ---------- Telefona kur ---------- */
+.telefon-izgara { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; }
+.qr img { width: 200px; height: 200px; background: #fff; border-radius: 8px; display: block; }
+.qr:empty { display: none; }
+.kalin { font-weight: 600; word-break: break-all; }
+.adimlar { padding-left: 20px; margin: 6px 0; font-size: 14px; }
+.adimlar li { margin-bottom: 4px; }
+.kur-bandi { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; }
+.kur-bandi span { flex: 1; }
+@media (max-width: 520px) { .telefon-izgara { grid-template-columns: 1fr; } .qr img { margin: 0 auto; } }
+@media (display-mode: standalone) { .kur-bandi { display: none !important; } }
+
 /* ---------- Piyasa: ısı haritası ---------- */
 .harita { display: flex; flex-wrap: wrap; gap: 3px; }
 .karo { flex-grow: 1; min-width: 64px; min-height: 52px; border-radius: 6px; padding: 4px 6px; color: #fff; cursor: pointer;

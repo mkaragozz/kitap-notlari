@@ -45,6 +45,7 @@ host = "127.0.0.1"      # yalnızca bu bilgisayar. Tailscale için Tailscale IP'
 port = 8000
 guvenli_cerez = false   # Caddy/HTTPS arkasında true
 log_seviye = "INFO"
+telefon = "otomatik"    # Tailscale kuruluysa telefon için güvenli HTTPS adresi + QR kodu ("kapali" ile kapatın)
 
 [bildirim]
 telegram = false        # TG_TOKEN ve TG_CHAT ortam değişkenleri gerekli

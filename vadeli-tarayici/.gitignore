@@ -8,3 +8,4 @@ sinyaller*.csv
 config.toml
 .env
 raporlar_demo/
+.venv/

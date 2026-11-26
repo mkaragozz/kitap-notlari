@@ -486,6 +486,16 @@ def uygulama_olustur(tarayici: Tarayici, cfg: A.Ayarlar) -> FastAPI:
         import os
         return os.environ.get("VAPID_PUBLIC_KEY") or None
 
+    @app.get("/api/telefon")
+    async def telefon_bilgi(req: Request):
+        from . import telefon as tel
+
+        host = req.headers.get("host", "")
+        url = cfg.telefon_url or (f"https://{host}" if host.endswith(".ts.net") else None)
+        sonuc = getattr(cfg, "telefon_sonuc", None) or {}
+        return {"url": url, "qr_svg": tel.qr_svg(url) if url else None, "mesaj": sonuc.get("mesaj"),
+                "onay_url": sonuc.get("onay_url"), "indir": tel.INDIR}
+
     @app.post("/api/push/abone")
     async def push_abone(p: PushIstek):
         db.push_ekle(p.model_dump())

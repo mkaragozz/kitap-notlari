@@ -2,7 +2,10 @@
 from __future__ import annotations
 
 import os
-import tomllib
+try:
+    import tomllib
+except ModuleNotFoundError:  # Python 3.10
+    import tomli as tomllib
 from dataclasses import dataclass, field, fields
 from pathlib import Path
 
@@ -58,6 +61,8 @@ class Ayarlar:
     zil: bool = True
     # güvenlik: PANO_PAROLA ortam değişkeni. Boşsa yalnızca 127.0.0.1/Tailscale arayüzünde çalışmaya izin verilir.
     guvenli_cerez: bool = False             # HTTPS arkasında (Caddy) True yapın
+    telefon: str = "otomatik"               # "otomatik": Tailscale kuruluysa telefon için HTTPS adresi aç · "kapali"
+    telefon_url: str | None = None          # çalışırken doldurulur
 
     # ---- türetilmiş
     def strateji(self) -> StratejiParam:

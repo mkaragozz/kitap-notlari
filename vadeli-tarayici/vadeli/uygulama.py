@@ -50,6 +50,11 @@ def calistir(cfg: Ayarlar, demo: bool = False, demo_hiz: float = 3.0, pano: bool
     tarayici = Tarayici(cfg, db, borsa, Bildirici(cfg, db), yayinci, tablo_yaz if terminal else None)
     print(f"{UYARI}\nVeri kaynağı: {'DEMO (arşiv tekrarı, Binance bağlantısı yok)' if demo else 'Binance USDT-M (herkese açık uç noktalar)'}"
           f"\nSistem emir göndermez; API anahtarı kullanmaz.")
+    if pano and cfg.host in ("127.0.0.1", "localhost", "::1"):
+        from . import telefon
+
+        cfg.telefon_sonuc = telefon.hazirla(cfg.port, cfg.telefon)
+        cfg.telefon_url = cfg.telefon_sonuc.get("url")
     if pano:
         print(f"Pano: http://{cfg.host if ':' not in cfg.host else '[' + cfg.host + ']'}:{cfg.port}  ({neden})")
 
