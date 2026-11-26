@@ -14,7 +14,7 @@ import pytest
 from vadeli import turev, veri
 from vadeli.strateji import MaliyetParam, RiskParam, StratejiParam, hazirla, risk_hesapla
 
-JS = Path(__file__).resolve().parents[2] / "vadeli" / "strateji.js"
+JS = Path(__file__).resolve().parents[1] / "mobil" / "strateji.js"
 pytestmark = pytest.mark.skipif(shutil.which("node") is None or not JS.exists(), reason="node veya strateji.js yok")
 P = StratejiParam(tetik_tf="4h", rejim_tf="4h", btc_filtre=True, oi_teyit=True, oi_n=6)
 KOLON = ["rejim", "long_sinyal", "short_sinyal", "long_yeni", "short_yeni", "long_cikis", "short_cikis", "long_yakin", "short_yakin"]

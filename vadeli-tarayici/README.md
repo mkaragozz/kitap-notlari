@@ -32,10 +32,10 @@ açılan web panosu (PWA)**.
 
 ## 0. Telefon sürümü (kurulumsuz, tek bağlantı)
 
-**https://mkaragozz.github.io/kitap-notlari/vadeli/** — telefonda açın, *Ana Ekrana Ekle* deyin.
+**https://mkaragozz.github.io/vadeli/** — telefonda açın, *Ana Ekrana Ekle* deyin.
 
 * Bilgisayar gerekmez: telefon veriyi doğrudan Binance'in herkese açık uç noktalarından okur (anahtar yok, emir yok).
-* Bilgisayar sürümüyle **aynı strateji kodu** (`vadeli/strateji.js`, Python ile eşdeğerlik testi:
+* Bilgisayar sürümüyle **aynı strateji kodu** (`mobil/strateji.js`; yayın deposu `mkaragozz/vadeli`, kopyalama: `python3 mobil_yayinla.py`, Python ile eşdeğerlik testi:
   `tests/test_mobil_esdeger.py`): 4s kırılım, BTC rejimi, açık pozisyon teyidi, aynı risk/kaldıraç hesabı.
 * Sınırlar: yalnızca uygulama **açıkken** tarar (kapalıyken bildirim yok); pozisyon kayıtları yalnızca o telefonda;
   backtest/geçmiş istatistik ekranı yok. 7/24 tarama ve Telegram için aşağıdaki bilgisayar sürümünü kullanın.
