@@ -342,3 +342,10 @@ vadede daha da etkili). Bu yüzden asıl ölçü rastgeleye göre farktır.
   Testlerde %80'e ulaşan tek sinyal. 300 olay eşiğinin altında kaldığı için kabul **edilmedi** (kural değiştirilmedi).
   Başarısız olduğu dönemler sert çöküşler (2024-Ç4 %17, 2025-Ç4 %43). Stop haftalık 1.5×ATR olduğu için geniştir
   (çoğu zaman %20-40) ve işlem aylarca sürebilir.
+
+## 8. "Umut verici · az olay" etiketi (2026-11-26) — sonuçlar GÖRÜLDÜKTEN SONRA eklendi
+Kullanıcı isteği: haftalık RSI dönüşünü (%80.7, 270 olay) öne çıkarmak. Tek sinyale özel istisna yerine genel kural:
+§4 kabul kurallarının hepsini geçen ama 300 olay eşiğinin altında kalan (100-299 olay) sinyaller "◆ umut verici · az olay"
+olarak işaretlenir. Bu bir **bilgi etiketidir**, "doğrulanmış" (★) sayılmaz; kural sonuçlara bakılarak yazıldığı için
+seçilim yanlılığı taşır. 4s/günlük/3g/haftalıkta 10 sinyal-hedef kombinasyonu bu etiketi aldı (ör. haftalık RSI AL,
+günlük marubozu AL, 3g OBO SAT). Asıl kanıt ileri testte (canlı izleme) aranmalıdır.

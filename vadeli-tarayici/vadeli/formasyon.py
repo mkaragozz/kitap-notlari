@@ -478,6 +478,13 @@ def uret(semboller: int | None = None, mod: str = "kisa") -> dict:
     return sonuc
 
 
+def umut_verici(x: dict) -> bool:
+    """DENEYLER.md §8 (sonuçlar görüldükten SONRA yazıldı, kullanıcı isteği): kabul kurallarının hepsini geçen ama
+    300 olay eşiğinin altında kalan (100-299 olay) sinyaller. Bilgi etiketi; "doğrulanmış" sayılmaz."""
+    return bool(not x["kabul"] and 100 <= x["n"] < 300 and x["z"] >= 3.5 and x["n_h"] >= 30
+                and x["isabet_h"] is not None and x["isabet_h"] > x["rastgele_h"] and x["ort_r"] > 0)
+
+
 def uygulama_istatistigi() -> dict:
     """Telefon/pano için kompakt istatistik: mobil/formasyon_istatistik.json (1 saatlik hariç; kullanıcı kararı)."""
     s, taban, meta = {}, {}, {}
@@ -492,11 +499,11 @@ def uygulama_istatistigi() -> dict:
                 continue
             s[f'{x["sinyal"]}|{x["tf"]}|{x["yon"]}|{x["k"]}'] = [
                 x["n"], round(x["isabet"], 4), round(x["rastgele"], 4), round(x["ort_r"], 4),
-                None if x["isabet_h"] is None else round(x["isabet_h"], 4), int(x["kabul"])]
+                None if x["isabet_h"] is None else round(x["isabet_h"], 4), int(x["kabul"]), int(umut_verici(x))]
         for t in r["taban"]:
             if t["tf"] != "1h":
                 taban[f'{t["tf"]}|{t["yon"]}|{t["k"]}'] = round(t["isabet"], 4)
-    out = {"kaynaklar": meta, "alanlar": ["n", "isabet", "rastgele", "ort_r", "isabet_holdout", "dogrulanmis"],
+    out = {"kaynaklar": meta, "alanlar": ["n", "isabet", "rastgele", "ort_r", "isabet_holdout", "dogrulanmis", "umut_verici"],
            "taban": taban, "s": s}
     (KOK / "mobil" / "formasyon_istatistik.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")))
     return out
