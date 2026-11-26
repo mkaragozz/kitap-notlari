@@ -312,3 +312,18 @@ Tanım (her sinyal için, sinyal mumunun kapanışında bilinen onaylı pivotlar
   (uzaksa 3×ATR'ye çekilir); seviye yoksa 1.5×ATR.
 * Doğru = önce hedef; aynı mumda ikisi yanlış; 50 mumda sonuçsuz. Maliyet sonrası R ve rastgele giriş (aynı kurallar,
   her mum) tabanı. Kabul kuralı §4 ile aynı. Bu, ATR tabanlı hedeflere ek bir gösterimdir; ikisi yan yana sunulur.
+
+## 6. Ön kayıt — 4 saat + günlük teyidi (2026-11-26, sonuçlar görülmeden)
+Kullanıcı kararı: yalnız 4 saatlik ve günlük grafik kullanılacak (1 saatlik sinyallerin hepsi maliyet sonrası zararda çıktı).
+"Teyitli" = 4s sinyali + 4s trend ve günlük trend (kapanış > EMA50, EMA20 > EMA50; short tersi; günlükte yalnız
+tamamlanmış mum) sinyal yönünde. Aynı hedef tanımları (1:1, 1:2, seviye) ve §4 kabul kuralı.
+
+## 7. Ön kayıt — 3 günlük ve haftalık (2026-11-26, sonuçlar görülmeden)
+Kullanıcı isteği: 4s/günlük bölümüyle aynı prensiple ikinci bölüm: 3 günlük, haftalık ve "3g + haftalık teyitli".
+* Veri: aynı 181 kripto, spot **günlük** mumlar 2017-08'den (Binance başlangıcı) → 3 günlük (Binance hizası: 1970'ten
+  72 saatlik dilimler) ve haftalık (Pazartesi 00:00 UTC). Mum az olduğu için olay dönemi **2019-01 → 2026-10**,
+  holdout yine 2025-01 → 2026-10.
+* Aynı sinyal aileleri, aynı hedef tanımları (1:1, 1:2, seviye; 50 mum ufuk), aynı kabul kuralı (§4).
+  Teyit = 3g sinyali + 3g trend ve haftalık trend aynı yönde (yalnız tamamlanmış haftalık mum).
+* Beklenti (önceden yazıyorum): olay sayıları küçük olacak (haftalıkta birçok sinyal < 300 olay); bunlar kabul edilemez,
+  yalnız bilgi olarak gösterilir.

@@ -598,7 +598,8 @@ def uygulama_olustur(tarayici: Tarayici, cfg: A.Ayarlar) -> FastAPI:
             return FileResponse(yol, media_type=tur, headers={"Cache-Control": "no-cache"})
         return sun
 
-    for _ad in ("tarama.js", "tarama_baslat.js", "tarama_istatistik.json"):
+    for _ad in ("tarama.js", "tarama_baslat.js", "tarama_istatistik.json", "analiz.js", "formasyon.js", "strateji.js",
+                "formasyon_istatistik.json"):
         app.add_api_route(f"/static/{_ad}", _ortak(_ad), methods=["GET"])
 
     app.mount("/static", StaticFiles(directory=STATIK), name="static")

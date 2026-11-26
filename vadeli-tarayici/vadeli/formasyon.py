@@ -28,7 +28,8 @@ UFUK = 50
 MALIYET = 0.001 + 0.0005  # spot: komisyon + kayma, yön başına
 HOLDOUT = pd.Timestamp("2025-01-01", tz="UTC")
 BASLANGIC = pd.Timestamp("2021-01-01", tz="UTC")
-HEDEFLER = (1.0, 2.0)
+HEDEFLER = (1.0, 2.0, "seviye")
+HEDEF_AD = {1.0: "1:1", 2.0: "1:2", "seviye": "seviye"}
 
 AD = {  # sinyal adı → (Türkçe ad, aile)
     "yutan": ("Yutan (engulfing)", "mum"), "cekic": ("Çekiç / Asılı adam", "mum"), "ters_cekic": ("Ters çekiç / Kayan yıldız", "mum"),
@@ -265,17 +266,57 @@ def _bayrak(h, l, c, a) -> tuple[np.ndarray, np.ndarray]:
 def sonuclar(df: pd.DataFrame, yon: int, k: float) -> tuple[np.ndarray, np.ndarray]:
     """Satır i'de sinyal olsaydı: i+1 açılışında giriş, stop 1.5×ATR(i), hedef k×stop.
     Döner: durum (1 doğru, 0 yanlış, -1 sonuçsuz/veri yok) ve maliyet sonrası R."""
+    o = df["open"].to_numpy(float)
+    a = atr_hesap(df, 14).to_numpy()
+    giris = np.full(len(o), np.nan)
+    giris[:-1] = o[1:]
+    mesafe = STOP_ATR * a
+    return yuru(df, yon, giris, giris - yon * mesafe, giris + yon * k * mesafe)
+
+
+def seviye_hedefleri(df: pd.DataFrame, yon: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """DENEYLER.md §5: her mum için seviye tabanlı (giriş, stop, hedef). Hedef yoksa NaN."""
     o, h, l = (df[x].to_numpy(float) for x in ("open", "high", "low"))
     a = atr_hesap(df, 14).to_numpy()
     n = len(o)
+    pt, pdp = pivotlar(h, l)
     giris = np.full(n, np.nan)
     giris[:-1] = o[1:]
-    mesafe = STOP_ATR * a
-    stop = giris - yon * mesafe
-    hedef = giris + yon * k * mesafe
+    stop = np.full(n, np.nan)
+    hedef = np.full(n, np.nan)
+    tepe_i = np.flatnonzero(pt)
+    dip_i = np.flatnonzero(pdp)
+    for i in range(n - 1):
+        if not np.isfinite(a[i]):
+            continue
+        g, at = giris[i], a[i]
+        # i'de bilinen pivotlar: j <= i-K, son 200 mum
+        t = tepe_i[np.searchsorted(tepe_i, i - 200):np.searchsorted(tepe_i, i - K_PIVOT, side="right")]
+        d = dip_i[np.searchsorted(dip_i, i - 200):np.searchsorted(dip_i, i - K_PIVOT, side="right")]
+        tf, df_ = h[t], l[d]
+        if yon == 1:
+            ust = tf[tf >= g + at]
+            alt = df_[df_ <= g - 0.5 * at]
+            hedef[i] = ust.min() if len(ust) else np.nan
+            st = (alt.max() - 0.25 * at) if len(alt) else g - STOP_ATR * at
+            stop[i] = max(st, g - 3 * at)
+        else:
+            alt = df_[df_ <= g - at]
+            ust = tf[tf >= g + 0.5 * at]
+            hedef[i] = alt.max() if len(alt) else np.nan
+            st = (ust.min() + 0.25 * at) if len(ust) else g + STOP_ATR * at
+            stop[i] = min(st, g + 3 * at)
+    return giris, stop, hedef
+
+
+def yuru(df: pd.DataFrame, yon: int, giris: np.ndarray, stop: np.ndarray, hedef: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Her satır için verilen giriş/stop/hedefle ileri yürüyüş. R = (çıkış−giriş)/|giriş−stop| − maliyet."""
+    o, h, l = (df[x].to_numpy(float) for x in ("open", "high", "low"))
+    n = len(o)
+    mesafe = np.abs(giris - stop)
     durum = np.full(n, -1, np.int8)
     cikis = np.full(n, np.nan)
-    acik = np.isfinite(giris) & np.isfinite(mesafe) & (mesafe > 0)
+    acik = np.isfinite(giris) & np.isfinite(hedef) & np.isfinite(stop) & (mesafe > 0)
     for j in range(1, UFUK + 1):
         idx = np.arange(n) + j
         gecerli = acik & (idx < n)
@@ -286,12 +327,12 @@ def sonuclar(df: pd.DataFrame, yon: int, k: float) -> tuple[np.ndarray, np.ndarr
         acilis = o[jj]
         if yon == 1:
             bosluk_stop = (j > 1) & (acilis <= stop[ii])
-            stop_v = (l[jj] <= stop[ii])
-            hedef_v = (h[jj] >= hedef[ii])
+            stop_v = l[jj] <= stop[ii]
+            hedef_v = h[jj] >= hedef[ii]
         else:
             bosluk_stop = (j > 1) & (acilis >= stop[ii])
-            stop_v = (h[jj] >= stop[ii])
-            hedef_v = (l[jj] <= hedef[ii])
+            stop_v = h[jj] >= stop[ii]
+            hedef_v = l[jj] <= hedef[ii]
         kayip = stop_v | bosluk_stop
         kazanc = hedef_v & ~kayip
         s_i = ii[kayip]
@@ -302,7 +343,8 @@ def sonuclar(df: pd.DataFrame, yon: int, k: float) -> tuple[np.ndarray, np.ndarr
         cikis[k_i] = hedef[k_i]
         acik[s_i] = False
         acik[k_i] = False
-    r = yon * (cikis - giris) / mesafe - 2 * MALIYET * giris / mesafe
+    with np.errstate(invalid="ignore", divide="ignore"):
+        r = yon * (cikis - giris) / mesafe - 2 * MALIYET * giris / mesafe
     return durum, r
 
 
@@ -336,6 +378,10 @@ def _sembol_isle(args):
         S = sinyaller(df)
         donem = (df.index >= BASLANGIC)
         hold = df.index >= HOLDOUT
+        if tf == "4h":  # 4s sinyali + 4s ve günlük trend aynı yönde (DENEYLER.md §6)
+            t1d4 = hizala(df.index, "4h", tfler["1d"], "1d", trendler["1d"])
+            teyit2_l = (trendler["4h"] == 1) & (t1d4 == 1)
+            teyit2_s = (trendler["4h"] == -1) & (t1d4 == -1)
         if tf == "1h":
             t4 = hizala(df.index, "1h", tfler["4h"], "4h", trendler["4h"])
             t1d = hizala(df.index, "1h", tfler["1d"], "1d", trendler["1d"])
@@ -343,14 +389,17 @@ def _sembol_isle(args):
             teyit_s = (trendler["1h"] == -1) & (t4 == -1) & (t1d == -1)
         for yon, yad in ((1, "long"), (-1, "short")):
             for k in HEDEFLER:
-                durum, r = sonuclar(df, yon, k)
+                durum, r = yuru(df, yon, *seviye_hedefleri(df, yon)) if k == "seviye" else sonuclar(df, yon, k)
                 temel = donem & (durum >= 0)
                 # rastgele giriş (her mum) — karşılaştırma tabanı
-                kayit = {"sembol": s, "tf": tf, "yon": yad, "k": k}
+                kayit = {"sembol": s, "tf": tf, "yon": yad, "k": HEDEF_AD[k]}
                 sonuc.append({**kayit, "sinyal": "_rastgele", **_say(durum, r, temel, hold)})
                 for ad, (ml, ms) in S.items():
                     m = (ml if yon == 1 else ms) & temel
                     sonuc.append({**kayit, "sinyal": ad, **_say(durum, r, m, hold)})
+                    if tf == "4h":
+                        mt = m & (teyit2_l if yon == 1 else teyit2_s)
+                        sonuc.append({**kayit, "sinyal": ad + "+2tf", **_say(durum, r, mt, hold)})
                     if tf == "1h":
                         mt = m & (teyit_l if yon == 1 else teyit_s)
                         sonuc.append({**kayit, "sinyal": ad + "+3tf", **_say(durum, r, mt, hold)})
@@ -396,8 +445,8 @@ def uret(semboller: int | None = None) -> dict:
         sd = math.sqrt(max(x.r_kare / x.n - ort_r ** 2, 0))
         z = (p - p0) / math.sqrt(p0 * (1 - p0) / x.n)
         kabul = bool(x.n >= 300 and z >= 3.5 and ph is not None and x.n_h >= 30 and ph > p0h and ort_r > 0)
-        kayitlar.append({"sinyal": x.sinyal, "ad": AD.get(x.sinyal.replace("+3tf", ""), (x.sinyal,))[0] + (" (3 zaman dilimi teyitli)" if x.sinyal.endswith("+3tf") else ""),
-                         "aile": AD.get(x.sinyal.replace("+3tf", ""), ("", "?"))[1], "tf": x.tf, "yon": x.yon, "k": x.k,
+        kayitlar.append({"sinyal": x.sinyal, "ad": AD.get(x.sinyal.split("+")[0], (x.sinyal,))[0] + (" (3 zaman dilimi teyitli)" if x.sinyal.endswith("+3tf") else " (4s + günlük teyitli)" if x.sinyal.endswith("+2tf") else ""),
+                         "aile": AD.get(x.sinyal.split("+")[0], ("", "?"))[1], "tf": x.tf, "yon": x.yon, "k": x.k,
                          "n": int(x.n), "isabet": p, "rastgele": p0, "fark": p - p0, "z": z, "ort_r": ort_r,
                          "t_r": ort_r / (sd / math.sqrt(x.n)) if sd > 0 else 0.0,
                          "n_h": int(x.n_h), "isabet_h": ph, "rastgele_h": p0h, "ort_r_h": x.r_top_h / x.n_h if x.n_h else None,

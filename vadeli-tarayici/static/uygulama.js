@@ -55,7 +55,7 @@ const durum = { sinyaller: { aktif: [], yaklasan: [], evren: [] }, alt: "aktif",
   aralik: "1h", bt: null, sse: null };
 
 function rota() {
-  const h = location.hash.replace(/^#\/?/, "") || "sinyaller";
+  const h = location.hash.replace(/^#\/?/, "") || "analiz";
   const [ad, sorgu] = h.split("?");
   return { ad, p: new URLSearchParams(sorgu || "") };
 }

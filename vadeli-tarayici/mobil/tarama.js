@@ -32,7 +32,7 @@ export function varlikTuru(baz, kapanislar) {
 // ------------------------------------------------------------------ veri
 const bekle = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function spotAl(yol) {
+export async function spotAl(yol) {
   let son;
   for (const taban of SPOT_TABANLAR) {
     for (let i = 0; i < 3; i++) {
@@ -48,7 +48,7 @@ async function spotAl(yol) {
   throw son || new Error("Binance spot'a ulaşılamadı");
 }
 
-async function havuz(liste, n, fn, ilerleme) {
+export async function havuz(liste, n, fn, ilerleme) {
   const out = new Array(liste.length);
   let i = 0, biten = 0;
   await Promise.all(Array.from({ length: Math.min(n, liste.length) }, async () => {
@@ -135,7 +135,7 @@ export async function tara({ ilerleme, zorla = false } = {}) {
 }
 
 // ------------------------------------------------------------------ arayüz
-function el(etiket, oz = {}, ...cocuk) {
+export function el(etiket, oz = {}, ...cocuk) {
   const e = document.createElement(etiket);
   for (const [k, v] of Object.entries(oz || {})) {
     if (v == null || v === false) continue;
