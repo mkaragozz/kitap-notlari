@@ -349,3 +349,39 @@ Kullanıcı isteği: haftalık RSI dönüşünü (%80.7, 270 olay) öne çıkarm
 olarak işaretlenir. Bu bir **bilgi etiketidir**, "doğrulanmış" (★) sayılmaz; kural sonuçlara bakılarak yazıldığı için
 seçilim yanlılığı taşır. 4s/günlük/3g/haftalıkta 10 sinyal-hedef kombinasyonu bu etiketi aldı (ör. haftalık RSI AL,
 günlük marubozu AL, 3g OBO SAT). Asıl kanıt ileri testte (canlı izleme) aranmalıdır.
+
+---
+
+## 9. Ön kayıt — tablo temel modelleri (TabPFN ailesi) ile skor (2026-11-26, sonuçlar görülmeden)
+
+**Kaynak:** Hollmann ve ark., "TabPFN: A Transformer That Solves Small Tabular Classification Problems in a Second"
+(arXiv 2207.01848v6; ≤1 000 eğitim örneği, ≤100 sayısal özellik, ≤10 sınıf; kategorik özellik ve eksik değerde daha zayıf)
+ve sonrakiler: TabPFN v2 (Nature 2025), TabICL (BSD-3), TabDPT (Apache-2.0), Mitra (Apache-2.0), TabPFN-TS.
+TabPFN v2+ ağırlıkları kullanıcı lisans onayı gerektirdiği için onay gelene kadar dışarıda; diğerleri kullanılır.
+Bu modeller "bağlam içi öğrenme" yapar: eğitim tablosunu bağlam olarak alır, yeni satırları tek geçişte tahmin eder.
+
+**Görevler (her biri 4s, günlük, 3g, haftalık ayrı; kripto, spot, 181 coin):**
+* **A — Sinyal kalite skoru (meta-etiket):** satır = §4-7'deki bir formasyon/kırılım/indikatör sinyali; etiket = 1:1
+  hedef stoptan önce geldi mi.
+* **B — Yön:** satır = (coin, mum), H mum aralıkla örneklenir (örtüşmesin); etiket = H mum sonra kapanış daha yüksek mi.
+  H: 4s→6 (1 gün), günlük→7, 3g→5, haftalık→4.
+* **C — Hacim durumu sonrası (yalnız günlük):** satır = hacim patlaması/artan/kuruma olayı; etiket = 30 gün getiri > 0.
+* **D — Seviye kırılımı:** satır = destek/direnç kırılımı (her iki yön); etiket = sonraki seviyeye stoptan önce ulaştı mı.
+
+**Özellikler (yalnız satırın mum kapanışında bilinen; hepsi sayısal):** sinyal türü kodu ve yön (A), RSI14, kendi ve bir
+üst zaman diliminin trendi, ATR/fiyat, 5/20/60 mum getiri, hacim / 20 mum ortalaması, en yakın direnç ve desteğe uzaklık
+(ATR cinsinden), 20 mumluk kanal içindeki konum, BTC trendi ve 20 mum getirisi, 1 yıllık zirveden uzaklık.
+
+**Değerlendirme (zaman sıralı, geleceğe bakmadan):** her test yılı Y için yalnız Y'den önceki olaylar bağlam/eğitim olur
+(bağlam modelleri için en yeni 3 000 olay; sınıflar dengelenmez), Y yılının olayları (en çok 2 000, rastgele) test edilir.
+Test yılları: 4s/günlük 2023-2026, 3g/haftalık 2021-2026. Karşılaştırılanlar: **taban** (eğitimdeki sinyal türüne göre
+ortalama isabet = şu an uygulamadaki tablo), lojistik regresyon, LightGBM, TabICL, TabDPT, Mitra.
+Ölçüler: AUC, log-loss, en yüksek skorlu üçte birin isabeti ve maliyet sonrası ort. R'si (A, D), tüm olaylara karşı.
+
+**Kabul ("skor uygulamada doğrulanmış olarak gösterilir") — bir model × görev × zaman dilimi için hepsi:**
+(a) test yıllarının birleşiminde AUC ≥ 0.55 ve tabandan en az +0.02 yüksek; (b) log-loss tabandan iyi;
+(c) test yıllarının en az %75'inde en yüksek üçte birin isabeti tüm olaylardan yüksek; (d) A ve D için en yüksek üçte birin
+maliyet sonrası ort. R'si > 0 ve tüm olayların R'sinden yüksek; (e) holdout (2025-2026) yıllarında da (a) sağlanır.
+Geçemeyenler kullanıcının isteğiyle "🧪 deneysel" etiketiyle gösterilir. Birden fazla model geçerse görev×zaman dilimi
+başına AUC'si en yüksek olan seçilir. Telefon için: seçilen modelin skorları LightGBM "öğrenci" modeline damıtılıp JavaScript'e
+aktarılır; öğrenci, test verisinde öğretmenle skor korelasyonu ≥ 0.9 değilse telefonda yalnız taban gösterilir.
