@@ -57,7 +57,7 @@ Ayrıntılı tablolar: `raporlar/ozet.md` (otomatik), `raporlar/*.csv`, panoda *
 | | İşlem | Ort. R | Holdout 2025-26 ort. R (t) | Kârlı sembol |
 |---|---|---|---|---|
 | 4s tetik + BTC rejimi (önceki varsayılan) | 4357 | 0.083 | 0.020 (0.7) | 77% |
-| **+ açık pozisyon teyidi (yeni varsayılan)** | 2714 | **0.114** | **0.084 (1.9)** | 73% |
+| **+ açık pozisyon teyidi (yeni varsayılan)** | 2708 | **0.115** | **0.087 (1.9)** | 73% |
 | + fonlama vetosu | 4288 | 0.088 | 0.020 | 82% |
 | + long/short kalabalık filtresi | 4276 | 0.086 | 0.023 | 77% |
 | + taker teyidi | 3188 | 0.071 | 0.035 | 59% |
@@ -68,7 +68,7 @@ Ayrıntılı tablolar: `raporlar/ozet.md` (otomatik), `raporlar/*.csv`, panoda *
 * Fonlama ve taker filtreleri işe yaramadı; long/short kalabalığının etkisi gürültü düzeyinde.
 * 1 saatlik şartname stratejisini hiçbir türev verisi kâra çevirmedi.
 * **Güncel değerlendirme:** önceki "kenar son iki yılda kayboldu" bulgusu, açık pozisyon teyidi ile zayıfladı (holdout
-  +0.084 R, t 1.9). Ancak bu bir kez daha seçilmiş bir sonuç (5 filtre denendi) ve t < 2. Öneri değişmedi:
+  +0.087 R, t 1.9). Ancak bu bir kez daha seçilmiş bir sonuç (5 filtre denendi) ve t < 2. Öneri değişmedi:
   **önce izleme, sonra çok küçük risk.** Kanıt güçlendi ama "güvenilir kâr" seviyesinde değil.
 
 ## 2. Yöntem

@@ -125,3 +125,8 @@ Dönem 2022-01 → 2026-10, taban `4s_tetik_btc`: 4357 işlem, ort. R +0.083, ho
   "+oi +kalabalık" birleşimini canlıya koymak yerine eklenmedi. Bu, ön kayıttan bilinçli bir sapmadır (daha az filtre yönünde).
 * +kombine'nin üstünlüğü büyük ölçüde +oi'den geliyor; fonlama filtresi tek başına kabul edilmediği için birleşim seçilmedi.
 * Uyarı: +oi 2022'de tabandan kötü (−0.055 vs +0.075). Holdout iyileşmesi (t 1.9) umut verici ama kesin değil.
+
+### D11 — Veri düzeltmesi: açık pozisyonu 0 yazılmış saatler
+Telefon sürümünün eşdeğerlik testi, arşivde birkaç saat açık pozisyonun **0** yazıldığını ortaya çıkardı (sonsuz değişim →
+filtre yanlışlıkla "geçti"). İki tarafta da 0/negatif açık pozisyon "veri yok" sayıldı ve deney yeniden çalıştırıldı:
++oi 2714 → 2708 işlem, ort. R 0.114 → 0.115, holdout 0.084 → 0.087. Karar değişmedi.

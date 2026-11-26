@@ -30,6 +30,17 @@ açılan web panosu (PWA)**.
 
 ---
 
+## 0. Telefon sürümü (kurulumsuz, tek bağlantı)
+
+**https://mkaragozz.github.io/kitap-notlari/vadeli/** — telefonda açın, *Ana Ekrana Ekle* deyin.
+
+* Bilgisayar gerekmez: telefon veriyi doğrudan Binance'in herkese açık uç noktalarından okur (anahtar yok, emir yok).
+* Bilgisayar sürümüyle **aynı strateji kodu** (`vadeli/strateji.js`, Python ile eşdeğerlik testi:
+  `tests/test_mobil_esdeger.py`): 4s kırılım, BTC rejimi, açık pozisyon teyidi, aynı risk/kaldıraç hesabı.
+* Sınırlar: yalnızca uygulama **açıkken** tarar (kapalıyken bildirim yok); pozisyon kayıtları yalnızca o telefonda;
+  backtest/geçmiş istatistik ekranı yok. 7/24 tarama ve Telegram için aşağıdaki bilgisayar sürümünü kullanın.
+* Binance bulunduğunuz bölgeden vadeli veriye izin vermiyorsa (HTTP 451) telefon sürümü veri alamaz.
+
 ## 1. Kurulum
 
 Gerekenler: **Python 3.10+** (3.11+ önerilir), internet. Windows, macOS ve Linux'ta çalışır.

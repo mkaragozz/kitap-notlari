@@ -144,14 +144,15 @@ def ozellikler(metrik_1h: pd.DataFrame, fonlama: pd.Series | None, index: pd.Dat
     """
     out = pd.DataFrame(index=index)
     if metrik_1h is not None and len(metrik_1h):
-        m = metrik_1h.sort_index()
+        m = metrik_1h.sort_index().reindex(columns=METRIK_SUTUN)  # eksik sütunlar (ör. yalnız OI) NaN
         if tf != "1h":
             g = m.resample(tf, label="left", closed="left", origin="epoch")
             m = g[["oi", "top_ls", "top_hesap_ls", "ls_hesap"]].last()
-            m["taker_oran"] = g["taker_oran"].mean() if "taker_oran" in metrik_1h else np.nan
+            m["taker_oran"] = g["taker_oran"].mean()
         m = m.reindex(index)
-        out["oi"] = m["oi"]
-        out["oi_deg"] = m["oi"] / m["oi"].shift(oi_n) - 1
+        oi = m["oi"].where(m["oi"] > 0)  # arşivde ara sıra 0 yazılmış saatler: veri yok say
+        out["oi"] = oi
+        out["oi_deg"] = oi / oi.shift(oi_n) - 1
         ls = m["ls_hesap"]
         out["ls_hesap"] = ls
         out["ls_z"] = (ls - ls.rolling(z_n, min_periods=z_n // 2).mean()) / ls.rolling(z_n, min_periods=z_n // 2).std()

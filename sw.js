@@ -4,10 +4,10 @@
 // SÜRÜM DEĞİŞTİRİRKEN: aşağıdaki V değerini ve tüm dosyalardaki "?v=..." eklerini birlikte değiştirin
 // (index.html, *.js içindeki import satırları). Sürüm eki her dosyaya yeni bir adres verir; böylece
 // GitHub'ın önbelleği eski dosyayı veremez ve eski/yeni dosyalar karışmaz.
-const V = '3.2';
+const V = '3.3';
 const VERSION = 'kn-v' + V;
 const MODS = ['app', 'ui', 'db', 'cards', 'lock', 'scanner', 'thoughts', 'journal', 'export', 'notes', 'guide', 'lists', 'reader', 'articles', 'blog', 'reports'].map((m) => `${m}.js?v=${V}`);
-const SHELL = ['./', 'index.html', `styles.css?v=${V}`, ...MODS, 'lib/html5-qrcode.min.js?v=2.3.8', 'lib/pdf.min.js?v=3.21.174', 'lib/pdf.worker.min.js?v=3.21.174', 'lib/mammoth.browser.min.js?v=1.8.0', 'lib/jszip.min.js?v=3.20.1',
+const SHELL = ['./', 'index.html', `styles.css?v=${V}`, ...MODS, 'lib/html5-qrcode.min.js?v=2.3.8', 'lib/pdf.min.js?v=3.31.174', 'lib/pdf.worker.min.js?v=3.31.174', 'lib/mammoth.browser.min.js?v=1.8.0', 'lib/jszip.min.js?v=3.30.1',
   'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'privacy.html'];
 const CDN = /^https:\/\/(cdn\.jsdelivr\.net|cdnjs\.cloudflare\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)\//;
 
@@ -25,6 +25,8 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+  // Aynı sitedeki ayrı uygulama (Vadeli Tarayıcı, /vadeli/): kendi service worker'ı yönetir, burada hiç karışma.
+  if (url.origin === location.origin && url.pathname.includes('/vadeli/')) return;
   // Uygulama dosyaları: bu sürümün önbelleğinden (hızlı ve internetsiz açılır).
   // Güncelleme: uygulama dosyaları değiştiğinde yukarıdaki VERSION değeri de değiştirilmelidir;
   // tarayıcı yeni sw.js'i görünce bütün dosyaları birlikte yeniden indirir.
