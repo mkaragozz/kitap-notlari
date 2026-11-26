@@ -136,23 +136,28 @@ sunucuda (VPS) çalışır; bilgisayar ve telefon aynı web arayüzüne tarayıc
 Pano pozisyon bilgisi içerdiği için **internete şifresiz açılmaz**: dış bir adrese parolasız bağlanmaya çalışırsanız
 program başlamayı reddeder.
 
-### 5A. Bilgisayarda çalıştır + Tailscale ile telefondan bağlan (önerilen)
+### 5A. Telefonda uygulama olarak (önerilen, tek dokunuşla açılır)
 
-Port açmadan, yalnızca sizin cihazlarınızın erişebildiği özel ağ.
+Port açmadan, yalnızca **sizin cihazlarınızın** erişebildiği güvenli HTTPS adresi (Tailscale).
 
-1. Bilgisayara ve telefona **Tailscale** kurun (tailscale.com/download), ikisinde de aynı hesapla giriş yapın.
-2. Bilgisayarın Tailscale IP'sini öğrenin: `tailscale ip -4` → ör. `100.101.102.103`.
-3. Panoyu bu adreste başlatın:
-   ```bash
-   python tarayici.py tara --hesap 1000 --host 100.101.102.103
-   ```
-   (İsterseniz ek güvenlik için parola da koyun: `PANO_PAROLA` — aşağıya bakın.)
-4. Telefonda Tailscale açıkken tarayıcıda `http://100.101.102.103:8000` adresine gidin.
-5. **Ana ekrana ekleyin:** iPhone Safari → Paylaş → *Ana Ekrana Ekle*; Android Chrome → ⋮ → *Uygulamayı yükle*.
-   Pano tam ekran, uygulama gibi açılır.
+**Bir kez yapılır:**
+1. **Bilgisayara** Tailscale kurun ve giriş yapın: https://tailscale.com/download
+2. **Telefona** Tailscale uygulamasını kurun (App Store / Google Play), **aynı hesapla** giriş yapın.
+3. Bilgisayarda `baslat.bat` / `baslat.command` ile programı başlatın. Program Tailscale'i kendisi bulur,
+   panoyu `https://<bilgisayarınız>.<ağınız>.ts.net` adresinden yayınlar ve siyah pencerede bir **QR kodu** gösterir
+   (aynı kod panoda **Ayarlar → 📱 Telefona kur** kartında da var).
+   * İlk seferde Tailscale "HTTPS'i etkinleştir" onayı isteyebilir: açılan sayfada onaylayın ve programı yeniden başlatın.
+4. Telefonun kamerasıyla QR kodu okutun → pano açılır.
+5. **iPhone:** Safari'de Paylaş ⬆︎ → *Ana Ekrana Ekle*. **Android:** Chrome'da *Uygulamayı yükle* (veya ⋮ → *Ana ekrana ekle*).
 
-Not: bilgisayar uykudayken tarama durur. 7/24 için bilgisayarı uykuya almayın veya VPS kullanın.
-Alternatif: `tailscale serve --bg 8000` ile panoyu Tailnet'e HTTPS olarak yayınlayabilirsiniz (pano 127.0.0.1'de kalır).
+**Sonra:** ana ekrandaki **Vadeli** simgesine dokunmanız yeterli; tam ekran, uygulama gibi açılır. Simgeye uzun basınca
+Sinyaller / Pozisyonlarım / Piyasa kısayolları çıkar (Android). Telefonda Tailscale açık olmalı, bilgisayarda program çalışıyor olmalı.
+
+Notlar:
+* Pano bilgisayarda 127.0.0.1'de kalır; Tailscale yalnızca sizin Tailscale ağınızdaki cihazlara iletir (internete açılmaz,
+  `funnel` kullanılmaz). İstemezseniz `config.toml` → `telefon = "kapali"`.
+* Bilgisayar uykudayken tarama durur. 7/24 için uykuyu kapatın veya VPS kullanın (5B).
+* Elle: `tailscale serve --bg http://127.0.0.1:8000` aynı işi yapar.
 
 ### 5B. VPS (7/24) + HTTPS (Caddy) + parola
 

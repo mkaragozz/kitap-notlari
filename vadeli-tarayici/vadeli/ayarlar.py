@@ -61,6 +61,8 @@ class Ayarlar:
     zil: bool = True
     # güvenlik: PANO_PAROLA ortam değişkeni. Boşsa yalnızca 127.0.0.1/Tailscale arayüzünde çalışmaya izin verilir.
     guvenli_cerez: bool = False             # HTTPS arkasında (Caddy) True yapın
+    telefon: str = "otomatik"               # "otomatik": Tailscale kuruluysa telefon için HTTPS adresi aç · "kapali"
+    telefon_url: str | None = None          # çalışırken doldurulur
 
     # ---- türetilmiş
     def strateji(self) -> StratejiParam:

@@ -35,6 +35,11 @@ def _log_kur(seviye: str = "INFO", dosya: Path | None = None) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    for akis in (sys.stdout, sys.stderr):  # Windows konsolunda Türkçe karakter / QR kodu hata vermesin
+        try:
+            akis.reconfigure(errors="replace")
+        except (AttributeError, ValueError):
+            pass
     ap = argparse.ArgumentParser(prog="tarayici.py", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     alt = ap.add_subparsers(dest="komut", required=True)
 

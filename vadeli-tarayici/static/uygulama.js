@@ -76,7 +76,7 @@ function ekranGoster() {
   if (ad === "piyasa") { durum.haritaD = p.get("d") || "d24s"; $("#haritaVadeli").checked = p.get("vadeli") === "1"; piyasaYukle(); }
   if (ad === "gecmis") gecmisYukle();
   if (ad === "backtest") backtestYukle(p.get("varyant"));
-  if (ad === "ayarlar") ayarlariYukle();
+  if (ad === "ayarlar") { ayarlariYukle(); telefonKartiYukle(); }
 }
 window.addEventListener("hashchange", ekranGoster);
 
@@ -570,6 +570,68 @@ $("#pushAbone").addEventListener("click", async () => {
   } catch (e) { toast("Web Push etkinleştirilemedi: " + e.message); }
 });
 
+// ------------------------------------------------------------------ telefona kurulum (PWA)
+const kurulu = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const ios = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const mobil = () => /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent) || ios();
+let kurIstegi = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  kurIstegi = e;
+  $("#yukleDugme").classList.remove("gizli");
+  $("#kurBandiDugme").classList.remove("gizli");
+  kurBandiGoster();
+});
+async function uygulamayiYukle() {
+  if (!kurIstegi) return;
+  kurIstegi.prompt();
+  const s = await kurIstegi.userChoice;
+  if (s.outcome === "accepted") toast("Yüklendi: ana ekrandaki Vadeli simgesinden açabilirsiniz");
+  kurIstegi = null;
+  $("#yukleDugme").classList.add("gizli");
+  $("#kurBandi").classList.add("gizli");
+}
+$("#yukleDugme").addEventListener("click", uygulamayiYukle);
+$("#kurBandiDugme").addEventListener("click", uygulamayiYukle);
+$("#kurBandiKapat").addEventListener("click", () => {
+  $("#kurBandi").classList.add("gizli");
+  try { localStorage.setItem("kurBandiKapali", "1"); } catch { /* özel mod */ }
+});
+window.addEventListener("appinstalled", () => $("#kurBandi").classList.add("gizli"));
+
+function kurBandiGoster() {
+  if (kurulu() || !mobil()) return;
+  try { if (localStorage.getItem("kurBandiKapali")) return; } catch { /* yok */ }
+  const guvenli = window.isSecureContext;
+  $("#kurBandiMetin").textContent = !guvenli
+    ? "Uygulama olarak kurmak için panoyu HTTPS adresinden açın (Ayarlar → Telefona kur)."
+    : ios() ? "Uygulama gibi kullanmak için: Paylaş ⬆︎ → Ana Ekrana Ekle"
+      : kurIstegi ? "Panoyu telefona uygulama olarak yükleyin." : "Tarayıcı menüsünden: Ana ekrana ekle";
+  $("#kurBandi").classList.remove("gizli");
+}
+
+async function telefonKartiYukle() {
+  let v;
+  try { v = await api("/api/telefon"); } catch { return; }
+  const qr = $("#telefonQr");
+  if (v.url && v.qr_svg) {
+    const img = el("img", { alt: "Telefon adresi QR kodu", src: "data:image/svg+xml;charset=utf-8," + encodeURIComponent(v.qr_svg) });
+    qr.replaceChildren(img);
+    $("#telefonUrl").textContent = v.url;
+  } else {
+    qr.replaceChildren();
+    $("#telefonUrl").textContent = "Telefon adresi henüz yok.";
+  }
+  const parca = [];
+  if (v.mesaj) parca.push(v.mesaj);
+  if (!v.url) parca.push(`Bilgisayara Tailscale kurup giriş yapın (${v.indir}), sonra programı yeniden başlatın: adres ve QR kodu otomatik oluşur.`);
+  if (kurulu()) parca.push("Bu cihazda uygulama olarak açık ✓");
+  $("#telefonMesaj").textContent = parca.join(" ");
+  if (v.onay_url) {
+    $("#telefonMesaj").appendChild(el("a", { href: v.onay_url, target: "_blank", rel: "noopener" }, " HTTPS'i etkinleştirmek için tıklayın"));
+  }
+}
+
 // ------------------------------------------------------------------ başlat
 async function baslat() {
   try {
@@ -578,6 +640,7 @@ async function baslat() {
   } catch { /* sunucu yok */ }
   $("#sekmeler").classList.remove("gizli");
   sseBaslat();
+  kurBandiGoster();
   await sinyalleriYukle();
   ekranGoster();
   setInterval(sinyalleriYukle, 60000); // SSE kaçırılırsa yedek
