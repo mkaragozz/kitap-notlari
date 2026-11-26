@@ -240,3 +240,38 @@ filtresi eklendi. İleri test zaten yalnız ana sette yürüyor.
 `python tarayici.py ileri-test` (pano: Geçmiş → İleri test, açık tarayıcı her gün 03 UTC sonrası kendiliğinden günceller).
 İlk sonuç (2026-11-01 → 11-25, 22 sembol): 16 kapanan işlem, ort. R +0.365, toplam +5.8 R, 3 açık. Kural gereği **erken**
 (< 50 işlem): bu sayı hiçbir şey kanıtlamaz; tek işlemin R standart sapması ~2.3.
+
+---
+
+## 4. Ön kayıt — formasyon, destek/direnç ve indikatör istatistiği (sonuçlar görülmeden yazıldı, 2026-11-26)
+
+**Kullanıcının sorusu:** 1 saat, 4 saat ve günlük grafikte hangi al/sat sinyalleri (mum formasyonları, grafik formasyonları,
+destek/direnç kırılımı, indikatörler) geçmişte gerçekten tuttu? Hedef: "%80 doğru tahmin".
+
+**"Doğru" tanımı (kullanıcı seçti):** sinyalden sonraki mumun açılışında giriş; stop = giriş ∓ 1.5×ATR(14); hedef =
+giriş ± k × stop mesafesi (k = 1 ve 2). Fiyat **önce hedefe** değerse doğru, **önce stopa** değerse yanlış. Aynı mumda
+ikisi de olursa yanlış sayılır (temkinli). 50 mum içinde ikisi de olmazsa "sonuçsuz" (ayrıca raporlanır, oranlara girmez).
+Önemli: k = 1'de rastgele girişin doğruluk oranı ~%50'dir; %80 doğruluk k = 1'de bile çok güçlü bir kenar demektir.
+Daha uzak hedefte (k = 2) rastgele oran ~%33'tür. Bu yüzden her sinyal **aynı coin ve dönemdeki rastgele girişlerle**
+karşılaştırılır ve maliyet sonrası beklenen R (spot: %0.1 komisyon/yön + %0.05 kayma) da verilir.
+
+**Veri:** Binance spot arşivi, hacimce ilk 200 USDT çiftinden kripto olanlar (tokenize hisse, altın, stabil hariç),
+1s mum → 4s ve günlük. 2021-01 → 2026-10; **holdout 2025-01 → 2026-10.** Göstergeler yalnız kapanmış mumla
+(look-ahead yok); pivot (tepe/dip) noktaları ancak sağında k mum kapandıktan sonra "bilinir" sayılır.
+
+**Sinyal aileleri (her biri long/short, her zaman diliminde ayrı):**
+* **Mum formasyonları:** yutan (engulfing), çekiç / ters çekiç, kayan yıldız / asılı adam, doji (yusufçuk / mezar taşı),
+  sabah / akşam yıldızı, üç beyaz asker / üç kara karga, delen çizgi / kara bulut, harami, marubozu. Dönüş formasyonları
+  yalnız önceki 10 mumluk eğilim tersse sayılır (standart tanım).
+* **Grafik formasyonları:** ikili dip / ikili tepe, omuz-baş-omuz / ters OBO, yükselen / alçalan / simetrik üçgen
+  kırılımı, bayrak (sert hareket + daralan konsolidasyon kırılımı). Pivotlarla (sağında/solunda 5 mum) tanımlanır;
+  sinyal = formasyonun boyun/kenar çizgisinin kapanışla kırılması.
+* **Destek/direnç kırılımı:** son onaylı, henüz kırılmamış pivot tepesinin (direnç) kapanışla yukarı kırılması → al;
+  pivot dibinin (destek) aşağı kırılması → sat. Ayrıca hacim teyitli hali (kırılım mumu hacmi > 1.5 × 20 mum ort.).
+* **İndikatörler:** RSI(14) 30'un üstüne dönüş / 70'in altına dönüş, MACD(12,26,9) sinyal kesişimi, EMA20/EMA50
+  kesişimi, Bollinger(20,2) bandı dışına kapanıştan geri dönüş, Donchian 20 kırılımı (karşılaştırma için).
+* **Üç zaman dilimi teyidi:** 1s sinyali + 4s ve günlükte trend aynı yönde (kapanış > EMA50 ve EMA20 > EMA50; short tersi).
+
+**Kabul ("kullanılabilir sinyal") kuralı — hepsi:** (a) en az 300 olay; (b) doğruluk oranı rastgele girişten anlamlı
+yüksek: z ≥ 3.5 (yaklaşık 300+ test yapıldığı için sıkı eşik); (c) holdout'ta da rastgeleden yüksek; (d) maliyet sonrası
+ortalama R > 0. Hiçbiri %80'e ulaşmazsa bu açıkça yazılır; eşik değerleri sonuç görülerek değiştirilmez.
