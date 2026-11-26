@@ -301,3 +301,14 @@ kriptoda mumlar arası boşluk olmadığı için delen çizgi ve harami tanımla
 * **1 saatlik sinyallerin hepsi maliyet sonrası zararda** (isabet biraz yüksek olsa bile ort. R < 0). 3 zaman dilimi
   teyidi 1s sinyallerini kâra çevirmedi.
 * Uyarı: aynı gün çok sayıda coin aynı sinyali verir; olaylar bağımsız değil, z değerleri olduğundan büyük görünür.
+
+## 5. Ön kayıt — seviye tabanlı hedef/stop (sonuçlar görülmeden yazıldı, 2026-11-26)
+
+Kullanıcı isteği: hedef = sonraki direnç (long) / destek (short), stop = kırılan seviyenin hemen ötesi.
+Tanım (her sinyal için, sinyal mumunun kapanışında bilinen onaylı pivotlarla, son 200 mum):
+* Giriş: sonraki mumun açılışı. **Hedef:** girişten en az 1×ATR uzaktaki en yakın onaylı pivot tepe (long) / dip (short).
+  Böyle bir seviye yoksa sinyal "hedefsiz" sayılır (oranlara girmez, ayrıca sayılır).
+* **Stop:** girişten en az 0.5×ATR uzaktaki en yakın onaylı pivot dip (long) / tepe (short) ∓ 0.25×ATR; en fazla 3×ATR
+  (uzaksa 3×ATR'ye çekilir); seviye yoksa 1.5×ATR.
+* Doğru = önce hedef; aynı mumda ikisi yanlış; 50 mumda sonuçsuz. Maliyet sonrası R ve rastgele giriş (aynı kurallar,
+  her mum) tabanı. Kabul kuralı §4 ile aynı. Bu, ATR tabanlı hedeflere ek bir gösterimdir; ikisi yan yana sunulur.
