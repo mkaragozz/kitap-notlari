@@ -29,6 +29,7 @@
 <nav class="sekmeler" id="sekmeler">
   <a href="#/sinyaller" data-sekme="sinyaller">Sinyaller</a>
   <a href="#/grafik" data-sekme="grafik">Grafik</a>
+  <a href="#/tarama" data-sekme="tarama">Tarama</a>
   <a href="#/piyasa" data-sekme="piyasa">Piyasa</a>
   <a href="#/pozisyonlar" data-sekme="pozisyonlar">Pozisyonlarım</a>
   <a href="#/gecmis" data-sekme="gecmis">Geçmiş</a>
@@ -91,6 +92,11 @@
     <p id="turevNot" class="not"></p>
     <p class="not">Turuncu: EMA(4s) rejim çizgisi · mavi kesikli: giriş kanalı (önceki N mum) · yatay çizgiler: giriş / stop / likidasyon.
       Grafik kütüphanesi: TradingView Lightweight Charts™ (Apache 2.0, yerel dosya; veri kendi API'mizden).</p>
+  </section>
+
+  <!-- TARAMA (telefonla ortak modül: mobil/tarama.js) -->
+  <section id="s-tarama" class="ekran gizli">
+    <div id="taramaKok"></div>
   </section>
 
   <!-- PİYASA -->
@@ -211,5 +217,6 @@
 <div id="bildirim" class="toast gizli" role="status"></div>
 <script src="/static/lib/lightweight-charts.standalone.production.js"></script>
 <script src="/static/uygulama.js"></script>
+<script type="module" src="/static/tarama_baslat.js"></script>
 </body>
 </html>

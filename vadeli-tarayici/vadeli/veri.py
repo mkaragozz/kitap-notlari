@@ -78,7 +78,7 @@ def yeniden_ornekle(df: pd.DataFrame, aralik: str) -> pd.DataFrame:
     Son dilim eksikse (içindeki saatlerin hepsi gelmemişse) atılır; kısmi mum asla kullanılmaz."""
     if df.empty:
         return df.copy()
-    kural = aralik.replace("h", "h").replace("d", "D")
+    kural = f"{int(aralik[:-1]) * 24}h" if aralik.endswith("d") else aralik  # günlük = 24h (epoch hizası = UTC gece yarısı)
     g = df.resample(kural, label="left", closed="left", origin="epoch")
     out = pd.DataFrame({
         "open": g["open"].first(), "high": g["high"].max(), "low": g["low"].min(),

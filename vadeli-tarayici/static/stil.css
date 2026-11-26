@@ -146,3 +146,16 @@ button.kopya { min-height: 32px; min-width: 40px; padding: 2px 8px; background: 
 .istat .kart span + span { margin-top: 2px; }
 .etiketler { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
 .etiket.dis { background: transparent; border: 1px solid var(--sari); color: var(--sari); }
+
+/* ---------- Tarama (telefonla ortak modül) ---------- */
+.tarama-sekme { flex-wrap: wrap; }
+.tarama-tablo td:nth-child(2) { text-align: left; }
+.coin { font-weight: 600; display: inline-flex; gap: 4px; align-items: center; }
+.rozet-v { font-style: normal; font-size: 10px; padding: 0 4px; border-radius: 4px; border: 1px solid var(--mavi); color: var(--mavi); }
+.rozet-h { font-style: normal; font-size: 11px; padding: 1px 5px; border-radius: 5px; margin-left: 3px; white-space: nowrap; }
+.rozet-h.patlama { background: rgba(240,180,41,.18); color: var(--sari); }
+.rozet-h.artan { background: rgba(38,166,154,.15); color: var(--yesil); }
+.rozet-h.kuruma { background: rgba(139,152,165,.18); color: var(--soluk); }
+.aciklama { font-size: 13px; margin: 8px 0; }
+.istat-kutu table { font-size: 13px; }
+.istat-kutu td:first-child, .istat-kutu th:first-child { position: static; }

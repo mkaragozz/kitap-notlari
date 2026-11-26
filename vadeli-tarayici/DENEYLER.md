@@ -275,3 +275,29 @@ karşılaştırılır ve maliyet sonrası beklenen R (spot: %0.1 komisyon/yön +
 **Kabul ("kullanılabilir sinyal") kuralı — hepsi:** (a) en az 300 olay; (b) doğruluk oranı rastgele girişten anlamlı
 yüksek: z ≥ 3.5 (yaklaşık 300+ test yapıldığı için sıkı eşik); (c) holdout'ta da rastgeleden yüksek; (d) maliyet sonrası
 ortalama R > 0. Hiçbiri %80'e ulaşmazsa bu açıkça yazılır; eşik değerleri sonuç görülerek değiştirilmez.
+
+### D16 — Hacim durumu istatistiği (tablo: `raporlar/ozet_tarama.md`)
+174 kripto (spot, hacimce ilk 200'den), 2021-01 → 2026-10, günlük. **Taban gerçeği:** bu dönemde tipik bir coin 30 gün
+sonra yalnız %41 olasılıkla daha yüksekte (medyan −%4.6); altcoinler çoğu zaman düştü.
+* **Hacim patlaması** (dün > 5× önceki 20 gün): 7 gün sonra yükselme %39, 30 gün medyan −%6.6 (aynı günlerdeki tüm
+  coinler −%4.3). Yani patlamadan sonra **hafif daha kötü**; "kısa vadede düşme riski" sezgisi doğru yönde ama etki küçük.
+* **Hacmi artan** (7g/30g ≥ 1.5): piyasadan ayırt edilemiyor (−%3.7 vs −%4.8).
+* **Hacmi kurumuş** (7g/90g ≤ 0.3): 30 gün medyan −%3.2 (aynı günlerde −%5.6): **hafif daha iyi**, ama yine çoğunlukla düşüş.
+* Eşikler önceden yazılan kuralla seçildi (30g farkı en büyük olan): patlama 5×, artan 1.5×, kuruma 0.3×.
+**Sonuç:** hacim durumu tek başına yön tahmini için zayıf; panoda bilgi olarak, geçmiş olasılıklarıyla birlikte gösteriliyor.
+
+### D17 — Formasyon / destek-direnç / indikatör istatistiği (`raporlar/formasyon.json`)
+181 kripto, 1s/4s/günlük, 2021-01 → 2026-10, 320 test. Tanım uyarlaması (sonuçlardan önce, ilk denemede fark edildi):
+kriptoda mumlar arası boşluk olmadığı için delen çizgi ve harami tanımlarındaki boşluk şartı "eşit veya" yapıldı.
+
+**Rastgele giriş tabanı:** 1:1 hedefte long %49, short %50.5; 1:2 hedefte long %32-33, short %31-33.
+
+* **Hiçbir sinyal %80'e ulaşmadı.** En yüksek: günlük destek kırılımı + hacim (short, 1:1) **%62.5** (holdout %58),
+  ardından günlük üçgen aşağı kırılımı %57, günlük destek kırılımı %56, günlük ikili tepe %56.
+* 320 testin **19'u kabul kurallarını geçti**; çoğu **günlük ve 4 saatlik destek/direnç ve grafik formasyonu kırılımları**,
+  ağırlıkla **aşağı yön** (dönemin genel düşüş eğilimiyle uyumlu).
+* **Mum formasyonları neredeyse tamamen gürültü:** isabetleri rastgeleye çok yakın; kabul edilen tek mum formasyonu
+  "üç beyaz asker" (4s, long, 1:2: %36.6 vs %32.4, maliyet sonrası +0.015 R — önemsiz).
+* **1 saatlik sinyallerin hepsi maliyet sonrası zararda** (isabet biraz yüksek olsa bile ort. R < 0). 3 zaman dilimi
+  teyidi 1s sinyallerini kâra çevirmedi.
+* Uyarı: aynı gün çok sayıda coin aynı sinyali verir; olaylar bağımsız değil, z değerleri olduğundan büyük görünür.

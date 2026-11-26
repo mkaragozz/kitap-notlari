@@ -163,7 +163,8 @@ def uygulama_olustur(tarayici: Tarayici, cfg: A.Ayarlar) -> FastAPI:
         yanit.headers["X-Frame-Options"] = "DENY"
         yanit.headers["Referrer-Policy"] = "no-referrer"
         yanit.headers["Content-Security-Policy"] = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
-                                                    "img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'")
+                                                    "img-src 'self' data:; connect-src 'self' https://data-api.binance.vision https://api.binance.com "
+                                                    "https://fapi.binance.com; frame-ancestors 'none'; base-uri 'none'")
         if yol.startswith("/api/"):
             yanit.headers["Cache-Control"] = "no-store"
         return yanit
@@ -584,6 +585,21 @@ def uygulama_olustur(tarayici: Tarayici, cfg: A.Ayarlar) -> FastAPI:
     @app.get("/manifest.json")
     async def manifest():
         return FileResponse(STATIK / "manifest.json", media_type="application/manifest+json")
+
+    # Tarama modülü telefon sürümüyle ORTAK dosyadır (mobil/); masaüstü aynı dosyayı sunar.
+    MOBIL = KOK / "mobil"
+
+    def _ortak(ad: str):
+        async def sun():
+            yol = MOBIL / ad
+            if not yol.exists():
+                raise HTTPException(404)
+            tur = "application/javascript" if ad.endswith(".js") else "application/json"
+            return FileResponse(yol, media_type=tur, headers={"Cache-Control": "no-cache"})
+        return sun
+
+    for _ad in ("tarama.js", "tarama_baslat.js", "tarama_istatistik.json"):
+        app.add_api_route(f"/static/{_ad}", _ortak(_ad), methods=["GET"])
 
     app.mount("/static", StaticFiles(directory=STATIK), name="static")
     return app

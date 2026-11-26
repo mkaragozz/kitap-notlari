@@ -8,13 +8,13 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Vadeli">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://fapi.binance.com; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://fapi.binance.com https://data-api.binance.vision https://api.binance.com; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
 <title>Vadeli Tarayıcı</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="ikon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="ikon-192.png">
-<link rel="stylesheet" href="stil.css?v=1">
+<link rel="stylesheet" href="stil.css?v=2">
 </head>
 <body>
 <header class="ust">
@@ -32,6 +32,7 @@
   </div>
   <nav class="sekmeler" id="sekmeler">
     <a href="#/sinyaller" data-sekme="sinyaller">Sinyaller</a>
+    <a href="#/tarama" data-sekme="tarama">Tarama</a>
     <a href="#/grafik" data-sekme="grafik">Grafik</a>
     <a href="#/pozisyonlar" data-sekme="pozisyonlar">Pozisyonlarım</a>
     <a href="#/ayarlar" data-sekme="ayarlar">Ayarlar</a>
@@ -55,6 +56,10 @@
       kapanışı; giriş sonraki 4s mumun açılışında. Kaldıraç yalnızca teminatı belirler; risk stop mesafesi ve pozisyon
       büyüklüğüyle belirlenir. Strateji: 4s kırılım 20/10, 3×ATR takip eden stop, EMA200 rejimi, BTC rejimi, açık pozisyon
       teyidi (geçmiş veride doğrulanan sürüm <span id="surum"></span>). Bu telefon sürümü yalnızca uygulama açıkken tarar.</p>
+  </section>
+
+  <section id="s-tarama" class="ekran gizli">
+    <div id="taramaKok"></div>
   </section>
 
   <section id="s-grafik" class="ekran gizli">
@@ -114,6 +119,7 @@
 
 <div id="bildirim" class="toast gizli" role="status"></div>
 <script src="lib/lightweight-charts.standalone.production.js"></script>
-<script type="module" src="uygulama.js?v=1"></script>
+<script type="module" src="uygulama.js?v=2"></script>
+<script type="module" src="tarama_baslat.js?v=1"></script>
 </body>
 </html>
