@@ -14,6 +14,7 @@ denenmiş kodlardan sadeleştirilmiştir.
 8. E-kitap okuyucu notları
 9. Simge üretimi (SVG → PNG)
 10. Ekran tasarımı ilkeleri
+11. Sesli okuma (kitabı dinleme)
 
 ---
 
@@ -144,3 +145,27 @@ const { chromium } = require('playwright'); const fs = require('fs');
 - Uzun formlar yerine alttan açılan sayfa (sheet); silmede onay; kayıttan sonra kısa bildirim (toast).
 - Açık/koyu tema: renkler `:root` değişkenlerinde; koyu tema `prefers-color-scheme` + elle seçim (`data-theme`).
 - Türkçe sıralama/arama: `localeCompare(x, 'tr')`, `toLocaleLowerCase('tr')`, aksan duyarsız `norm()`.
+
+## 11. Sesli okuma (kitabı dinleme)
+
+Ücretsiz ve ek kurulumsuz yol: tarayıcının **Web Speech API**'si (`speechSynthesis`). Kitap & Notlarım 3.5.1'de
+uygulandı; sahte ses motoruyla otomatik test edildi, gerçek seslerle **yalnızca gerçek telefonda** doğrulanabilir.
+
+- Sesler: `speechSynthesis.getVoices()` (boş gelirse `voiceschanged` bekle). Türkçe (`lang` "tr" ile başlayan) ve
+  `localService: true` olanları öne al. Tarayıcı bir sesin kadın/erkek olduğunu bildirmez: yalnızca adında geçiyorsa
+  👩/👨 göster, her sese "Sesi dene" koy. Ton (`pitch` 0.5–1.5) için Kalın/Normal/İnce düğmeleri.
+- Gizlilik: `localService: false` olan sesler (spesifikasyona göre uzak servis) okunan metni sağlayıcıya gönderir →
+  listede 🌐 ile işaretle, varsayılan olarak cihazdaki sesi seç, gizlilik politikasına satır ekle.
+- Metni **cümle cümle** seslendir (uzun metinde bazı tarayıcılar susabilir; 260 karakterden uzun cümleyi virgülden böl).
+  `Intl.Segmenter('tr', { granularity: 'sentence' })`, yoksa düzenli ifade.
+- Takip: her cümle için DOM `Range`; `CSS.highlights.set('tts', new Highlight(range))` (DOM'a dokunmaz, sayfalamayı
+  bozmaz). `utterance.onboundary` kelime sınırı verirse (`charIndex`, `charLength`) kelimeyi ayrıca vurgula.
+  Cümlenin/kelimenin sayfası değişince sayfayı çevir; kullanıcı elle çevirirse okumayı yeni sayfadan sürdür.
+- PDF orijinal görünüm: pdf.js metin katmanındaki düğümleri birleştir (parçalar arasına sanal boşluk koy, ama
+  ofset eşlemesini koru) → aynı vurgulama çalışır. Sayfa bitince sonraki sayfayı çiz ve sürdür.
+- Duraklatma: `pause()/resume()` yerine `cancel()` + kaldığı cümleyi hatırla (daha öngörülebilir).
+  Her `speak` için bir sayaç (token) tut; eski `onend` olaylarını yok say.
+- Dinlerken ekran kararmasın: `navigator.wakeLock.request('screen')`; duraklatınca bırak, sayfa yeniden görününce
+  tekrar iste. Ekran kilitlenince telefonun okumayı durdurup durdurmayacağı cihaza bağlıdır: kullanıcıya söyle.
+- Kişinin kendi sesini kopyalamak (ses klonlama) tarayıcıda yerleşik değildir; ücretli bulut servisi + biyometrik veri
+  demektir (bkz. yasal.md) → önerme.
