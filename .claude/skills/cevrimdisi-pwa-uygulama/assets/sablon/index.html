@@ -2,6 +2,9 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8">
+  <!-- Güvenlik: yalnızca kendi dosyaları. Satır içi betik değişirse sha256 özetini güncelleyin (guvenlik_tarama.py yazar). connect-src'a kullandığınız API kökenlerini ekleyin. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-nmSKkaLFKaQtIfMdJAurCv79zu7uIeBySINHbcythEo='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'">
+  <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Uygulamam</title>
   <meta name="description" content="Verileriniz yalnızca cihazınızda kalır; internetsiz çalışır.">
