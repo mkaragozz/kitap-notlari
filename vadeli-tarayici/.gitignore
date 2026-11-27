@@ -1,11 +1,4 @@
-__pycache__/
-*.pyc
-.pytest_cache/
-veri_onbellek/
-veri/
-loglar/
-sinyaller*.csv
-config.toml
-.env
-raporlar_demo/
-.venv/
+# Proje mkaragozz/vadeli deposuna taşındı; buradaki yerel veri/önbellek dosyaları depoya girmez.
+*
+!.gitignore
+!TASINDI.md
