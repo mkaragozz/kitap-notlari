@@ -1,5 +1,7 @@
 // Ortak arayüz yardımcıları: seçiciler, bildirim, alt sayfa (modal), tarih biçimleri, dosya seçme.
 
+/** Resim adresi: yalnızca data:image, blob: ve https: kabul edilir, HTML özniteliği için kaçışlanır. */
+export const safeSrc = (u) => { const s = String(u || '').trim(); return /^(data:image\/[a-z+.-]+;base64,|blob:|https:\/\/)/i.test(s) ? esc(s) : ''; };
 export const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 export const $ = (s, r = document) => r.querySelector(s);
 export const $$ = (s, r = document) => [...r.querySelectorAll(s)];

@@ -2,6 +2,8 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-igVigYtmEfnu0jw0HNgCia60e7QGu81M0dDM2ASf4IM='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: blob: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://openlibrary.org https://covers.openlibrary.org https://www.googleapis.com https://api.crossref.org; worker-src 'self' blob:; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'">
+  <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Kitap &amp; Notlarım</title>
   <meta name="description" content="Kitaplardan alıntılarınızı sayfa numarasıyla saklayın; düşüncelerinizi ve günlüğünüzü yazın.">
@@ -15,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=3.4">
+  <link rel="stylesheet" href="styles.css?v=3.5">
 </head>
 <body>
   <div id="app">
@@ -35,7 +37,7 @@
   <div id="modal-root"></div>
   <div id="toast" role="status" aria-live="polite"></div>
   <div id="print-area"></div>
-  <script type="module" src="app.js?v=3.4"></script>
+  <script type="module" src="app.js?v=3.5"></script>
   <script>
     // Güvenlik ağı: uygulama birkaç saniye içinde açılamazsa (ör. bozuk önbellek) onarma düğmesi göster.
     (function () {
@@ -47,6 +49,9 @@
         if (window.caches) p.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }));
         Promise.all(p).catch(function () {}).then(function () { location.replace(location.pathname + '?r=' + Date.now() + location.hash); });
       };
+      // Kapak resmi yüklenemezse gizle; "Onar" düğmeleri (satır içi onclick/onerror kullanılmaz: CSP)
+      document.addEventListener('error', function (e) { var t = e.target; if (t && t.tagName === 'IMG' && t.hasAttribute('data-hide-err')) t.remove(); }, true);
+      document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-repair]'); if (b) window.__knRepair(); });
       window.addEventListener('error', function (e) { errs.push((e.message || (e.target && (e.target.src || e.target.href)) || 'hata')); }, true);
       window.addEventListener('unhandledrejection', function (e) { errs.push(String(e.reason && (e.reason.message || e.reason))); });
       setTimeout(function () {

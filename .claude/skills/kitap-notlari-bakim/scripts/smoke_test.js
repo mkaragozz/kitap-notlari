@@ -13,6 +13,7 @@ const ROUTES = ['', '#/library', '#/wish', '#/favorites', '#/private', '#/ebooks
   const p = await ctx.newPage();
   const errs = [];
   p.on('pageerror', (e) => errs.push(`${p.url()} :: ${e.message}`));
+  p.on('console', (m) => { if (/Content Security Policy|Refused to/i.test(m.text())) errs.push(`${p.url()} :: CSP: ${m.text().slice(0, 160)}`); });
   await ctx.route(/fonts\.(googleapis|gstatic)/, (r) => r.abort());
   await ctx.route(/openlibrary|googleapis|crossref/, (r) => r.fulfill({ contentType: 'application/json', body: '{}' }));
   for (const r of ROUTES) {

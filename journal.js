@@ -1,11 +1,11 @@
 // 📔 Günlük: yönlendirici başlıklarla gün içinde istediğiniz kadar "an" yazın.
 // Her an yazıldığı saatle kaydedilir; gün sonunda hepsi tek bir sayfa olarak okunur.
 // Ruh hâli, fotoğraf, takvim ve "geçen yıl bugün" hatırlatması.
-import * as DB from './db.js?v=3.4';
-import * as EX from './export.js?v=3.4';
-import * as Lock from './lock.js?v=3.4';
-import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, rerender, go, today, fmtTime, fmtDateTime,
-  longDate, addDays, parseDate, localDate, MONTHS, pickFiles, loadImage, dataUrlToBlob } from './ui.js?v=3.4';
+import * as DB from './db.js?v=3.5';
+import * as EX from './export.js?v=3.5';
+import * as Lock from './lock.js?v=3.5';
+import { $, esc, safeSrc, view, toast, openSheet, closeSheet, confirmDialog, rerender, go, today, fmtTime, fmtDateTime,
+  longDate, addDays, parseDate, localDate, MONTHS, pickFiles, loadImage, dataUrlToBlob } from './ui.js?v=3.5';
 
 // Hazır başlıklar. Kullanıcı bunların adını/emojisini değiştirebilir, gizleyebilir;
 // ayrıca kendi başlıklarını ekleyebilir (DB 'prompts' deposunda saklanır, yedeğe dahildir).
@@ -89,7 +89,7 @@ function momentHtml(m, date) {
       <span class="m-act"><button data-act="moment-edit" data-id="${m.id}" aria-label="Düzenle">✏️</button></span></div>
     ${otherDay ? `<div class="small muted">Yazılış: ${esc(fmtDateTime(m.at))}</div>` : ''}
     ${m.text ? `<div class="m-text">${esc(m.text)}</div>` : ''}
-    ${m.photos && m.photos.length ? `<div class="m-photos">${m.photos.map((ph) => `<img src="${ph.data}" alt="" data-act="photo-view" data-id="${m.id}" data-ph="${ph.id}" loading="lazy">`).join('')}</div>` : ''}
+    ${m.photos && m.photos.length ? `<div class="m-photos">${m.photos.map((ph) => `<img src="${safeSrc(ph.data)}" alt="" data-act="photo-view" data-id="${m.id}" data-ph="${ph.id}" loading="lazy">`).join('')}</div>` : ''}
     </section>`;
 }
 
@@ -121,7 +121,7 @@ function openMomentEditor({ id = null, date = today(), prompt = 'free' } = {}) {
     foot: `${id ? '<button class="btn danger" data-x="del" style="flex:0 0 auto">🗑️</button>' : ''}<button class="btn" data-act="close-sheet">Vazgeç</button><button class="btn primary" data-x="save">💾 Kaydet</button>`,
   });
   const paint = () => {
-    $('#m-photos', s).innerHTML = photos.map((ph) => `<div class="ph"><img src="${ph.data}" alt=""><button type="button" data-rm="${ph.id}" aria-label="Kaldır">×</button></div>`).join('');
+    $('#m-photos', s).innerHTML = photos.map((ph) => `<div class="ph"><img src="${safeSrc(ph.data)}" alt=""><button type="button" data-rm="${ph.id}" aria-label="Kaldır">×</button></div>`).join('');
   };
   paint();
   $('#m-prompt', s).onchange = (e) => { $('#m-text', s).placeholder = getPrompt(e.target.value).ph; };
@@ -171,7 +171,7 @@ function viewPhoto(momentId, phId) {
   const ph = (m.photos || []).find((x) => x.id === phId); if (!ph) return;
   const s = openSheet({
     title: `📷 ${longDate(m.date)} · ${fmtTime(m.at)}`, wide: true,
-    body: `<img class="photo-full" src="${ph.data}" alt="">`,
+    body: `<img class="photo-full" src="${safeSrc(ph.data)}" alt="">`,
     foot: `<button class="btn" data-act="close-sheet">Kapat</button><button class="btn primary" data-x="dl">⬇️ Telefona kaydet</button>`,
   });
   $('[data-x="dl"]', s).onclick = () => savePhoto(ph, `gunluk-${m.date}-${fmtTime(m.at).replace(':', '')}.jpg`);

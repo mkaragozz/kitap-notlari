@@ -1,9 +1,10 @@
 // Dışa aktarma: PDF (yazdır), Word (.docx), Excel (.xlsx), dosya kaydetme.
 // Kitap notları, düşünceler ve günlük için.
 
-const DOCX_URL = 'https://cdn.jsdelivr.net/npm/docx@8.5.0/+esm';
-const XLSX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+const DOCX_URL = 'lib/docx.umd.js?v=8.5.0';
+const XLSX_URL = 'lib/xlsx.full.min.js?v=0.18.5';
 
+const safeSrc = (u) => { const x = String(u || '').trim(); return /^(data:image\/[a-z+.-]+;base64,|blob:|https:\/\/)/i.test(x) ? esc(x) : ''; };
 export const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 function loadScript(src) {
@@ -155,7 +156,7 @@ export function printHtml(html) {
 // ---------- Word ----------
 let docxMod = null;
 async function getDocx() {
-  try { docxMod = docxMod || (await import(DOCX_URL)); } catch (e) { throw new Error('Word kütüphanesi yüklenemedi (internet bağlantısını kontrol edin).'); }
+  try { if (!docxMod) { await loadScript(DOCX_URL); docxMod = window.docx; } } catch (e) { throw new Error('Word kütüphanesi yüklenemedi.'); }
   return docxMod;
 }
 const DOC_STYLES = { default: { document: { run: { font: 'Calibri', size: 23 } } } };
@@ -349,7 +350,7 @@ export function buildJournalPrintHtml(title, days) {
     d.moments.forEach((m) => {
       h += `<div class="pd-moment"><p class="pd-mhead"><span class="pd-time">${esc(hm(m.at))}</span> · <b>${esc(m.promptLabel)}</b></p>`;
       if (m.text) h += `<p>${esc(m.text).replace(/\n/g, '<br>')}</p>`;
-      if (m.photos && m.photos.length) h += `<div class="pd-photos">${m.photos.map((p) => `<img src="${p.data}" alt="">`).join('')}</div>`;
+      if (m.photos && m.photos.length) h += `<div class="pd-photos">${m.photos.map((p) => `<img src="${safeSrc(p.data)}" alt="">`).join('')}</div>`;
       h += `</div>`;
     });
     h += `</section>`;
