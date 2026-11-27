@@ -5,8 +5,9 @@
 // - Metni seçip "Alıntılarıma aktar": kitabın Alıntılar bölümüne, renkli vurguyla; orijinal dosyadaki yeri
 //   (PDF/Word/TXT/EPUB, sayfa ya da konum) kaynak/dipnot olarak alıntıya yazılır.
 // - Sayfaya "tekrar oku" işareti ve sayfa yorumu; kaldığı yerden devam.
-import * as DB from './db.js?v=3.5';
-import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, go, fmtDateTime } from './ui.js?v=3.5';
+// - 🔊 Sesli okuma: telefonun kendi sesleriyle, ses / hız / ton seçimi, okunan cümle vurgulanır.
+import * as DB from './db.js?v=3.5.1';
+import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, go, fmtDateTime } from './ui.js?v=3.5.1';
 
 export const hooks = { openQuoteEditor: null };
 
@@ -250,10 +251,19 @@ export async function renderReader(bookId, params) {
       <button class="rd-ic" data-r="reread" title="Bu sayfayı tekrar okunacaklara ekle">🔖</button>
       <button class="rd-ic" data-r="comment" title="Bu sayfaya yorum ekle">💬</button>
       <button class="rd-ic" data-r="marks" title="İşaretler ve alıntılar">📑</button>
+      <button class="rd-ic" data-r="tts" title="Sesli oku">🔊</button>
       <button class="rd-ic" data-r="prefs" title="Okuma ayarları">Aa</button>
     </div>
     <div class="rd-stage" id="rd-stage"><div class="loading-box"><div class="spinner"></div><div id="rd-load">Kitap açılıyor…</div></div></div>
     <div class="rd-sel" id="rd-sel" hidden><button class="btn primary" data-r="save-sel">📥 Alıntılarıma aktar</button></div>
+    <div class="rd-tts" id="rd-tts" hidden>
+      <button class="rd-ic" data-r="tts-stop" title="Durdur ve kapat">⏹</button>
+      <button class="rd-ic" data-r="tts-back" title="Önceki cümle">⏮</button>
+      <button class="rd-ic big" data-r="tts-play" title="Oku">▶</button>
+      <button class="rd-ic" data-r="tts-fwd" title="Sonraki cümle">⏭</button>
+      <span class="tts-rate"><button class="rd-ic sm" data-r="tts-slower" title="Yavaşlat">−</button><b id="tts-rate">1,0×</b><button class="rd-ic sm" data-r="tts-faster" title="Hızlandır">＋</button></span>
+      <button class="rd-ic" data-r="tts-voice" title="Ses, hız ve ton">🗣️</button>
+    </div>
     <div class="rd-bottom">
       <button class="rd-ic" data-r="prev" aria-label="Önceki sayfa">‹</button>
       <button class="rd-page" data-r="goto" id="rd-page">…</button>
@@ -454,6 +464,7 @@ async function gotoPage(n, animate = true, dir = 0) {
   updatePageLabel();
   clearTimeout(saveTimer);
   saveTimer = setTimeout(savePos, 700);
+  if (T && !T.internal) ttsFollowManual();
 }
 function currentPdfPage() {
   if (R.mode === 'orig') return R.page + 1;
@@ -663,6 +674,14 @@ function bindReader() {
       if (a === 'next') gotoPage(R.page + 1, true, 1);
       if (a === 'goto') gotoDialog();
       if (a === 'prefs') openPrefs();
+      if (a === 'tts') { if ($('#rd-tts').hidden) { ttsBar(true); ttsPlay(); } else ttsStop(); }
+      if (a === 'tts-play') { if (T && T.playing) ttsPause(); else ttsPlay(); }
+      if (a === 'tts-stop') ttsStop();
+      if (a === 'tts-back') ttsSkip(-1);
+      if (a === 'tts-fwd') ttsSkip(1);
+      if (a === 'tts-slower') ttsRate(-0.1);
+      if (a === 'tts-faster') ttsRate(0.1);
+      if (a === 'tts-voice') openTtsVoices();
       if (a === 'marks') openMarks();
       if (a === 'reread') toggleReread();
       if (a === 'comment') commentClick();
@@ -703,12 +722,232 @@ function bindReader() {
   window.addEventListener('resize', onResize);
   lastTick = Date.now();
   R.cleanup = () => {
+    ttsStop();
     tickReading(0); flushReading();
     document.removeEventListener('keydown', onKey); document.removeEventListener('selectionchange', onSel); window.removeEventListener('resize', onResize);
     document.body.classList.remove('reading');
     if (R.mode !== 'orig') savePos();
   };
 }
+
+// ================= 🔊 Sesli okuma =================
+// Telefonun / tarayıcının kendi konuşma sesleri kullanılır (Web Speech API): ücretsizdir, ek kurulum gerekmez.
+// "📱 cihazda" sesler metni cihazda seslendirir; tarayıcının "yerel değil" bildirdiği sesler (🌐) metni sesin
+// sağlayıcısına gönderir — bu yüzden varsayılan olarak cihazdaki Türkçe ses seçilir.
+export const TTS_DEFAULT = { voice: '', rate: 1, pitch: 1 };
+export const ttsSupported = () => 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+export function ttsPrefs() { return { ...TTS_DEFAULT, ...(DB.getSettings().tts || {}) }; }
+function saveTts(p) { DB.setSettings({ tts: p }); }
+/** Sesler: Türkçe ve cihazdakiler önce */
+export function ttsVoices() {
+  if (!ttsSupported()) return Promise.resolve([]);
+  const sortV = (vs) => [...vs].sort((a, b) => (b.lang.toLowerCase().startsWith('tr') - a.lang.toLowerCase().startsWith('tr')) || (b.localService - a.localService) || a.name.localeCompare(b.name));
+  const now = speechSynthesis.getVoices();
+  if (now.length) return Promise.resolve(sortV(now));
+  return new Promise((ok) => {
+    const done = () => { speechSynthesis.removeEventListener('voiceschanged', done); ok(sortV(speechSynthesis.getVoices())); };
+    speechSynthesis.addEventListener('voiceschanged', done);
+    setTimeout(done, 1500);
+  });
+}
+export function voiceGender(v) { const n = v.name || ''; if (/female|kad[ıi]n|woman|frau|femme|mujer/i.test(n)) return '👩 '; if (/\bmale|erkek|\bman\b|mann|homme|hombre/i.test(n)) return '👨 '; return ''; }
+export function voiceLabel(v) { return `${voiceGender(v)}${v.name} (${v.lang})${v.localService ? ' · 📱 cihazda' : ' · 🌐 internet'}`; }
+async function pickVoice(p) {
+  const vs = await ttsVoices();
+  return vs.find((v) => v.voiceURI === p.voice) || vs.find((v) => v.lang.toLowerCase().startsWith('tr') && v.localService && v.default) || vs.find((v) => v.lang.toLowerCase().startsWith('tr') && v.localService) || vs.find((v) => v.lang.toLowerCase().startsWith('tr')) || null;
+}
+/** Tek bir metni seslendirir (ayarlarda "Dene" için) */
+export async function ttsSay(text, p = ttsPrefs()) {
+  if (!ttsSupported()) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  const v = await pickVoice(p);
+  if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'tr-TR';
+  u.rate = p.rate; u.pitch = p.pitch;
+  speechSynthesis.speak(u);
+}
+export function ttsStopAll() { if (ttsSupported()) speechSynthesis.cancel(); }
+
+function splitSentences(text) {
+  const out = [];
+  if (window.Intl && Intl.Segmenter) {
+    for (const s of new Intl.Segmenter('tr', { granularity: 'sentence' }).segment(text)) out.push({ start: s.index, end: s.index + s.segment.length });
+  } else {
+    const re = /[^.!?…]+[.!?…]*["'”’)]*\s*/g; let m;
+    while ((m = re.exec(text))) { if (!m[0]) break; out.push({ start: m.index, end: m.index + m[0].length }); }
+  }
+  // çok uzun cümleleri (bazı tarayıcılar uzun metinde susuyor) virgülden böl
+  const res = [];
+  out.forEach(({ start, end }) => {
+    let a = start;
+    while (end - a > 260) { const cut = text.lastIndexOf(',', a + 240); const c = cut > a + 60 ? cut + 1 : a + 240; res.push({ start: a, end: c }); a = c; }
+    res.push({ start: a, end });
+  });
+  return res.filter(({ start, end }) => text.slice(start, end).trim().length > 0);
+}
+// Metin düğümlerini birleştir; PDF metin katmanında parçalar arasına sanal boşluk koy (kelimeler yapışmasın)
+function joinNodes(nodes, sep) {
+  const starts = []; let text = '';
+  nodes.forEach((n, i) => {
+    if (sep && i && text && !/[\s-]$/.test(text) && !/^\s/.test(n.data)) text += ' ';
+    starts.push(text.length); text += n.data;
+  });
+  return { nodes, starts, text };
+}
+function locate(J, off) {
+  let i = J.starts.length - 1;
+  while (i > 0 && J.starts[i] > off) i--;
+  const n = J.nodes[i]; return [n, Math.max(0, Math.min(n.data.length, off - J.starts[i]))];
+}
+function rangeOf(J, a, b) { const r = document.createRange(); const [sn, so] = locate(J, a); const [en, eo] = locate(J, b); r.setStart(sn, so); r.setEnd(en, eo); return r; }
+function sentencesOf(J, extra = {}) {
+  return splitSentences(J.text).map(({ start, end }) => {
+    const raw = J.text.slice(start, end), t = raw.trim(), lead = raw.length - raw.trimStart().length;
+    return { text: t, J, off: start + lead, range: rangeOf(J, start + lead, start + lead + t.length), ...extra };
+  });
+}
+const BLOCKS = 'p,li,h1,h2,h3,h4,h5,h6,blockquote,pre,td,th,dd,dt,figcaption';
+function flowSentences() {
+  let blocks = [...R.flow.querySelectorAll(BLOCKS)].filter((b) => !b.querySelector(BLOCKS));
+  if (!blocks.length) blocks = [R.flow];
+  const list = [];
+  blocks.forEach((b) => { const nodes = textNodes(b); if (nodes.length) list.push(...sentencesOf(joinNodes(nodes, false))); });
+  return list;
+}
+function pageOfRange(r) {
+  const rect = r.getClientRects()[0] || r.getBoundingClientRect(); const fr = R.flow.getBoundingClientRect();
+  return Math.max(0, Math.min(R.pages - 1, Math.floor((rect.left - fr.left + 2) / R.W)));
+}
+async function pdfPageSentences(n) {
+  const page = await R.content.pdf.getPage(n);
+  const tc = await page.getTextContent();
+  const text = tc.items.map((it) => it.str + (it.hasEOL ? '\n' : '')).join('').replace(/-\n(?=\p{Ll})/gu, '').replace(/\s*\n\s*/g, ' ');
+  return splitSentences(text).map(({ start, end }) => ({ text: text.slice(start, end).trim(), pdf: true }));
+}
+/** PDF orijinal görünüm: sayfanın seçilebilir metin katmanından cümleler (vurgulanabilir) */
+async function pdfLayerSentences() {
+  let tl = null;
+  for (let i = 0; i < 50; i++) { tl = document.querySelector('#rd-pdf .textLayer'); if (tl && textNodes(tl).length) break; await new Promise((r) => setTimeout(r, 100)); }
+  const nodes = tl ? textNodes(tl) : [];
+  if (!nodes.length) return pdfPageSentences(R.page + 1); // metin katmanı yoksa vurgusuz oku
+  return sentencesOf(joinNodes(nodes, true), { pdf: true });
+}
+function setTtsHighlight(range, word = null) {
+  if (!(window.CSS && CSS.highlights && window.Highlight)) return;
+  if (range) CSS.highlights.set('kn-tts', new Highlight(range)); else CSS.highlights.delete('kn-tts');
+  if (word) CSS.highlights.set('kn-tts-w', new Highlight(word)); else CSS.highlights.delete('kn-tts-w');
+}
+let T = null; // { playing, list, idx, token, internal }
+// Dinlerken ekran kararmasın (destekleyen tarayıcılarda); duraklatınca / durdurunca bırakılır
+let wake = null;
+async function keepAwake(on) {
+  try {
+    if (on && !wake && navigator.wakeLock) { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => { wake = null; }); }
+    if (!on && wake) { await wake.release(); wake = null; }
+  } catch (e) { wake = null; }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && T && T.playing) keepAwake(true); });
+function ttsBar(show) {
+  const bar = $('#rd-tts'); if (!bar) return;
+  bar.hidden = !show;
+  const p = ttsPrefs();
+  const pl = $('[data-r="tts-play"]', bar); if (pl) { pl.textContent = T && T.playing ? '⏸' : '▶'; pl.title = T && T.playing ? 'Duraklat' : 'Oku'; }
+  const rv = $('#tts-rate', bar); if (rv) rv.textContent = p.rate.toFixed(1).replace('.', ',') + '×';
+  const tb = $('[data-r="tts"]'); if (tb) tb.classList.toggle('on', !!show);
+}
+async function ttsBuild() {
+  if (R.mode === 'orig') return { list: await pdfLayerSentences(), idx: 0 };
+  const list = flowSentences();
+  let idx = list.findIndex((s) => pageOfRange(s.range) >= R.page); if (idx < 0) idx = 0;
+  return { list, idx };
+}
+async function ttsPlay() {
+  if (!ttsSupported()) { toast('Bu tarayıcı sesli okumayı desteklemiyor'); return; }
+  if (!T || !T.list) { const b = await ttsBuild(); T = { ...b, idx: b.idx || 0, token: 0 }; }
+  T.playing = true; ttsBar(true); keepAwake(true); ttsSpeak();
+}
+function ttsPause() { if (!T) return; T.playing = false; T.token++; speechSynthesis.cancel(); keepAwake(false); ttsBar(true); }
+export function ttsStop(hide = true) { if (T) { T.playing = false; T.token++; } T = null; keepAwake(false); if (ttsSupported()) speechSynthesis.cancel(); setTtsHighlight(null); ttsBar(!hide); }
+async function ttsSpeak() {
+  if (!T || !T.playing || !R) return;
+  if (T.idx >= T.list.length) {
+    if (R.mode === 'orig' && R.page < R.pages - 1) { // PDF orijinal görünüm: sonraki sayfaya geç
+      T.internal = true; await gotoPage(R.page + 1, true, 1); T.internal = false;
+      T.list = await pdfLayerSentences(); T.idx = 0; ttsSpeak(); return;
+    }
+    ttsStop(false); toast('Sesli okuma bitti'); return;
+  }
+  const s = T.list[T.idx];
+  if (s.range && !s.pdf) {
+    const pg = pageOfRange(s.range);
+    if (pg !== R.page) { T.internal = true; await gotoPage(pg, true, pg > R.page ? 1 : -1); T.internal = false; }
+  }
+  setTtsHighlight(s.range || null);
+  const p = ttsPrefs();
+  const u = new SpeechSynthesisUtterance(s.text);
+  const v = await pickVoice(p);
+  if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'tr-TR';
+  u.rate = p.rate; u.pitch = p.pitch;
+  const tok = ++T.token;
+  u.onend = () => { if (T && T.playing && T.token === tok) { T.idx++; ttsSpeak(); } };
+  // Kelime kelime takip: ses motoru kelime sınırını bildirirse o kelime de vurgulanır, gerekirse sayfa çevrilir
+  u.onboundary = (e) => {
+    if (!T || T.token !== tok || !s.range || (e.name && e.name !== 'word')) return;
+    const ci = e.charIndex || 0;
+    let len = e.charLength; if (!len) { const m = /^\S+/.exec(s.text.slice(ci)); len = m ? m[0].length : 0; }
+    if (!len) return;
+    const wr = rangeOf(s.J, s.off + ci, s.off + Math.min(s.text.length, ci + len));
+    if (!s.pdf) { const pg = pageOfRange(wr); if (pg > R.page) { T.internal = true; gotoPage(pg, true, 1); T.internal = false; } }
+    setTtsHighlight(s.range, wr);
+  };
+  u.onerror = (e) => { if (T && T.token === tok && e.error !== 'interrupted' && e.error !== 'canceled') { T.playing = false; ttsBar(true); toast('Sesli okuma durdu: ' + e.error); } };
+  speechSynthesis.speak(u);
+}
+/** Kullanıcı elle sayfa çevirince okuma yeni sayfadan sürer */
+async function ttsFollowManual() {
+  if (!T || T.internal) return;
+  const was = T.playing; T.token++; speechSynthesis.cancel(); setTtsHighlight(null);
+  const b = await ttsBuild(); T.list = b.list; T.idx = b.idx || 0;
+  if (was) { T.playing = true; ttsSpeak(); }
+}
+function ttsSkip(d) { if (!T) return; T.token++; speechSynthesis.cancel(); T.idx = Math.max(0, Math.min(T.list.length, T.idx + d)); if (T.playing) ttsSpeak(); }
+function ttsRate(d) {
+  const p = ttsPrefs(); p.rate = Math.round(Math.max(0.5, Math.min(2.5, p.rate + d)) * 10) / 10; saveTts(p); ttsBar(true);
+  if (T && T.playing) { T.token++; speechSynthesis.cancel(); ttsSpeak(); }
+}
+export function ttsVoiceFieldsHtml(p, vs, idp = 'tv') {
+  const tr = vs.filter((v) => v.lang.toLowerCase().startsWith('tr')), other = vs.filter((v) => !v.lang.toLowerCase().startsWith('tr'));
+  const trL = vs.filter((v) => v.lang.toLowerCase().startsWith('tr') && v.localService);
+  const cur = p.voice || ((trL.find((v) => v.default) || trL[0] || {}).voiceURI) || '';
+  const opt = (v) => `<option value="${esc(v.voiceURI)}" ${v.voiceURI === cur ? 'selected' : ''}>${esc(voiceLabel(v))}</option>`;
+  return `${vs.length ? `<label class="field"><span>Okuyucu ses</span><select id="${idp}-voice">${tr.length ? `<optgroup label="Türkçe">${tr.map(opt).join('')}</optgroup>` : ''}${other.length ? `<optgroup label="Diğer diller">${other.map(opt).join('')}</optgroup>` : ''}</select></label>
+      ${tr.length ? '' : '<p class="hint">⚠️ Bu cihazda Türkçe ses bulunamadı. Telefonun ayarlarındaki “Metin okuma / Yazıdan konuşmaya” bölümünden Türkçe ses paketi yükleyebilirsiniz (menü adı telefona göre değişir).</p>'}`
+    : '<p class="hint">Bu cihazda kullanılabilir ses bulunamadı.</p>'}
+    <div class="field"><span>Okuma hızı: <b id="${idp}-rate-v">${p.rate.toFixed(1).replace('.', ',')}×</b></span><input type="range" id="${idp}-rate" min="0.5" max="2.5" step="0.1" value="${p.rate}"></div>
+    <div class="field"><span>Ses tonu: <b id="${idp}-pitch-v">${p.pitch.toFixed(1).replace('.', ',')}</b></span>
+      <div class="seg" style="margin-bottom:6px">${[[0.7, '🔉 Kalın'], [1, 'Normal'], [1.3, '🔊 İnce']].map(([v, l]) => `<button type="button" class="${Math.abs(p.pitch - v) < 0.05 ? 'on' : ''}" data-pitch="${v}">${l}</button>`).join('')}</div>
+      <input type="range" id="${idp}-pitch" min="0.5" max="1.5" step="0.1" value="${p.pitch}"></div>
+    <button type="button" class="btn block" data-tts-try>🔊 Sesi dene</button>
+    <p class="hint">Kadın ya da erkek sesi: telefonunuzda yüklü sesler listede görünür; sesin adında belliyse 👩/👨 işareti vardır. Her sesi <b>Sesi dene</b> ile dinleyip seçin. Ton düğmeleri sesi kalınlaştırır ya da inceltir.</p>
+    <p class="hint">Sesler telefonunuzun kendi sesleridir; ücretsizdir. <b>📱 cihazda</b> sesler metni telefonda seslendirir. <b>🌐 internet</b> işaretli sesler okunan cümleleri sesin sağlayıcısına gönderir.</p>`;
+}
+export function bindTtsVoiceFields(root, idp = 'tv', onChange = null) {
+  const set = (patch) => { const p = { ...ttsPrefs(), ...patch }; saveTts(p); if (onChange) onChange(p); };
+  const vSel = root.querySelector(`#${idp}-voice`); if (vSel) vSel.onchange = () => set({ voice: vSel.value });
+  [['rate', 'rate'], ['pitch', 'pitch']].forEach(([k]) => { const i = root.querySelector(`#${idp}-${k}`); if (!i) return; i.oninput = () => { root.querySelector(`#${idp}-${k}-v`).textContent = parseFloat(i.value).toFixed(1).replace('.', ',') + (k === 'rate' ? '×' : ''); }; i.onchange = () => set({ [k]: parseFloat(i.value) }); });
+  const t = root.querySelector('[data-tts-try]'); if (t) t.onclick = () => ttsSay('Merhaba, bu kitabı sizin için bu sesle okuyacağım.');
+  root.querySelectorAll('[data-pitch]').forEach((b) => { b.onclick = () => {
+    const v = parseFloat(b.dataset.pitch); root.querySelectorAll('[data-pitch]').forEach((x) => x.classList.toggle('on', x === b));
+    const i = root.querySelector(`#${idp}-pitch`); if (i) i.value = v; const l = root.querySelector(`#${idp}-pitch-v`); if (l) l.textContent = v.toFixed(1).replace('.', ',');
+    set({ pitch: v }); ttsSay('Bu ses tonuyla okuyacağım.');
+  }; });
+}
+async function openTtsVoices() {
+  const vs = await ttsVoices();
+  const s = openSheet({ title: '🗣️ Ses, hız ve ton', body: ttsVoiceFieldsHtml(ttsPrefs(), vs, 'rv') });
+  bindTtsVoiceFields(s, 'rv', () => { ttsBar(true); if (T && T.playing) { T.token++; speechSynthesis.cancel(); ttsSpeak(); } });
+}
+
 /** Okuyucudan çıkılınca (başka sayfaya gidilince) çağrılır */
 export function leaveReader() { if (R && R.cleanup) { R.cleanup(); } R = null; }
 /** Kaydedilen alıntı okuyucudaysa vurguları yenile */

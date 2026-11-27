@@ -19,7 +19,8 @@ GitHub Pages `main` dalından yayınlanır. Kullanıcı Türkçe konuşur, tekni
 - Kullanıcı ekran görüntüsü üzerinde renkli kalemle işaret koyarak istek yapar ("kırmızıyla işaretlediğim yere…").
   Her işareti tek tek eşleştir, yanıtta her rengi ayrı madde olarak karşıla.
 - Tasarım tercihi: **pratik, derli toplu, kalabalık olmayan.** Aynı işi yapan ikinci bir düğme ekleme.
-- Sürüm numaralarını sen belirle (kullanıcı "sana bırakıyorum" dedi): küçük değişiklik +0.1.
+- Sürüm numarası **üç haneli** (kullanıcının isteği, 27.11.2026): her güncelleme son haneyi artırır (3.5.1 → 3.5.2);
+  çok büyük bir yenilikte orta hane artar ve son hane sıfırlanır (3.6.0). Ana dalda kullanılmış numarayı tekrar kullanma.
 
 ## Dosya haritası
 
@@ -29,7 +30,7 @@ GitHub Pages `main` dalından yayınlanır. Kullanıcı Türkçe konuşur, tekni
 | `app.js` | Yönlendirme (`route()`, `NAV_OF`, `NAV_ITEMS`), ana sayfa (`renderHome`), kitap formu, alıntı editörü, Diğer (`renderMore`), Ayarlar alt sayfaları, açılış göçleri (migration) ve `APP_VERSION` |
 | `db.js` | IndexedDB (`DB_VERSION`, `STORES`, `files` deposu), ayar varsayılanları (`DEFAULTS`), yedek al/içe aktar |
 | `lists.js` | Kitap bölümleri: `LISTS`, `SECTION_ROUTES`, `PRIVATE_LOCK`, liste kartları, kategoriler, katalog PDF |
-| `reader.js` | E-kitap okuyucu (PDF/Word/TXT/EPUB), vurgular, "Alıntılarıma aktar" |
+| `reader.js` | E-kitap okuyucu (PDF/Word/TXT/EPUB), vurgular, "Alıntılarıma aktar", 🔊 sesli okuma (Web Speech API: ses/hız/ton, cümle + kelime takibi, otomatik sayfa çevirme, ekranı açık tutma) |
 | `cards.js`, `export.js` | Alıntı/düşünce kartları; PDF/Word/Excel dışa aktarma, kaynak satırı |
 | `articles.js`, `blog.js`, `notes.js`, `thoughts.js`, `journal.js`, `reports.js` | Bölümler |
 | `lock.js` | PIN, kurtarma kodu, bölüm kilitleri (`isOpen(section)`) |

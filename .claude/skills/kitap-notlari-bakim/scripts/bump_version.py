@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Sürümü her yerde birlikte yükseltir: ?v=X.Y ekleri, sw.js V, app.js APP_VERSION.
 
-Kullanım (depo kökünden): python3 .claude/skills/kitap-notlari-bakim/scripts/bump_version.py 3.3
+Kullanım (depo kökünden): python3 .claude/skills/kitap-notlari-bakim/scripts/bump_version.py 3.5.2
 lib/ altındaki kütüphane sürüm eklerine (ör. ?v=2.3.8) dokunmaz.
 """
 import pathlib
 import re
 import sys
 
-if len(sys.argv) != 2 or not re.fullmatch(r'\d+\.\d+', sys.argv[1]):
-    sys.exit('Kullanım: bump_version.py 3.3')
+if len(sys.argv) != 2 or not re.fullmatch(r'\d+\.\d+(\.\d+)?', sys.argv[1]):
+    sys.exit('Kullanım: bump_version.py 3.5.2  (üç haneli: büyük.orta.küçük)')
 new = sys.argv[1]
 root = pathlib.Path('.')
 sw = (root / 'sw.js').read_text(encoding='utf-8')

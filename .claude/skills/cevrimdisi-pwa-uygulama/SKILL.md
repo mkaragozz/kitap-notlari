@@ -95,7 +95,8 @@ Ayrıntı ve resmî kaynaklar: `references/yasal.md`. Özet kontrol listesi:
 3. **Önce göster.** Her değişiklikten sonra telefon boyutunda (360×800, ölçek 2) ekran görüntüsü gönder.
    Ekran görüntüsündeki renkli işaretlerin her birini ayrı maddede karşıla.
 4. **"Yayınla" denmeden yayınlama.** Kullanıcı açıkça "yayınla" ya da "düzelt ve yayınla" derse yayınla.
-5. **Sürüm numarası:** küçük değişiklik +0.1; ana dalda kullanılmış bir numarayı tekrar kullanma.
+5. **Sürüm numarası üç haneli** (X.Y.Z): her güncelleme Z+1, büyük yenilik Y+1 ve Z=0; ana dalda kullanılmış bir
+   numarayı tekrar kullanma. Kullanıcı başka bir düzen isterse onunkini uygula.
 6. Yayından sonra canlı adresi doğrula ve kullanıcıya "uygulamayı kapatıp açın; 'Uygulama güncellendi (X.Y)'
    bildirimi çıkar" de.
 
