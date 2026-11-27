@@ -1,23 +1,23 @@
-import * as DB from './db.js?v=3.2';
-import * as EX from './export.js?v=3.2';
-import * as Lock from './lock.js?v=3.2';
-import * as Scan from './scanner.js?v=3.2';
+import * as DB from './db.js?v=3.3';
+import * as EX from './export.js?v=3.3';
+import * as Lock from './lock.js?v=3.3';
+import * as Scan from './scanner.js?v=3.3';
 import { $, $$, esc, view, nav, toast, openSheet, closeSheet, confirmDialog, modal, today, fmtDate, norm, highlight,
-  pickFiles, fileToDataUrl, copyText, starPickerHtml, bindStarPicker, longDate, fmtTime } from './ui.js?v=3.2';
+  pickFiles, fileToDataUrl, copyText, starPickerHtml, bindStarPicker, longDate, fmtTime } from './ui.js?v=3.3';
 import { pageNum, sortQuotes, allTags, quoteCard, thoughtCard, thoughtText, openRelated, starFilterHtml, applyStarFilter,
-  tagInputHtml, bindTagInput } from './cards.js?v=3.2';
-import { renderThoughts, renderThought, THOUGHT_ACTIONS } from './thoughts.js?v=3.2';
-import { renderJournal, renderJournalCal, JOURNAL_ACTIONS, getPrompt, managePrompts } from './journal.js?v=3.2';
-import { renderNotes, renderNotebook, renderShopping, noteCard, nbIsOpen, NOTE_ACTIONS, openNbookEditor, openShopcatEditor, moveOrder, lockKey } from './notes.js?v=3.2';
-import { manageNotebooks as manageThoughtNotebooks } from './thoughts.js?v=3.2';
-import { GUIDE } from './guide.js?v=3.2';
-import { renderReports, REPORT_ACTIONS } from './reports.js?v=3.2';
-import { LISTS, SECTION_ROUTES, PRIVATE_LOCK, privateLockOf, listHref, inList, renderListTab, bindListTab, LIST_ACTIONS, topicChips, topicPickerHtml, bindTopicPicker, openTopicEditor } from './lists.js?v=3.2';
-import { renderReader, leaveReader, readerRefresh, hooks as readerHooks, readMeta, fileKind, KIND_LABEL, HL_COLORS, HL_NAMES, BG_PRESETS, FONTS, readerPrefs, autoFg } from './reader.js?v=3.2';
-import { renderArticles, renderArticleForm, ARTICLE_ACTIONS } from './articles.js?v=3.2';
-import { renderBlog, renderPost, renderPostEditor, BLOG_ACTIONS, postPlain } from './blog.js?v=3.2';
+  tagInputHtml, bindTagInput } from './cards.js?v=3.3';
+import { renderThoughts, renderThought, THOUGHT_ACTIONS } from './thoughts.js?v=3.3';
+import { renderJournal, renderJournalCal, JOURNAL_ACTIONS, getPrompt, managePrompts } from './journal.js?v=3.3';
+import { renderNotes, renderNotebook, renderShopping, noteCard, nbIsOpen, NOTE_ACTIONS, openNbookEditor, openShopcatEditor, moveOrder, lockKey } from './notes.js?v=3.3';
+import { manageNotebooks as manageThoughtNotebooks } from './thoughts.js?v=3.3';
+import { GUIDE } from './guide.js?v=3.3';
+import { renderReports, REPORT_ACTIONS } from './reports.js?v=3.3';
+import { LISTS, SECTION_ROUTES, PRIVATE_LOCK, privateLockOf, listHref, inList, renderListTab, bindListTab, LIST_ACTIONS, topicChips, topicPickerHtml, bindTopicPicker, openTopicEditor } from './lists.js?v=3.3';
+import { renderReader, leaveReader, readerRefresh, hooks as readerHooks, readMeta, fileKind, KIND_LABEL, HL_COLORS, HL_NAMES, BG_PRESETS, FONTS, readerPrefs, autoFg } from './reader.js?v=3.3';
+import { renderArticles, renderArticleForm, ARTICLE_ACTIONS } from './articles.js?v=3.3';
+import { renderBlog, renderPost, renderPostEditor, BLOG_ACTIONS, postPlain } from './blog.js?v=3.3';
 
-const APP_VERSION = '3.2';
+const APP_VERSION = '3.3';
 window.__knStarted = true; // index.html'deki güvenlik ağı için: modüller sorunsuz yüklendi
 const COLORS = [['#7C5CFF', '#FF5DA2'], ['#FF6B57', '#FFB020'], ['#10B8A6', '#2F9BFF'], ['#FF5DA2', '#FFB020'], ['#2F9BFF', '#7C5CFF'], ['#10B8A6', '#7CD957'], ['#FF8A3D', '#FF5D7A']];
 const TAG_COLORS = ['#7C5CFF', '#FF5DA2', '#10B8A6', '#FF6B57', '#2F9BFF', '#FFB020', '#8E5CF7', '#13A88F'];
@@ -98,8 +98,36 @@ function buildNav() {
     <a href="#/more" data-nav="more" class="mob-only"><span class="ni">☰</span><span>Diğer</span><b class="nav-badge" hidden></b></a>`;
   $('#nav').classList.toggle('n7', vis.length >= 5);
 }
+// ---- Kilitli bölümden çıkınca hemen kilitle ----
+// Her ekran bir "bölge"ye aittir. Kilit açıkken başka bölgeye geçilince kilit yeniden devreye girer.
+// Arama ve etiket sayfasından bir kayda gitmek (ör. özel düşünce) kilidi korur; o bölgeden çıkınca kilitlenir.
+const PROTECTED_Z = new Set(['thoughts', 'journal', 'blog', 'reports', 'shopping', 'privateBooks', 'privateEbooks', 'articles']);
+const PASS_Z = new Set(['search', 'tags', 'tag']);
+function zoneOf(parts) {
+  const p0 = parts[0] || 'home';
+  const bookZone = (id) => { const raw = DB.getBookRaw(id); if (!raw || !raw.private) return raw && raw.kind === 'article' ? 'articles' : 'books'; const lk = privateLockOf(raw); return lk === 'privateArticles' ? 'articles' : lk; };
+  if (p0 === 'notes') return parts[1] ? lockKey(parts[1]) : 'notes';
+  if (p0 === 'thought') return 'thoughts';
+  if (p0 === 'journal-cal') return 'journal';
+  if (p0 === 'post' || p0 === 'new-post') return 'blog';
+  if (p0 === 'private') return 'privateBooks';
+  if (p0 === 'ebooks') return parts[1] === 'private' ? 'privateEbooks' : 'ebooks';
+  if (p0 === 'new-article') return 'articles';
+  if (p0 === 'book' || p0 === 'read') return bookZone(parts[1]);
+  return p0;
+}
+let lastZone = null;
+function relockOnLeave(parts) {
+  const z = zoneOf(parts);
+  if (lastZone !== null && z !== lastZone && DB.getSettings().lockOnLeave !== false && Lock.enabled() && Lock.isOpen()) {
+    const keep = PASS_Z.has(lastZone) && (PROTECTED_Z.has(z) || z.startsWith('nb:'));
+    if (!keep) Lock.lock();
+  }
+  lastZone = z;
+}
 function route() {
   const { parts, params, path } = parseHash();
+  relockOnLeave(parts);
   const key = parts.length ? NAV_OF[parts[0]] || 'home' : 'home';
   const vis = navOrder();
   $$('.nav a').forEach((a) => a.classList.toggle('active', a.dataset.nav === key || (a.dataset.nav === 'more' && !vis.includes(key) && key !== 'home' && window.innerWidth < 900)));
@@ -943,12 +971,15 @@ async function renderSettings(sub = '') {
     const pinOn = Lock.enabled();
     const sections = [['journal', '📔 Günlük'], ['thoughts', '💡 Düşüncelerim'], ['reports', '📊 Raporlar'], ['privateBooks', '🔒 Özel Kitaplar'], ['privateEbooks', '🔒 Özel E-kitaplarım'], ['privateArticles', '🔒 Özel Makalelerim'], ['blog', '✍️ Blog'], ...DB.nbooks().map((n) => [lockKey(n.id), `${n.emoji || '📓'} ${n.name}`]), ['shopping', '🛒 Alışveriş Listem']];
     h += `<div class="card"><b>PIN</b>
-      <p class="hint">Tüm kilitli bölümler için <b>tek PIN</b> ve <b>tek kurtarma kodu</b> kullanılır. Kilidi bir kez açınca tüm kilitli bölümler açılır.</p>
+      <p class="hint">Tüm kilitli bölümler için <b>tek PIN</b> ve <b>tek kurtarma kodu</b> kullanılır.</p>
       ${pinOn ? `<p class="small">Durum: <b style="color:var(--teal)">Açık</b></p><div class="row-actions"><button class="btn" data-act="pin-change" style="flex:1">🔁 PIN'i değiştir</button><button class="btn" data-act="pin-regen" style="flex:1">🔑 Kurtarma kodunu yenile</button></div><button class="btn danger block" data-act="pin-off">Kilidi tamamen kapat</button>`
         : `<p class="small">Durum: <b>Kapalı</b></p><button class="btn primary block" data-act="pin-on">🔒 PIN kilidini aç</button>`}</div>
       <div class="card"><b>Kilitli bölümler</b><p class="hint">İşaretli bölümlere girerken PIN sorulur.${pinOn ? '' : ' (PIN açıldığında geçerli olur.)'}</p>
         ${sections.map(([k, l]) => `<label class="check"><input type="checkbox" data-lock="${esc(k)}" ${Lock.isLockedSection(k) ? 'checked' : ''}> ${esc(l)}</label>`).join('')}</div>
-      <div class="card"><label class="field"><span>Kullanılmazsa yeniden kilitle</span><select id="lock-min">${[1, 5, 15, 30, 60].map((m) => `<option value="${m}" ${String(s.lockMinutes) === String(m) ? 'selected' : ''}>${m} dakika sonra</option>`).join('')}</select></label>
+      <div class="card"><b>Ne zaman yeniden kilitlensin?</b>
+        <label class="check"><input type="checkbox" data-set="lockOnLeave" ${s.lockOnLeave !== false ? 'checked' : ''}> 🚪 Kilitli bölümden çıkınca hemen kilitle</label>
+        <p class="hint">Örneğin Özel Notlar'dan Not Defteri'ne dönünce özel notlar "Son notlar"da da görünmez; tekrar girerken PIN sorulur. İşareti kaldırırsanız kilit bir kez açılınca tüm kilitli bölümler açık kalır.</p>
+        <label class="field"><span>Kullanılmazsa yeniden kilitle</span><select id="lock-min">${[1, 5, 15, 30, 60].map((m) => `<option value="${m}" ${String(s.lockMinutes) === String(m) ? 'selected' : ''}>${m} dakika sonra</option>`).join('')}</select></label>
         <p class="hint">Uygulamayı kapattığınızda kilit her zaman yeniden devreye girer. Bu kilit meraklı gözlere karşıdır; veriler cihazda şifrelenmiş değildir.</p></div>`;
   } else if (sub === 'menu') {
     const vis = navOrder();

@@ -316,6 +316,7 @@ const DEFAULTS = {
   // Kilitli bölümler (PIN açıkken). 'nb:<id>' = not defteri, 'shopping' = alışveriş listesi
   locks: ['journal', 'thoughts', 'nb:nb-private'],
   lockMinutes: 5,
+  lockOnLeave: true,
   // Barkod
   scanVibrate: true, scanBeep: true, searchLinks: ['kitapyurdu', 'google'],
   // Alt menüde görünen bölümler ve sırası (Kitaplar ve Diğer sabit)
