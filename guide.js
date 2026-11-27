@@ -142,8 +142,10 @@ export const GUIDE = [
     h: `<ol><li>Ayarlar → <b>🔒 Kilit</b> → <b>PIN kilidini aç</b>. 4 haneli PIN'i iki kez girin.</li>
       <li>Size bir <b>kurtarma kodu</b> gösterilir (ör. K7M4-9QX2). <b>Mutlaka bir yere yazın</b>; bir daha gösterilmez.</li>
       <li>Aynı sayfadan hangi bölümlerin kilitli olacağını seçin: Günlük, Düşüncelerim, Özel Kitaplar, Özel E-kitaplarım, Özel Makalelerim, Blog, Özel Notlar, kendi defterleriniz, Alışveriş Listem.</li></ol>
-      <ul><li>Tüm kilitler için <b>tek PIN ve tek kurtarma kodu</b> vardır; kilidi bir kez açınca tüm kilitli bölümler açılır.</li>
-      <li>Belirlediğiniz süre (varsayılan 5 dakika) kullanmazsanız ya da uygulamayı kapatırsanız kilit yeniden devreye girer. 🔒 düğmesiyle hemen kilitleyebilirsiniz.</li>
+      <ul><li>Tüm kilitler için <b>tek PIN ve tek kurtarma kodu</b> vardır.</li>
+      <li>Kilitli bir bölümden <b>çıktığınız anda</b> kilit yeniden devreye girer (ör. Özel Notlar'dan Not Defteri'ne dönünce özel notlar "Son notlar"da görünmez). Bunu Ayarlar → Kilit → <b>Kilitli bölümden çıkınca hemen kilitle</b> ile kapatabilirsiniz.</li>
+      <li>Ayrıca belirlediğiniz süre (varsayılan 5 dakika) kullanmazsanız ya da uygulamayı kapatırsanız kilit yeniden devreye girer. 🔒 düğmesiyle hemen kilitleyebilirsiniz.</li>
+      <li>Kurtarma kodunu uygulamanın <b>dışında</b> saklayın (kâğıt, telefonun kendi not uygulaması). Kilitli bir defterde saklarsanız PIN'i unuttuğunuzda ona ulaşamazsınız.</li>
       <li><b>PIN'i unuttuysanız:</b> kilit ekranında <b>PIN'i unuttum</b> → kurtarma kodunu yazın → yeni PIN belirleyin.</li>
       <li>Kurtarma kodunu kaybettiyseniz PIN'i bilirken Ayarlar → Kilit → <b>Kurtarma kodunu yenile</b> ile yenisini alın.</li></ul>
       <p class="muted">Bu kilit, telefonunuzu eline alan birinin bu bölümleri açmasını engeller; veriler cihazda şifrelenmiş değildir.</p>`,

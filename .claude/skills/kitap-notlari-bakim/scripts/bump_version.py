@@ -21,7 +21,8 @@ targets = [p for p in root.glob('*.js')] + [root / 'index.html']
 changed = []
 for p in targets:
     s = p.read_text(encoding='utf-8')
-    t = s.replace(f'?v={old}', f'?v={new}')
+    # Yalnızca tam eşleşen ek: "?v=3.1" değişir, "?v=3.11.174" (kütüphane sürümü) değişmez
+    t = re.sub(r'\?v=' + re.escape(old) + r'(?![\d.]*\d)', f'?v={new}', s)
     if p.name == 'sw.js':
         t = t.replace(f"const V = '{old}'", f"const V = '{new}'")
     if p.name == 'app.js':
@@ -31,7 +32,7 @@ for p in targets:
         changed.append(p.name)
 
 # Doğrulama: eski ek hiçbir yerde kalmamalı
-left = [p.name for p in targets if f'?v={old}' in p.read_text(encoding='utf-8')]
+left = [p.name for p in targets if re.search(r'\?v=' + re.escape(old) + r'(?![\d.]*\d)', p.read_text(encoding='utf-8'))]
 if left:
     sys.exit(f'HATA: eski ek kaldı: {left}')
 print(f'{old} -> {new}; değişen dosyalar: {", ".join(sorted(changed))}')

@@ -1,9 +1,9 @@
 // 📝 Not Defteri: Genel Notlar, Özel Notlar ve kullanıcının eklediği defterler; Alışveriş Listem.
 // Her notun başlığı, metni, oluşturma ve son düzenleme tarih-saati vardır.
 // Hangi defterin kilitli olacağı Ayarlar → Kilit'ten seçilir (tek PIN).
-import * as DB from './db.js?v=3.3';
-import * as Lock from './lock.js?v=3.3';
-import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, rerender, go, fmtDateTime, norm, highlight } from './ui.js?v=3.3';
+import * as DB from './db.js?v=3.4';
+import * as Lock from './lock.js?v=3.4';
+import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, rerender, go, fmtDateTime, norm, highlight } from './ui.js?v=3.4';
 
 const NB_EMOJIS = ['📒', '📓', '📔', '📕', '📗', '📘', '📙', '🔐', '💼', '🏠', '🎓', '🕌', '💡', '❤️', '🩺', '💰', '✈️', '🍳', '🌱', '🎯', '🧠', '📌', '⭐', '🗂️'];
 const SHOP_EMOJIS = ['🛒', '💊', '🏠', '🥦', '🍞', '🧴', '👕', '🎁', '📚', '🔧', '🐾', '👶', '🖊️', '💻'];

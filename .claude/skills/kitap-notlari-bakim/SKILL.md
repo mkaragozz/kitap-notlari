@@ -52,6 +52,9 @@ python3 .claude/skills/kitap-notlari-bakim/scripts/bump_version.py 3.3   # hepsi
 ```
 
 Yeni bir `.js` modülü eklersen `sw.js` içindeki `MODS` listesine de ekle; yoksa internetsiz açılmaz.
+`lib/` kütüphanelerinin kendi sürüm ekleri vardır (`pdf.min.js?v=3.11.174`); bunlara elle `sed` uygulama — eski bir
+toplu değiştirme bunları `3.31.174` yapmıştı. Betik yalnızca tam eşleşen eki değiştirir.
+`sw.js` `/vadeli/` yolunu bilerek atlar (aynı sitede ayrı uygulama vardı); bu satırı kaldırma.
 
 ## Veri değişiklikleri
 
@@ -65,11 +68,14 @@ Yeni bir `.js` modülü eklersen `sw.js` içindeki `MODS` listesine de ekle; yok
 
 ## İş akışı
 
-1. İsteği maddelere ayır; belirsiz olanı sor.
-2. Kodu değiştir. Bash güvenlik kontrolü `$$` ve `rm` içeren heredoc'ları engeller: çok satırlı düzenlemeler için
+1. Önce `git fetch origin main` ve ana daldaki yeni commit'leri çalışma dalına birleştir: kullanıcı başka oturumlarda da
+   bu depoda çalışıyor (ör. aynı siteye ayrı bir uygulama eklenip taşındı, sürüm yükseltildi). Ana dalda kullanılmış
+   bir sürüm numarasını tekrar kullanma; bir üstüne çık.
+2. İsteği maddelere ayır; belirsiz olanı sor.
+3. Kodu değiştir. Bash güvenlik kontrolü `$$` ve `rm` içeren heredoc'ları engeller: çok satırlı düzenlemeler için
    betiği Write ile scratchpad'e yaz, `python3 betik.py` ile çalıştır (her `old` metnin varlığını `assert` et).
-3. Sürümü yükselt (`bump_version.py`).
-4. Yerel sunucu + duman testi:
+4. Sürümü yükselt (`bump_version.py`).
+5. Yerel sunucu + duman testi:
    ```bash
    (curl -s -o /dev/null http://localhost:8765/ || (nohup python3 -m http.server 8765 >/dev/null 2>&1 &)); sleep 1
    node .claude/skills/kitap-notlari-bakim/scripts/smoke_test.js <çıktı-klasörü>
@@ -77,9 +83,9 @@ Yeni bir `.js` modülü eklersen `sw.js` içindeki `MODS` listesine de ekle; yok
    Tüm rotaları gezer, sayfa hatalarını yazar, ana sayfa ve Diğer'in ekran görüntüsünü alır. Değiştirdiğin
    ekranı ayrıca Playwright ile örnek veri girerek test et (Chromium hazır; `playwright install` çalıştırma).
    Kamera ile barkod ve dokunarak metin seçme yalnızca gerçek telefonda denenebilir; bunu kullanıcıya söyle.
-5. Ekran görüntülerini gönder, değişiklikleri madde madde (kullanıcının diliyle) anlat, "yayınla" de diye bekle.
-6. Çalışma dalına commit + push (commit iletisi sonuna oturumun istediği atıf satırları).
-7. Kullanıcı **"yayınla"** deyince: PR aç (`main` ← çalışma dalı), birleştir, sonra canlıyı doğrula:
+6. Ekran görüntülerini gönder, değişiklikleri madde madde (kullanıcının diliyle) anlat, "yayınla" de diye bekle.
+7. Çalışma dalına commit + push (commit iletisi sonuna oturumun istediği atıf satırları).
+8. Kullanıcı **"yayınla"** deyince: PR aç (`main` ← çalışma dalı), birleştir, sonra canlıyı doğrula:
    ```bash
    curl -s "https://mkaragozz.github.io/kitap-notlari/sw.js?t=$RANDOM" | grep -o "const V = '[0-9.]*'"
    ```
