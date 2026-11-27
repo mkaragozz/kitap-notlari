@@ -25,6 +25,8 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+  // Aynı sitedeki ayrı uygulama (Vadeli Tarayıcı, /vadeli/): kendi service worker'ı yönetir, burada hiç karışma.
+  if (url.origin === location.origin && url.pathname.includes('/vadeli/')) return;
   // Uygulama dosyaları: bu sürümün önbelleğinden (hızlı ve internetsiz açılır).
   // Güncelleme: uygulama dosyaları değiştiğinde yukarıdaki VERSION değeri de değiştirilmelidir;
   // tarayıcı yeni sw.js'i görünce bütün dosyaları birlikte yeniden indirir.
