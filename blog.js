@@ -1,21 +1,24 @@
 // ✍️ Blog: yazılarınızı yazıp kaydettiğiniz, arşivlediğiniz kişisel blog (internette yayınlanmaz).
 // Başlık, biçimlendirme (kalın, italik, ara başlık, liste, alıntı, bağlantı), kapak fotoğrafı, kategori, etiket,
 // taslak / tamamlandı durumu, yazma ve düzenleme tarihi, ay-yıl arşivi; kopyalama, Word ve PDF.
-import * as DB from './db.js?v=3.4';
-import * as EX from './export.js?v=3.4';
-import * as Lock from './lock.js?v=3.4';
-import { $, esc, view, toast, confirmDialog, rerender, go, norm, fmtDateTime, fmtDate, MONTHS, pickFiles, fileToDataUrl, copyText, highlight } from './ui.js?v=3.4';
+import * as DB from './db.js?v=3.5';
+import * as EX from './export.js?v=3.5';
+import * as Lock from './lock.js?v=3.5';
+import { $, esc, view, toast, confirmDialog, rerender, go, norm, fmtDateTime, fmtDate, MONTHS, pickFiles, fileToDataUrl, copyText, highlight, safeSrc } from './ui.js?v=3.5';
 
 const state = { status: 'all', cat: 'all', q: '' };
 const ALLOWED = new Set(['P', 'BR', 'B', 'STRONG', 'I', 'EM', 'U', 'H2', 'H3', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'A']);
 
+// Güvenlik: HTML "etkisiz" bir belgede çözülür (resim yüklenmez, olay işleyicisi çalışmaz).
+// Yedekten gelen yazılar da her gösterimde bu süzgeçten geçer.
+const INERT = document.implementation.createHTMLDocument('');
 export function cleanHtml(html) {
-  const d = document.createElement('div'); d.innerHTML = html;
+  const d = INERT.createElement('div'); d.innerHTML = html || '';
   const walk = (el) => [...el.children].forEach((c) => {
     let tag = c.tagName.toUpperCase();
     if (['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'META', 'LINK'].includes(tag)) { c.remove(); return; }
-    if (tag === 'DIV') { const p = document.createElement('p'); while (c.firstChild) p.appendChild(c.firstChild); c.replaceWith(p); walk(el); return; }
-    if (tag === 'H1') { const h = document.createElement('h2'); while (c.firstChild) h.appendChild(c.firstChild); c.replaceWith(h); tag = 'H2'; walk(el); return; }
+    if (tag === 'DIV') { const p = INERT.createElement('p'); while (c.firstChild) p.appendChild(c.firstChild); c.replaceWith(p); walk(el); return; }
+    if (tag === 'H1') { const h = INERT.createElement('h2'); while (c.firstChild) h.appendChild(c.firstChild); c.replaceWith(h); tag = 'H2'; walk(el); return; }
     if (!ALLOWED.has(tag)) { const f = document.createDocumentFragment(); while (c.firstChild) f.appendChild(c.firstChild); c.replaceWith(f); walk(el); return; }
     [...c.attributes].forEach((a) => { if (!(tag === 'A' && a.name === 'href')) c.removeAttribute(a.name); });
     if (tag === 'A') { const h = c.getAttribute('href') || ''; if (!/^https?:|^mailto:/i.test(h)) c.removeAttribute('href'); else { c.setAttribute('target', '_blank'); c.setAttribute('rel', 'noopener'); } }
@@ -24,7 +27,7 @@ export function cleanHtml(html) {
   walk(d);
   return d.innerHTML.replace(/<p><br><\/p>$/g, '').trim();
 }
-const plain = (html) => { const d = document.createElement('div'); d.innerHTML = html || ''; return (d.innerText || d.textContent || '').trim(); };
+const plain = (html) => { const d = INERT.createElement('div'); d.innerHTML = html || ''; return (d.innerText || d.textContent || '').trim(); };
 const words = (html) => (plain(html).match(/\S+/g) || []).length;
 const postDate = (p) => p.createdAt || p.updatedAt || '';
 function lockBtn() { return Lock.enabled() && Lock.isLockedSection('blog') ? '<button class="btn sm ghost" data-act="lock-now" title="Kilitle">🔒</button>' : ''; }
@@ -85,7 +88,7 @@ export function renderPost(id) {
       <div class="q-ref">${p.status === 'draft' ? '<span class="badge draft">📝 Taslak</span>' : '<span class="badge done">✅ Tamamlandı</span>'}${p.category ? `<span class="badge nb">📁 ${esc(p.category)}</span>` : ''}
         <span class="small">🕒 Yazılış: ${esc(fmtDateTime(p.createdAt))}</span>${p.editedAt ? `<span class="small muted">· Düzenleme: ${esc(fmtDateTime(p.editedAt))}</span>` : ''}<span class="small muted">· ${words(p.body)} kelime</span></div>
       ${(p.tags || []).length ? `<div class="q-ref">${p.tags.map((t) => `<span class="chip">#${esc(t)}</span>`).join('')}</div>` : ''}
-      <div class="pv-body">${p.body || '<p class="muted">Boş yazı</p>'}</div>
+      <div class="pv-body">${cleanHtml(p.body) || '<p class="muted">Boş yazı</p>'}</div>
     </article>
     <div class="row-actions">
       <button class="btn" data-act="post-copy" data-id="${p.id}" style="flex:1">📋 Metni kopyala</button>
@@ -111,7 +114,7 @@ export function renderPostEditor(id) {
         <button type="button" data-cmd="insertUnorderedList" title="Madde işaretli liste">•</button><button type="button" data-cmd="insertOrderedList" title="Numaralı liste">1.</button>
         <button type="button" data-cmd="quote" title="Alıntı">❝</button><button type="button" data-cmd="link" title="Bağlantı">🔗</button>
         <button type="button" data-cmd="removeFormat" title="Biçimi temizle">⌫</button><button type="button" data-cmd="undo" title="Geri al">↶</button></div>
-      <div class="pe-body" id="pe-body" contenteditable="true" data-ph="Yazmaya başlayın…">${p.body || ''}</div>
+      <div class="pe-body" id="pe-body" contenteditable="true" data-ph="Yazmaya başlayın…">${cleanHtml(p.body)}</div>
       <div class="small muted" id="pe-count"></div>
     </div>
     <div class="card">
@@ -157,8 +160,8 @@ export function renderPostEditor(id) {
 }
 
 function postHtmlDoc(p) {
-  return `<article class="print-doc">${p.cover ? `<img src="${p.cover}" style="max-width:100%;border-radius:6pt" alt="">` : ''}<h1>${esc(p.title || 'Başlıksız yazı')}</h1>
-    <p class="pd-meta">${esc(fmtDate(p.createdAt))}${p.category ? ' · ' + esc(p.category) : ''}${(p.tags || []).length ? ' · ' + p.tags.map((t) => '#' + esc(t)).join(' ') : ''}</p><div>${p.body}</div></article>`;
+  return `<article class="print-doc">${p.cover ? `<img src="${safeSrc(p.cover)}" style="max-width:100%;border-radius:6pt" alt="">` : ''}<h1>${esc(p.title || 'Başlıksız yazı')}</h1>
+    <p class="pd-meta">${esc(fmtDate(p.createdAt))}${p.category ? ' · ' + esc(p.category) : ''}${(p.tags || []).length ? ' · ' + p.tags.map((t) => '#' + esc(t)).join(' ') : ''}</p><div>${cleanHtml(p.body)}</div></article>`;
 }
 export const BLOG_ACTIONS = {
   'blog-status': (el) => { state.status = el.dataset.s; rerender(); },
@@ -166,13 +169,13 @@ export const BLOG_ACTIONS = {
   'post-copy': (el) => { const p = DB.getPost(el.dataset.id); copyText(`${p.title}\n\n${plain(p.body)}`); },
   'post-copyhtml': async (el) => {
     const p = DB.getPost(el.dataset.id);
-    const html = `<h1>${esc(p.title)}</h1>${p.body}`;
+    const html = `<h1>${esc(p.title)}</h1>${cleanHtml(p.body)}`;
     try { await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([`${p.title}\n\n${plain(p.body)}`], { type: 'text/plain' }) })]); toast('Biçimli olarak kopyalandı'); }
     catch (e) { copyText(html); }
   },
   'post-word': async (el) => {
     const p = DB.getPost(el.dataset.id);
-    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>${esc(p.title)}</title></head><body style="font-family:Calibri,sans-serif">${p.cover ? `<img src="${p.cover}" width="600">` : ''}<h1>${esc(p.title)}</h1><p style="color:#666">${esc(fmtDate(p.createdAt))}${p.category ? ' · ' + esc(p.category) : ''}</p>${p.body}</body></html>`;
+    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>${esc(p.title)}</title></head><body style="font-family:Calibri,sans-serif">${p.cover ? `<img src="${safeSrc(p.cover)}" width="600">` : ''}<h1>${esc(p.title)}</h1><p style="color:#666">${esc(fmtDate(p.createdAt))}${p.category ? ' · ' + esc(p.category) : ''}</p>${cleanHtml(p.body)}</body></html>`;
     const r = await EX.saveFile(new Blob(['﻿', html], { type: 'application/msword' }), `${EX.safeName(p.title || 'blog-yazisi')}.doc`);
     if (r !== 'cancelled') toast('Word dosyası hazır ✓');
   },

@@ -1,9 +1,9 @@
 // 📚 Kitap listeleri: Okuyorum, Okunacak, Kütüphanem, Satın Alınacak, Seçkin, Özel.
 // Kitap bir kez kaydedilir; listeler işaretlerle çalışır. Konu başlıkları kitap ve makalelerde ortaktır.
-import * as DB from './db.js?v=3.4';
-import * as EX from './export.js?v=3.4';
-import * as Lock from './lock.js?v=3.4';
-import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, rerender, go, norm, today, fmtDate } from './ui.js?v=3.4';
+import * as DB from './db.js?v=3.5';
+import * as EX from './export.js?v=3.5';
+import * as Lock from './lock.js?v=3.5';
+import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, rerender, go, norm, today, fmtDate } from './ui.js?v=3.5';
 
 // Ayrı bölümler (menüde / Diğer'de): Kütüphanem, Satın Alınacaklar, Seçkin, Özel Kitaplar, E-kitaplar.
 // Okuma listeleri (ana sayfadan açılır): Okuyorum, Okumak istediklerim, Okuduklarım.
@@ -27,7 +27,7 @@ export const listHref = (key) => (key === 'privateEbooks' ? '#/ebooks/private' :
 const COLORS = [['#7C5CFF', '#FF5DA2'], ['#FF6B57', '#FFB020'], ['#10B8A6', '#2F9BFF'], ['#FF5DA2', '#FFB020'], ['#2F9BFF', '#7C5CFF'], ['#10B8A6', '#7CD957'], ['#FF8A3D', '#FF5D7A']];
 function hashStr(s) { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h); }
 export function thumbHtml(b) {
-  if (b.cover) return `<div class="thumb"><img src="${esc(b.cover)}" alt="" onerror="this.remove()"></div>`;
+  if (b.cover) return `<div class="thumb"><img src="${esc(b.cover)}" alt="" data-hide-err></div>`;
   const [a, c] = COLORS[hashStr(b.title) % COLORS.length];
   return `<div class="thumb" style="background:linear-gradient(150deg,${a},${c})"><span>${esc((b.title || '?').slice(0, 2))}</span></div>`;
 }

@@ -1,23 +1,23 @@
-import * as DB from './db.js?v=3.4';
-import * as EX from './export.js?v=3.4';
-import * as Lock from './lock.js?v=3.4';
-import * as Scan from './scanner.js?v=3.4';
+import * as DB from './db.js?v=3.5';
+import * as EX from './export.js?v=3.5';
+import * as Lock from './lock.js?v=3.5';
+import * as Scan from './scanner.js?v=3.5';
 import { $, $$, esc, view, nav, toast, openSheet, closeSheet, confirmDialog, modal, today, fmtDate, norm, highlight,
-  pickFiles, fileToDataUrl, copyText, starPickerHtml, bindStarPicker, longDate, fmtTime } from './ui.js?v=3.4';
+  pickFiles, fileToDataUrl, copyText, starPickerHtml, bindStarPicker, longDate, fmtTime } from './ui.js?v=3.5';
 import { pageNum, sortQuotes, allTags, quoteCard, thoughtCard, thoughtText, openRelated, starFilterHtml, applyStarFilter,
-  tagInputHtml, bindTagInput } from './cards.js?v=3.4';
-import { renderThoughts, renderThought, THOUGHT_ACTIONS } from './thoughts.js?v=3.4';
-import { renderJournal, renderJournalCal, JOURNAL_ACTIONS, getPrompt, managePrompts } from './journal.js?v=3.4';
-import { renderNotes, renderNotebook, renderShopping, noteCard, nbIsOpen, NOTE_ACTIONS, openNbookEditor, openShopcatEditor, moveOrder, lockKey } from './notes.js?v=3.4';
-import { manageNotebooks as manageThoughtNotebooks } from './thoughts.js?v=3.4';
-import { GUIDE } from './guide.js?v=3.4';
-import { renderReports, REPORT_ACTIONS } from './reports.js?v=3.4';
-import { LISTS, SECTION_ROUTES, PRIVATE_LOCK, privateLockOf, listHref, inList, renderListTab, bindListTab, LIST_ACTIONS, topicChips, topicPickerHtml, bindTopicPicker, openTopicEditor } from './lists.js?v=3.4';
-import { renderReader, leaveReader, readerRefresh, hooks as readerHooks, readMeta, fileKind, KIND_LABEL, HL_COLORS, HL_NAMES, BG_PRESETS, FONTS, readerPrefs, autoFg } from './reader.js?v=3.4';
-import { renderArticles, renderArticleForm, ARTICLE_ACTIONS } from './articles.js?v=3.4';
-import { renderBlog, renderPost, renderPostEditor, BLOG_ACTIONS, postPlain } from './blog.js?v=3.4';
+  tagInputHtml, bindTagInput } from './cards.js?v=3.5';
+import { renderThoughts, renderThought, THOUGHT_ACTIONS } from './thoughts.js?v=3.5';
+import { renderJournal, renderJournalCal, JOURNAL_ACTIONS, getPrompt, managePrompts } from './journal.js?v=3.5';
+import { renderNotes, renderNotebook, renderShopping, noteCard, nbIsOpen, NOTE_ACTIONS, openNbookEditor, openShopcatEditor, moveOrder, lockKey } from './notes.js?v=3.5';
+import { manageNotebooks as manageThoughtNotebooks } from './thoughts.js?v=3.5';
+import { GUIDE } from './guide.js?v=3.5';
+import { renderReports, REPORT_ACTIONS } from './reports.js?v=3.5';
+import { LISTS, SECTION_ROUTES, PRIVATE_LOCK, privateLockOf, listHref, inList, renderListTab, bindListTab, LIST_ACTIONS, topicChips, topicPickerHtml, bindTopicPicker, openTopicEditor } from './lists.js?v=3.5';
+import { renderReader, leaveReader, readerRefresh, hooks as readerHooks, readMeta, fileKind, KIND_LABEL, HL_COLORS, HL_NAMES, BG_PRESETS, FONTS, readerPrefs, autoFg } from './reader.js?v=3.5';
+import { renderArticles, renderArticleForm, ARTICLE_ACTIONS } from './articles.js?v=3.5';
+import { renderBlog, renderPost, renderPostEditor, BLOG_ACTIONS, postPlain } from './blog.js?v=3.5';
 
-const APP_VERSION = '3.4';
+const APP_VERSION = '3.5';
 window.__knStarted = true; // index.html'deki güvenlik ağı için: modüller sorunsuz yüklendi
 const COLORS = [['#7C5CFF', '#FF5DA2'], ['#FF6B57', '#FFB020'], ['#10B8A6', '#2F9BFF'], ['#FF5DA2', '#FFB020'], ['#2F9BFF', '#7C5CFF'], ['#10B8A6', '#7CD957'], ['#FF8A3D', '#FF5D7A']];
 const TAG_COLORS = ['#7C5CFF', '#FF5DA2', '#10B8A6', '#FF6B57', '#2F9BFF', '#FFB020', '#8E5CF7', '#13A88F'];
@@ -25,7 +25,7 @@ const STATUS = { okunuyor: '📖 Okunuyor', okunacak: '🕮 Okunacak', bitti: '�
 
 function hashStr(s) { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h); }
 function coverHtml(b) {
-  if (b.cover) return `<div class="cover"><img src="${esc(b.cover)}" alt="" onerror="this.remove()"></div>`;
+  if (b.cover) return `<div class="cover"><img src="${esc(b.cover)}" alt="" data-hide-err></div>`;
   const [a, c] = COLORS[hashStr(b.title) % COLORS.length];
   return `<div class="cover" style="background:linear-gradient(150deg,${a},${c})"><span>${esc(b.title)}</span></div>`;
 }
@@ -166,7 +166,7 @@ function route() {
     else renderHome();
   } catch (err) {
     console.error(err);
-    view.innerHTML = `<div class="empty"><div class="e">😕</div><h3>Bir hata oluştu</h3><p>${esc(err.message)}</p><p class="small mt">Uygulama yeni güncellendiyse eski dosyalar karışmış olabilir. Bu düğme yalnızca uygulama dosyalarını yeniden indirir, <b>notlarınız silinmez</b>.</p><button class="btn primary" onclick="window.__knRepair && window.__knRepair()">🔄 Onar ve yeniden aç</button></div>`;
+    view.innerHTML = `<div class="empty"><div class="e">😕</div><h3>Bir hata oluştu</h3><p>${esc(err.message)}</p><p class="small mt">Uygulama yeni güncellendiyse eski dosyalar karışmış olabilir. Bu düğme yalnızca uygulama dosyalarını yeniden indirir, <b>notlarınız silinmez</b>.</p><button class="btn primary" data-repair>🔄 Onar ve yeniden aç</button></div>`;
   }
   if (path !== lastPath) { window.scrollTo(0, 0); lastPath = path; }
   updateBadge();
@@ -1238,7 +1238,7 @@ function setupServiceWorker() {
 
 async function start() {
   try { await DB.load(); } catch (err) {
-    view.innerHTML = `<div class="empty"><div class="e">⚠️</div><h3>Veritabanı açılamadı</h3><p>${esc(err.message)}</p><p class="small">Gizli sekmede olabilirsiniz ya da tarayıcı depolamayı engelliyor olabilir.</p><p class="small mt">Uygulama yeni güncellendiyse eski dosyalar karışmış olabilir. Bu düğme yalnızca uygulama dosyalarını yeniden indirir, <b>notlarınız silinmez</b>.</p><button class="btn primary" onclick="window.__knRepair && window.__knRepair()">🔄 Onar ve yeniden aç</button></div>`;
+    view.innerHTML = `<div class="empty"><div class="e">⚠️</div><h3>Veritabanı açılamadı</h3><p>${esc(err.message)}</p><p class="small">Gizli sekmede olabilirsiniz ya da tarayıcı depolamayı engelliyor olabilir.</p><p class="small mt">Uygulama yeni güncellendiyse eski dosyalar karışmış olabilir. Bu düğme yalnızca uygulama dosyalarını yeniden indirir, <b>notlarınız silinmez</b>.</p><button class="btn primary" data-repair>🔄 Onar ve yeniden aç</button></div>`;
     return;
   }
   // Özel Kitaplar kilitliyken her yerde gizlensin; eski kurulumlarda bu kilidi varsayılan olarak ekle

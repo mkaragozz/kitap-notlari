@@ -4,10 +4,10 @@
 // SÜRÜM DEĞİŞTİRİRKEN: aşağıdaki V değerini ve tüm dosyalardaki "?v=..." eklerini birlikte değiştirin
 // (index.html, *.js içindeki import satırları). Sürüm eki her dosyaya yeni bir adres verir; böylece
 // GitHub'ın önbelleği eski dosyayı veremez ve eski/yeni dosyalar karışmaz.
-const V = '3.4';
+const V = '3.5';
 const VERSION = 'kn-v' + V;
 const MODS = ['app', 'ui', 'db', 'cards', 'lock', 'scanner', 'thoughts', 'journal', 'export', 'notes', 'guide', 'lists', 'reader', 'articles', 'blog', 'reports'].map((m) => `${m}.js?v=${V}`);
-const SHELL = ['./', 'index.html', `styles.css?v=${V}`, ...MODS, 'lib/html5-qrcode.min.js?v=2.3.8', 'lib/pdf.min.js?v=3.11.174', 'lib/pdf.worker.min.js?v=3.11.174', 'lib/mammoth.browser.min.js?v=1.8.0', 'lib/jszip.min.js?v=3.10.1',
+const SHELL = ['./', 'index.html', `styles.css?v=${V}`, ...MODS, 'lib/html5-qrcode.min.js?v=2.3.8', 'lib/pdf.min.js?v=3.11.174', 'lib/pdf.worker.min.js?v=3.11.174', 'lib/mammoth.browser.min.js?v=1.13.0', 'lib/jszip.min.js?v=3.10.1',
   'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'privacy.html'];
 const CDN = /^https:\/\/(cdn\.jsdelivr\.net|cdnjs\.cloudflare\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)\//;
 
@@ -37,6 +37,7 @@ self.addEventListener('fetch', (e) => {
         // Sayfa adresi "?r=..." gibi ekler taşıyabilir; uygulama dosyalarında ise sürüm eki birebir eşleşmeli.
         const hit = nav ? await c.match('index.html') : await c.match(req);
         if (hit) return hit;
+        if (url.pathname.includes('/lib/')) { try { const res = await fetch(req); if (res.ok) c.put(req, res.clone()); return res; } catch (err) { return Response.error(); } }
         try { return await fetch(req); } catch (err) { return nav ? c.match('index.html') : Response.error(); }
       })
     );

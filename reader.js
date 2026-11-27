@@ -5,15 +5,15 @@
 // - Metni seçip "Alıntılarıma aktar": kitabın Alıntılar bölümüne, renkli vurguyla; orijinal dosyadaki yeri
 //   (PDF/Word/TXT/EPUB, sayfa ya da konum) kaynak/dipnot olarak alıntıya yazılır.
 // - Sayfaya "tekrar oku" işareti ve sayfa yorumu; kaldığı yerden devam.
-import * as DB from './db.js?v=3.4';
-import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, go, fmtDateTime } from './ui.js?v=3.4';
+import * as DB from './db.js?v=3.5';
+import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, go, fmtDateTime } from './ui.js?v=3.5';
 
 export const hooks = { openQuoteEditor: null };
 
 const LIBS = {
   pdf: 'lib/pdf.min.js?v=3.11.174',
   pdfWorker: 'lib/pdf.worker.min.js?v=3.11.174',
-  mammoth: 'lib/mammoth.browser.min.js?v=1.8.0',
+  mammoth: 'lib/mammoth.browser.min.js?v=1.13.0',
   jszip: 'lib/jszip.min.js?v=3.10.1',
 };
 const loaded = {};
@@ -74,7 +74,7 @@ export async function readMeta(file) {
   try {
     if (kind === 'pdf') {
       const L = await pdfLib();
-      const doc = await L.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+      const doc = await L.getDocument({ isEvalSupported: false, data: new Uint8Array(await file.arrayBuffer()) }).promise;
       const md = await doc.getMetadata().catch(() => null);
       const info = (md && md.info) || {};
       const out = { ...base, pages: doc.numPages };
@@ -121,6 +121,7 @@ function sanitize(root, imgMap = null) {
   walk(root);
   return root;
 }
+const INERT = document.implementation.createHTMLDocument('');
 function htmlToFrag(html, imgMap) { const d = new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html'); return sanitize(d.body, imgMap).innerHTML; }
 function textToHtml(text) {
   return String(text).replace(/\r\n?/g, '\n').split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean)
@@ -169,7 +170,8 @@ async function epubToHtml(blob, onProgress) {
       const p = resolvePath(chDir, src); const zf = zip.file(p);
       if (zf && !imgs[src]) { const u = URL.createObjectURL(await zf.async('blob')); objectUrls.push(u); imgs[src] = u; }
     }
-    const tmp = document.createElement('div');
+    // Güvenlik: içerik önce "etkisiz" bir belgede çözülür (resim yüklenmez, olay işleyicisi çalışmaz), sonra temizlenir
+    const tmp = INERT.createElement('div');
     tmp.innerHTML = new XMLSerializer().serializeToString(body).replace(/^<body[^>]*>|<\/body>$/g, '');
     sanitize(tmp, (src) => imgs[src] || null);
     html += `<section class="rd-chap">${tmp.innerHTML}</section>`;
@@ -209,7 +211,7 @@ async function loadContent(book, mode, onProgress) {
   let out;
   if (kind === 'pdf') {
     const L = await pdfLib();
-    const pdf = await L.getDocument({ data: new Uint8Array(await rec.blob.arrayBuffer()) }).promise;
+    const pdf = await L.getDocument({ isEvalSupported: false, data: new Uint8Array(await rec.blob.arrayBuffer()) }).promise;
     if (mode === 'text') {
       let html = rec.textHtml;
       if (!html) { html = await pdfToHtml(pdf, onProgress); rec.textHtml = html; DB.putFile(rec).catch(() => {}); }
