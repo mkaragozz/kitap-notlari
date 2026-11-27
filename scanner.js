@@ -1,8 +1,8 @@
 // Barkod okuyucu + ISBN ile kitap bilgisi bulma.
 // Sıra: 1) cihazdaki ISBN hafızası (daha önce elle girilen kitaplar), 2) Google Books + Open Library.
 // Bulunamazsa Kitapyurdu / Google vb. arama bağlantıları gösterilir (Ayarlar'dan seçilir).
-import * as DB from './db.js?v=3.3';
-import { $, esc, openSheet, closeSheet, pickFiles, fileToDataUrl, toast } from './ui.js?v=3.3';
+import * as DB from './db.js?v=3.4';
+import { $, esc, openSheet, closeSheet, pickFiles, fileToDataUrl, toast } from './ui.js?v=3.4';
 
 const LIB = 'lib/html5-qrcode.min.js?v=2.3.8';
 let libLoad = null;
