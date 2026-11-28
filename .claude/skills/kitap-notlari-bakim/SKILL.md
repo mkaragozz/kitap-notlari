@@ -30,8 +30,7 @@ GitHub Pages `main` dalından yayınlanır. Kullanıcı Türkçe konuşur, tekni
 | `app.js` | Yönlendirme (`route()`, `NAV_OF`, `NAV_ITEMS`), ana sayfa (`renderHome`), kitap formu, alıntı editörü, Diğer (`renderMore`), Ayarlar alt sayfaları, açılış göçleri (migration) ve `APP_VERSION` |
 | `db.js` | IndexedDB (`DB_VERSION`, `STORES`, `files` deposu), ayar varsayılanları (`DEFAULTS`), yedek al/içe aktar |
 | `lists.js` | Kitap bölümleri: `LISTS`, `SECTION_ROUTES`, `PRIVATE_LOCK`, liste kartları, kategoriler, katalog PDF |
-| `reader.js` | E-kitap okuyucu (PDF/Word/TXT/EPUB), vurgular, "Alıntılarıma aktar", sesli okumanın okuyucu bağlantısı (cümle listesi, CSS Highlight ile cümle/kelime vurgusu, sayfa takibi) |
-| `tts.js` | 🔊 Sesli okuma: yalnızca telefonun Türkçe sesi (Web Speech API), duraklama, tahmini kelime takibi, okuyucu dışında süren okuma + alttaki küçük oynatıcı. (3.5.2'deki indirilebilir Piper/MMS sesleri 3.5.3'te kaldırıldı: telefonda çok yavaştı.) |
+| `reader.js` | E-kitap okuyucu (PDF/Word/TXT/EPUB), vurgular, "Alıntılarıma aktar" |
 | `cards.js`, `export.js` | Alıntı/düşünce kartları; PDF/Word/Excel dışa aktarma, kaynak satırı |
 | `articles.js`, `blog.js`, `notes.js`, `thoughts.js`, `journal.js`, `reports.js` | Bölümler |
 | `lock.js` | PIN, kurtarma kodu, bölüm kilitleri (`isOpen(section)`) |
@@ -98,6 +97,13 @@ toplu değiştirme bunları `3.31.174` yapmıştı. Betik yalnızca tam eşleşe
    ```
    Pages 1-3 dk gecikir; 30 sn arayla tekrar dene. Yeni sürüm görününce kullanıcıya: "Uygulamayı tamamen kapatıp
    açın; '✨ Uygulama güncellendi (sürüm X.Y)' bildirimi çıkar" de.
+
+## Kaldırılan özellikler (tekrar önerme)
+
+- **Sesli okuma (3.5.1–3.5.3, 3.5.4'te tamamen kaldırıldı):** Telefonun sesi tek ve "robot gibi", "yanlış okuyor";
+  indirilebilir sinir ağı sesleri (Piper/MMS) telefonda 23/77 sn gecikti. Kullanıcı "ses özelliği koymadan önceki
+  versiyona dön" dedi. Kullanıcı açıkça istemedikçe yeniden önerme.
+- **Yapay zekâ özellikleri (2.0'da kaldırıldı):** API anahtarı/ücret istemiyor.
 
 ## Sık sorulanlar
 

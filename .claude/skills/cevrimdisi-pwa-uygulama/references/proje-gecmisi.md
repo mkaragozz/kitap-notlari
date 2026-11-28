@@ -18,6 +18,7 @@ Amaç: aynı hataları tekrar yapmamak; benzer bir uygulamada hangi sırayla ile
 | 27.11.2026 | 3.4 | Kilitli bölümden çıkınca hemen yeniden kilit (ayarlanabilir); kütüphane sürüm ekleri düzeltildi |
 | 27.11.2026 | 3.5.1 | Sesli okuma (telefonun sesi; ses/hız/ton, cümle + kelime takibi); üç haneli sürüm numarası |
 | 28.11.2026 | 3.5.2 | İndirilebilir Piper (erkek) ve MMS Türkçe sesleri, duraklamalı okuma, yalnızca Türkçe sesler, okuyucu dışında süren okuma + küçük oynatıcı, tahmini kelime takibi |
+| 28.11.2026 | 3.5.4 | Sesli okuma tamamen kaldırıldı (kullanıcı: "beğenmedim, yanlış okuyor; ses öncesi sürüme dön"); ses sonrası yapılan güvenlik düzeltmeleri ve Ayarlar düzeni korundu |
 | 28.11.2026 | 3.5.3 | Piper/MMS kaldırıldı (telefonda ilk sese 23/77 sn), yalnızca telefonun sesi; CSP'den `wasm-unsafe-eval` geri alındı; indirilmiş ses önbelleği siliniyor |
 | 27.11.2026 | 3.5 | Güvenlik sürümü: CSP, pdf.js önlemi, etkisiz belgede HTML temizleme, `safeSrc`, mammoth 1.13.0, docx/xlsx yerel kopya |
 

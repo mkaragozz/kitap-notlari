@@ -1,10 +1,10 @@
 // ✍️ Blog: yazılarınızı yazıp kaydettiğiniz, arşivlediğiniz kişisel blog (internette yayınlanmaz).
 // Başlık, biçimlendirme (kalın, italik, ara başlık, liste, alıntı, bağlantı), kapak fotoğrafı, kategori, etiket,
 // taslak / tamamlandı durumu, yazma ve düzenleme tarihi, ay-yıl arşivi; kopyalama, Word ve PDF.
-import * as DB from './db.js?v=3.5.3';
-import * as EX from './export.js?v=3.5.3';
-import * as Lock from './lock.js?v=3.5.3';
-import { $, esc, view, toast, confirmDialog, rerender, go, norm, fmtDateTime, fmtDate, MONTHS, pickFiles, fileToDataUrl, copyText, highlight, safeSrc } from './ui.js?v=3.5.3';
+import * as DB from './db.js?v=3.5.4';
+import * as EX from './export.js?v=3.5.4';
+import * as Lock from './lock.js?v=3.5.4';
+import { $, esc, view, toast, confirmDialog, rerender, go, norm, fmtDateTime, fmtDate, MONTHS, pickFiles, fileToDataUrl, copyText, highlight, safeSrc } from './ui.js?v=3.5.4';
 
 const state = { status: 'all', cat: 'all', q: '' };
 const ALLOWED = new Set(['P', 'BR', 'B', 'STRONG', 'I', 'EM', 'U', 'H2', 'H3', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'A']);

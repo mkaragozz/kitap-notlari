@@ -147,7 +147,11 @@ const { chromium } = require('playwright'); const fs = require('fs');
 - Açık/koyu tema: renkler `:root` değişkenlerinde; koyu tema `prefers-color-scheme` + elle seçim (`data-theme`).
 - Türkçe sıralama/arama: `localeCompare(x, 'tr')`, `toLocaleLowerCase('tr')`, aksan duyarsız `norm()`.
 
-## 11. Sesli okuma (kitabı dinleme)
+## 11. Sesli okuma (kitabı dinleme) — Kitap & Notlarım'da denendi, kullanıcı beğenmedi ve kaldırıldı
+
+**Önce oku:** Tarayıcının Web Speech sesleri Türkçede çoğu telefonda tek ve yapay kalitede; kullanıcı "robot gibi,
+yanlış okuyor" dedi ve 3.5.4'te özellik tamamen kaldırıldı. Böyle bir istek gelirse önce bir cümlelik örneği
+kullanıcının kendi telefonunda dinletip onay al ("Sesi dene"), sonra kur. Aşağıdakiler teknik bilgi içindir.
 
 Ücretsiz ve ek kurulumsuz yol: tarayıcının **Web Speech API**'si (`speechSynthesis`). Kitap & Notlarım 3.5.1'de
 uygulandı; sahte ses motoruyla otomatik test edildi, gerçek seslerle **yalnızca gerçek telefonda** doğrulanabilir.
