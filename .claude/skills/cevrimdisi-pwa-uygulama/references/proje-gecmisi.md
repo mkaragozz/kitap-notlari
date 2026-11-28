@@ -38,6 +38,7 @@ Amaç: aynı hataları tekrar yapmamak; benzer bir uygulamada hangi sırayla ile
 | Kurtarma kodu kilitli defterde saklandı | Kullanıcı hatası riski | Kılavuz ve kilit ekranında uyarı |
 | Blog/EPUB içeriğinde kod çalışabiliyordu (3.4) | Canlı belgede `innerHTML`; test 3.4'te kodun çalıştığını gösterdi | Etkisiz belge + CSP (3.5) |
 | Sinir ağı sesleri telefonda okumadı (3.5.2) | Ölçüm: CPU 4x yavaşta ilk ses 23 sn (Piper), 77 sn (MMS); yayından önce telefon koşulunda ölçülmemişti | Kaldırıldı (3.5.3); ağır özellikleri önce telefon koşulunda ölç |
+| Bozuk metin uyarısı telefonda çıkmadı (3.5.5) | Kontrol yalnızca PDF metni ilk çıkarılırken çalışıyordu; kullanıcının kitabının metni önceden çıkarılıp kaydedilmişti; test yeni yüklenen kitapla yapılmıştı | Kontrol her gösterimde, paragraf düzeyinde (3.5.6). Ders: önbelleğe/kayda alınan veriyi etkileyen değişikliği "eski kayıtla" da test et |
 | Samsung İnternet'ten yüklemede Play Koruma uyarısı | **Doğrulanmadı** (gözlem). Chrome ile yüklemede uyarı beklenmez | Chrome ile yükleme önerildi |
 
 ## Kullanıcının tercihleri (bu projede öğrenilen)

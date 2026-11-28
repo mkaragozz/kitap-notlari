@@ -3,10 +3,10 @@
 // okunduğu; okuma hızı (sayfa/gün); dönem dönem bitirilen sayısı; okuyucuda geçen süre; Pareto (80/20) grafikleri.
 // Ayrıca Günlük, Düşüncelerim ve Blog: yazı sayıları, yazılan günler, ruh hâli dağılımı, yazma etkinliği.
 // Grafikler tek eksenli SVG; her çubuğun üzerine gelince/dokununca değeri görünür; altında tablo görünümü.
-import * as DB from './db.js?v=3.5.5';
-import * as EX from './export.js?v=3.5.5';
-import * as Lock from './lock.js?v=3.5.5';
-import { $, esc, view, rerender, today, fmtDate, localDate, parseDate, MONTHS } from './ui.js?v=3.5.5';
+import * as DB from './db.js?v=3.5.6';
+import * as EX from './export.js?v=3.5.6';
+import * as Lock from './lock.js?v=3.5.6';
+import { $, esc, view, rerender, today, fmtDate, localDate, parseDate, MONTHS } from './ui.js?v=3.5.6';
 
 const state = { preset: 'month', from: '', to: '' };
 const DAY = 864e5;

@@ -1,23 +1,23 @@
-import * as DB from './db.js?v=3.5.5';
-import * as EX from './export.js?v=3.5.5';
-import * as Lock from './lock.js?v=3.5.5';
-import * as Scan from './scanner.js?v=3.5.5';
+import * as DB from './db.js?v=3.5.6';
+import * as EX from './export.js?v=3.5.6';
+import * as Lock from './lock.js?v=3.5.6';
+import * as Scan from './scanner.js?v=3.5.6';
 import { $, $$, esc, view, nav, toast, openSheet, closeSheet, confirmDialog, modal, today, fmtDate, norm, highlight,
-  pickFiles, fileToDataUrl, copyText, starPickerHtml, bindStarPicker, longDate, fmtTime } from './ui.js?v=3.5.5';
+  pickFiles, fileToDataUrl, copyText, starPickerHtml, bindStarPicker, longDate, fmtTime } from './ui.js?v=3.5.6';
 import { pageNum, sortQuotes, allTags, quoteCard, thoughtCard, thoughtText, openRelated, starFilterHtml, applyStarFilter,
-  tagInputHtml, bindTagInput } from './cards.js?v=3.5.5';
-import { renderThoughts, renderThought, THOUGHT_ACTIONS } from './thoughts.js?v=3.5.5';
-import { renderJournal, renderJournalCal, JOURNAL_ACTIONS, getPrompt, managePrompts } from './journal.js?v=3.5.5';
-import { renderNotes, renderNotebook, renderShopping, noteCard, nbIsOpen, NOTE_ACTIONS, openNbookEditor, openShopcatEditor, moveOrder, lockKey } from './notes.js?v=3.5.5';
-import { manageNotebooks as manageThoughtNotebooks } from './thoughts.js?v=3.5.5';
-import { GUIDE } from './guide.js?v=3.5.5';
-import { renderReports, REPORT_ACTIONS } from './reports.js?v=3.5.5';
-import { LISTS, SECTION_ROUTES, PRIVATE_LOCK, privateLockOf, listHref, inList, renderListTab, bindListTab, LIST_ACTIONS, topicChips, topicPickerHtml, bindTopicPicker, openTopicEditor } from './lists.js?v=3.5.5';
-import { renderReader, leaveReader, readerRefresh, hooks as readerHooks, readMeta, fileKind, KIND_LABEL, HL_COLORS, HL_NAMES, BG_PRESETS, FONTS, readerPrefs, autoFg } from './reader.js?v=3.5.5';
-import { renderArticles, renderArticleForm, ARTICLE_ACTIONS } from './articles.js?v=3.5.5';
-import { renderBlog, renderPost, renderPostEditor, BLOG_ACTIONS, postPlain } from './blog.js?v=3.5.5';
+  tagInputHtml, bindTagInput } from './cards.js?v=3.5.6';
+import { renderThoughts, renderThought, THOUGHT_ACTIONS } from './thoughts.js?v=3.5.6';
+import { renderJournal, renderJournalCal, JOURNAL_ACTIONS, getPrompt, managePrompts } from './journal.js?v=3.5.6';
+import { renderNotes, renderNotebook, renderShopping, noteCard, nbIsOpen, NOTE_ACTIONS, openNbookEditor, openShopcatEditor, moveOrder, lockKey } from './notes.js?v=3.5.6';
+import { manageNotebooks as manageThoughtNotebooks } from './thoughts.js?v=3.5.6';
+import { GUIDE } from './guide.js?v=3.5.6';
+import { renderReports, REPORT_ACTIONS } from './reports.js?v=3.5.6';
+import { LISTS, SECTION_ROUTES, PRIVATE_LOCK, privateLockOf, listHref, inList, renderListTab, bindListTab, LIST_ACTIONS, topicChips, topicPickerHtml, bindTopicPicker, openTopicEditor } from './lists.js?v=3.5.6';
+import { renderReader, leaveReader, readerRefresh, hooks as readerHooks, readMeta, fileKind, KIND_LABEL, HL_COLORS, HL_NAMES, BG_PRESETS, FONTS, readerPrefs, autoFg } from './reader.js?v=3.5.6';
+import { renderArticles, renderArticleForm, ARTICLE_ACTIONS } from './articles.js?v=3.5.6';
+import { renderBlog, renderPost, renderPostEditor, BLOG_ACTIONS, postPlain } from './blog.js?v=3.5.6';
 
-const APP_VERSION = '3.5.5';
+const APP_VERSION = '3.5.6';
 window.__knStarted = true; // index.html'deki güvenlik ağı için: modüller sorunsuz yüklendi
 const COLORS = [['#7C5CFF', '#FF5DA2'], ['#FF6B57', '#FFB020'], ['#10B8A6', '#2F9BFF'], ['#FF5DA2', '#FFB020'], ['#2F9BFF', '#7C5CFF'], ['#10B8A6', '#7CD957'], ['#FF8A3D', '#FF5D7A']];
 const TAG_COLORS = ['#7C5CFF', '#FF5DA2', '#10B8A6', '#FF6B57', '#2F9BFF', '#FFB020', '#8E5CF7', '#13A88F'];

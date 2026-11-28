@@ -1,10 +1,10 @@
 // 📄 Makaleler: PDF / Word makale ekleme, kitap okuyucusuyla okuma, alıntı-not-fikir (kitaplarla aynı özellikler).
 // Makaleler "books" deposunda kind === 'article' olarak durur; böylece alıntılar, etiketler, dışa aktarma ve okuyucu ortaktır.
-import * as DB from './db.js?v=3.5.5';
-import * as Lock from './lock.js?v=3.5.5';
-import { $, esc, view, toast, rerender, go, norm, today, pickFiles } from './ui.js?v=3.5.5';
-import { topicChips, topicPickerHtml, bindTopicPicker } from './lists.js?v=3.5.5';
-import { readMeta, fileKind, KIND_LABEL } from './reader.js?v=3.5.5';
+import * as DB from './db.js?v=3.5.6';
+import * as Lock from './lock.js?v=3.5.6';
+import { $, esc, view, toast, rerender, go, norm, today, pickFiles } from './ui.js?v=3.5.6';
+import { topicChips, topicPickerHtml, bindTopicPicker } from './lists.js?v=3.5.6';
+import { readMeta, fileKind, KIND_LABEL } from './reader.js?v=3.5.6';
 
 const state = { tab: 'toread', topic: 'all', q: '' };
 export const isArticleRead = (a) => a.status === 'bitti';

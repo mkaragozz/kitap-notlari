@@ -1,9 +1,9 @@
 // 📚 Kitap listeleri: Okuyorum, Okunacak, Kütüphanem, Satın Alınacak, Seçkin, Özel.
 // Kitap bir kez kaydedilir; listeler işaretlerle çalışır. Konu başlıkları kitap ve makalelerde ortaktır.
-import * as DB from './db.js?v=3.5.5';
-import * as EX from './export.js?v=3.5.5';
-import * as Lock from './lock.js?v=3.5.5';
-import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, rerender, go, norm, today, fmtDate } from './ui.js?v=3.5.5';
+import * as DB from './db.js?v=3.5.6';
+import * as EX from './export.js?v=3.5.6';
+import * as Lock from './lock.js?v=3.5.6';
+import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, rerender, go, norm, today, fmtDate } from './ui.js?v=3.5.6';
 
 // Ayrı bölümler (menüde / Diğer'de): Kütüphanem, Satın Alınacaklar, Seçkin, Özel Kitaplar, E-kitaplar.
 // Okuma listeleri (ana sayfadan açılır): Okuyorum, Okumak istediklerim, Okuduklarım.
