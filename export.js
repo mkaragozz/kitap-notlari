@@ -2,7 +2,7 @@
 // Kitap notları, düşünceler ve günlük için.
 
 const DOCX_URL = 'lib/docx.umd.js?v=8.5.0';
-const XLSX_URL = 'lib/xlsx.full.min.js?v=0.18.5';
+const JSZIP_URL = 'lib/jszip.min.js?v=3.10.1';
 
 const safeSrc = (u) => { const x = String(u || '').trim(); return /^(data:image\/[a-z+.-]+;base64,|blob:|https:\/\/)/i.test(x) ? esc(x) : ''; };
 export const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -259,11 +259,49 @@ export async function buildDocx(sections, opt) {
   return D.Packer.toBlob(doc);
 }
 
+// ---------- Excel (.xlsx) yazıcı ----------
+// SheetJS yerine: bilinen açıkları (GHSA-4r6h-8v6p-xvw6, GHSA-5pgg-2g8v-p4x9) olan sürümü kaldırmak için
+// en basit Office Open XML paketi JSZip ile burada üretilir (yalnızca yazma; dosya okunmaz).
+const xmlEsc = (v) => String(v).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F￾￿]/g, '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function colName(i) { let n = i + 1, out = ''; while (n > 0) { const m = (n - 1) % 26; out = String.fromCharCode(65 + m) + out; n = Math.floor((n - 1) / 26); } return out; }
+function sheetName(name, used) {
+  let n = String(name).replace(/[\[\]:*?/\\]/g, ' ').trim().slice(0, 31) || 'Sayfa';
+  let k = 2; const base = n; while (used.has(n)) { n = (base.slice(0, 28) + ' ' + k++).slice(0, 31); }
+  used.add(n); return n;
+}
+function sheetXml(rows, widths) {
+  const keys = rows.length ? Object.keys(rows[0]) : [];
+  const cell = (v, r, c, style) => {
+    const ref = colName(c) + r;
+    if (typeof v === 'number' && Number.isFinite(v)) return `<c r="${ref}"${style}><v>${v}</v></c>`;
+    const t = xmlEsc(v == null ? '' : v).slice(0, 32000);
+    return `<c r="${ref}" t="inlineStr"${style}><is><t xml:space="preserve">${t}</t></is></c>`;
+  };
+  let x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">';
+  x += '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>';
+  if (keys.length) x += `<cols>${keys.map((k, i) => `<col min="${i + 1}" max="${i + 1}" width="${(widths && widths[i]) || Math.min(50, Math.max(10, k.length + 4))}" customWidth="1"/>`).join('')}</cols>`;
+  x += '<sheetData>';
+  x += `<row r="1">${keys.map((k, i) => cell(k, 1, i, ' s="1"')).join('')}</row>`;
+  rows.forEach((row, ri) => { x += `<row r="${ri + 2}">${keys.map((k, i) => cell(row[k], ri + 2, i, ' s="2"')).join('')}</row>`; });
+  x += '</sheetData></worksheet>';
+  return x;
+}
+async function writeXlsx(sheets) {
+  await loadScript(JSZIP_URL);
+  const zip = new window.JSZip();
+  const used = new Set(); const names = sheets.map((sh) => sheetName(sh.name, used));
+  zip.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>`);
+  zip.file('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>');
+  zip.file('xl/workbook.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${names.map((n, i) => `<sheet name="${xmlEsc(n)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>`);
+  zip.file('xl/_rels/workbook.xml.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((_, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`);
+  zip.file('xl/styles.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>');
+  sheets.forEach((sh, i) => zip.file(`xl/worksheets/sheet${i + 1}.xml`, sheetXml(sh.rows, sh.widths)));
+  return zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', compression: 'DEFLATE' });
+}
+
 // ---------- Excel ----------
 export async function buildXlsx(sections, opt) {
-  await loadScript(XLSX_URL);
-  const X = window.XLSX;
-  const wb = X.utils.book_new();
+  const sheets = [];
   const qRows = [];
   sections.forEach(({ book, quotes }) => {
     selectQuotes(quotes, opt).forEach((q) => qRows.push({
@@ -280,9 +318,7 @@ export async function buildXlsx(sections, opt) {
       'Eklenme': (q.createdAt || '').slice(0, 10),
     }));
   });
-  const ws1 = X.utils.json_to_sheet(qRows.length ? qRows : [{ 'Bilgi': 'Seçilen ölçütlerde kayıt yok' }]);
-  ws1['!cols'] = [{ wch: 28 }, { wch: 20 }, { wch: 80 }, { wch: 8 }, { wch: 24 }, { wch: 18 }, { wch: 22 }, { wch: 40 }, { wch: 12 }, { wch: 40 }, { wch: 11 }];
-  X.utils.book_append_sheet(wb, ws1, 'Alıntılar');
+  sheets.push({ name: 'Alıntılar', rows: qRows.length ? qRows : [{ 'Bilgi': 'Seçilen ölçütlerde kayıt yok' }], widths: qRows.length ? [28, 20, 80, 8, 24, 18, 22, 40, 12, 40, 11] : [40] });
 
   const bRows = sections.map(({ book, quotes }) => ({
     'Kitap': book.title, 'Alt başlık': book.subtitle || '', 'Yazar': book.author || '', 'Çevirmen': book.translator || '',
@@ -290,19 +326,18 @@ export async function buildXlsx(sections, opt) {
     'ISBN': book.isbn || '', 'Sayfa sayısı': book.pages || '', 'Konu': book.categories || '', 'Durum': book.status || '', 'Başlama': book.startDate || '',
     'Bitiş': book.endDate || '', 'Puan': book.rating || '', 'Alıntı sayısı': quotes.length,
   }));
-  X.utils.book_append_sheet(wb, X.utils.json_to_sheet(bRows), 'Kitaplar');
+  sheets.push({ name: 'Kitaplar', rows: bRows });
 
   if (opt.toc) {
     const tRows = [];
     sections.forEach(({ book, toc }) => (toc || []).forEach((t) => tRows.push({ 'Kitap': book.title, 'Seviye': t.level || 1, 'Başlık': t.title, 'Sayfa': t.page || '' })));
-    if (tRows.length) X.utils.book_append_sheet(wb, X.utils.json_to_sheet(tRows), 'İçindekiler');
+    if (tRows.length) sheets.push({ name: 'İçindekiler', rows: tRows, widths: [28, 8, 60, 8] });
   }
   if (opt.summary) {
     const sRows = sections.filter((s) => s.book.summary).map(({ book }) => ({ 'Kitap': book.title, 'Özet': book.summary }));
-    if (sRows.length) X.utils.book_append_sheet(wb, X.utils.json_to_sheet(sRows), 'Özetler');
+    if (sRows.length) sheets.push({ name: 'Özetler', rows: sRows, widths: [28, 100] });
   }
-  const arr = X.write(wb, { type: 'array', bookType: 'xlsx' });
-  return new Blob([arr], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  return writeXlsx(sheets);
 }
 
 // ---------- Düşünceler ----------

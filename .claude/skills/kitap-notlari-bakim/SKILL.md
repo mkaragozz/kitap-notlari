@@ -41,7 +41,7 @@ GitHub Pages `main` dalından yayınlanır. Kullanıcı Türkçe konuşur, tekni
 | `sw.js` | Service worker: `V`, `MODS` listesi, önbellek |
 | `privacy.html` | Gizlilik politikası (iletişim: kullanıcının verdiği e-posta) |
 | `KULLANIM.md`, `YAPILACAKLAR.md` | Kullanıcıya yönelik notlar; ertelenen işler (Play Store yüklemesi gibi) |
-| `lib/` | Yerel kopya kütüphaneler + LICENSE: html5-qrcode 2.3.8, pdf.js 3.11.174 (`isEvalSupported:false` şart), mammoth 1.13.0, jszip 3.10.1, docx 8.5.0, xlsx 0.18.5 (yalnızca yazma) |
+| `lib/` | Yerel kopya kütüphaneler + LICENSE: html5-qrcode 2.3.8, pdf.js 4.10.38 legacy (ES modülü, `import()` ile; `isEvalSupported:false`; metin katmanı `new TextLayer(...).render()`), mammoth 1.13.0, jszip 3.10.1, docx 8.5.0. Excel (.xlsx) SheetJS olmadan `export.js` içindeki küçük yazıcıyla (JSZip) üretilir |
 
 ## Altın kural: sürüm eki
 
@@ -90,7 +90,7 @@ GitHub tek dosyada 100 MB sınırı koyar: MMS modeli `part0/part1` olarak böl�
    Kamera ile barkod ve dokunarak metin seçme yalnızca gerçek telefonda denenebilir; bunu kullanıcıya söyle.
 6. **Güvenlik:** `python3 .claude/skills/cevrimdisi-pwa-uygulama/scripts/guvenlik_tarama.py .` (YÜKSEK = 0 olmalı;
    ORTA bulgular 3.5'te tek tek incelendi, hepsi kaçışlanmış ya da sayısal), lib/ sürümleri değiştiyse
-   `bash .claude/skills/cevrimdisi-pwa-uygulama/scripts/bagimlilik_denetimi.sh pdfjs-dist@3.11.174 mammoth@1.13.0 jszip@3.10.1 html5-qrcode@2.3.8 docx@8.5.0 xlsx@0.18.5`.
+   `bash .claude/skills/cevrimdisi-pwa-uygulama/scripts/bagimlilik_denetimi.sh pdfjs-dist@4.10.38 mammoth@1.13.0 jszip@3.10.1 html5-qrcode@2.3.8 docx@8.5.0 onnxruntime-web@1.20.1 @diffusionstudio/piper-wasm@1.0.0 @mintplex-labs/piper-tts-web@1.0.5` (28.11.2026: bilinen danışma yok).
    Güvenilmeyen HTML yalnızca etkisiz belgede (`INERT`) çözülür; yeni alanlar `esc()`/`safeSrc()` ile basılır;
    `index.html`deki satır içi betik değişirse CSP özetini güncelle. Ayrıntı: `cevrimdisi-pwa-uygulama/references/guvenlik.md`.
 7. Ekran görüntülerini gönder, değişiklikleri madde madde (kullanıcının diliyle) anlat, "yayınla" de diye bekle.

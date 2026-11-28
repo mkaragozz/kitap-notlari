@@ -101,8 +101,9 @@ export function printHtml(html, title) {
 ```
 CSS: `@media print { body > *:not(#print-area) { display:none !important } #print-area { display:block } }`,
 `@page { margin: 16mm }`, satır içi `pt` birimleri, `break-inside: avoid`. Kullanıcıya: "Yazıcı olarak 'PDF olarak
-kaydet'i seçin." Word için `docx` kütüphanesi (dipnotlar `footnotes`), Excel için SheetJS — ikisi de yalnızca
-düğmeye basılınca dinamik `import()`/script ile yüklensin.
+kaydet'i seçin." Word için `docx` kütüphanesi (dipnotlar `footnotes`). Excel için büyük kütüphane yerine JSZip ile en basit OOXML
+paketi yeterli ([Content_Types].xml, _rels, workbook, styles, sheetN; satır içi metin hücreleri, kalın başlık,
+dondurulmuş ilk satır). Hepsi yalnızca düğmeye basılınca yüklensin.
 
 ## 7. SVG grafikler
 

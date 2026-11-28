@@ -935,7 +935,7 @@ const SETTINGS_PAGES = [
     ['lock', '🔒', 'Kilit', 'PIN, kilitli bölümler, kurtarma kodu'],
     ['menu', '🧭', 'Menü', 'Alt menüde görünen bölümler ve sırası'],
     ['barcode', '📷', 'Barkod ve kitap arama', 'Titreşim, ses, arama düğmeleri'],
-    ['reader', '📖', 'Okuma görünümü', 'Zemin rengi, yazı tipi, boyut, sayfa çevirme'],
+    ['reader', '📖', 'Okuma görünümü', 'Zemin, yazı tipi, sayfa çevirme, sesli okuma'],
   ]],
   ['İçerik', [
     ['topics', '🏷️', 'Kategoriler', 'Kitap ve makale kategorileri'],
@@ -960,9 +960,9 @@ async function renderSettings(sub = '') {
   const top = (title) => `<div class="topbar"><button class="back" data-act="back" aria-label="Geri">‹</button><h1>${title}</h1></div>`;
   if (!sub) {
     view.innerHTML = `<div class="topbar"><button class="back mob-only" data-act="back" aria-label="Geri">‹</button><h1>⚙️ Ayarlar</h1></div>
-      ${SETTINGS_PAGES.map(([group, items]) => `<div class="set-group">${group}</div><div class="more-list">${items.map(([k, e, t, d]) => {
+      ${SETTINGS_PAGES.map(([group, items]) => `<div class="set-group">${group}</div><div class="more-list tight set-list">${items.map(([k, e, t, d]) => {
         const attr = k === '@privacy' ? 'href="#/privacy"' : k.startsWith('@') ? `href="#" data-act="set-open" data-k="${k.slice(1)}"` : `href="#/settings/${k}"`;
-        return `<a ${attr}><span>${e}</span><b>${t}</b>${d ? `<small>${d}</small>` : ''}<em>›</em></a>`;
+        return `<a ${attr} class="set-row"><span class="si">${e}</span><span class="st"><b>${t}</b>${d ? `<small>${d}</small>` : ''}</span><em>›</em></a>`;
       }).join('')}</div>`).join('')}
       <p class="hint" style="text-align:center;margin-top:18px">Kitap & Notlarım · sürüm ${APP_VERSION}</p>`;
     return;

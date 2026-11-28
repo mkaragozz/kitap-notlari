@@ -13,8 +13,9 @@ import * as TTS from './tts.js?v=3.5.2';
 export const hooks = { openQuoteEditor: null };
 
 const LIBS = {
-  pdf: 'lib/pdf.min.js?v=3.11.174',
-  pdfWorker: 'lib/pdf.worker.min.js?v=3.11.174',
+  // pdf.js 4.10.38 (legacy derleme, ES modülü): GHSA-wgrm-67xf-hhpq 4.2.67'de kapandı; isEvalSupported:false yine de verilir
+  pdf: 'lib/pdf.min.js?v=4.10.38',
+  pdfWorker: 'lib/pdf.worker.min.js?v=4.10.38',
   mammoth: 'lib/mammoth.browser.min.js?v=1.13.0',
   jszip: 'lib/jszip.min.js?v=3.10.1',
 };
@@ -27,7 +28,12 @@ function loadScript(src) {
   });
   return loaded[src];
 }
-async function pdfLib() { await loadScript(LIBS.pdf); const L = window.pdfjsLib; L.GlobalWorkerOptions.workerSrc = LIBS.pdfWorker; return L; }
+async function pdfLib() {
+  const L = window.pdfjsLib || await import(new URL(LIBS.pdf, location.href).href);
+  L.GlobalWorkerOptions.workerSrc = new URL(LIBS.pdfWorker, location.href).href;
+  window.pdfjsLib = L;
+  return L;
+}
 
 export const HL_COLORS = { yellow: '#FFE45C', green: '#9BE59B', blue: '#9CCBFF', pink: '#FFA8D2', orange: '#FFC078', purple: '#CDB4FF' };
 export const HL_NAMES = { yellow: 'Sarı', green: 'Yeşil', blue: 'Mavi', pink: 'Pembe', orange: 'Turuncu', purple: 'Mor' };
@@ -394,7 +400,7 @@ async function renderPdfPage(n) {
   if (seq !== pdfRenderSeq) return;
   const tc = await page.getTextContent();
   const tl = box.querySelector('.textLayer');
-  await L.renderTextLayer({ textContentSource: tc, container: tl, viewport: vp, textDivs: [] }).promise;
+  await new L.TextLayer({ textContentSource: tc, container: tl, viewport: vp }).render();
   drawPdfHighlights(n + 1);
   R.viewEl.scrollTop = 0;
 }

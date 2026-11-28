@@ -822,3 +822,10 @@ mark.hl.flash, .flash { animation: flash 1.8s; }
 .field .eng-row span { display: flex; flex-direction: column; margin: 0; font-size: 14.5px; color: inherit; font-weight: 400; text-transform: none; letter-spacing: 0; }
 .field .eng-row span b { font-weight: 800; }
 .field .eng-row small { font-size: 12.5px; color: var(--muted); }
+/* Ayarlar listesi: tek satırlık, sıkı satırlar (simge · başlık + açıklama · ›) */
+.set-list .set-row { flex-wrap: nowrap; gap: 12px; padding: 11px 14px; }
+.set-list .set-row .si { font-size: 22px; flex: none; width: 28px; text-align: center; }
+.set-list .set-row .st { flex: 1; min-width: 0; display: flex; flex-direction: column; font-size: inherit; }
+.set-list .set-row .st b { flex: none; font-size: 15.5px; }
+.set-list .set-row .st small { flex-basis: auto; margin: 1px 0 0; order: 0; font-size: 12.5px; line-height: 1.3; color: var(--muted); }
+.set-list .set-row em { order: 0; flex: none; }

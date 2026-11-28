@@ -7,7 +7,7 @@
 const V = '3.5.2';
 const VERSION = 'kn-v' + V;
 const MODS = ['app', 'ui', 'db', 'cards', 'lock', 'scanner', 'thoughts', 'journal', 'export', 'notes', 'guide', 'lists', 'reader', 'tts', 'articles', 'blog', 'reports'].map((m) => `${m}.js?v=${V}`);
-const SHELL = ['./', 'index.html', `styles.css?v=${V}`, ...MODS, 'lib/html5-qrcode.min.js?v=2.3.8', 'lib/pdf.min.js?v=3.11.174', 'lib/pdf.worker.min.js?v=3.11.174', 'lib/mammoth.browser.min.js?v=1.13.0', 'lib/jszip.min.js?v=3.10.1',
+const SHELL = ['./', 'index.html', `styles.css?v=${V}`, ...MODS, 'lib/html5-qrcode.min.js?v=2.3.8', 'lib/pdf.min.js?v=4.10.38', 'lib/pdf.worker.min.js?v=4.10.38', 'lib/mammoth.browser.min.js?v=1.13.0', 'lib/jszip.min.js?v=3.10.1',
   'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'privacy.html'];
 // Kullanıcının indirdiği sesli okuma dosyaları (lib/tts, voices/): sürümden bağımsız önbellek, güncellemede silinmez
 const VOICES = 'kn-voices';
