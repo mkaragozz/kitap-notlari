@@ -4,7 +4,7 @@
 // SÜRÜM DEĞİŞTİRİRKEN: aşağıdaki V değerini ve tüm dosyalardaki "?v=..." eklerini birlikte değiştirin
 // (index.html, *.js içindeki import satırları). Sürüm eki her dosyaya yeni bir adres verir; böylece
 // GitHub'ın önbelleği eski dosyayı veremez ve eski/yeni dosyalar karışmaz.
-const V = '3.5.5';
+const V = '3.5.6';
 const VERSION = 'kn-v' + V;
 const MODS = ['app', 'ui', 'db', 'cards', 'lock', 'scanner', 'thoughts', 'journal', 'export', 'notes', 'guide', 'lists', 'reader', 'articles', 'blog', 'reports'].map((m) => `${m}.js?v=${V}`);
 const SHELL = ['./', 'index.html', `styles.css?v=${V}`, ...MODS, 'lib/html5-qrcode.min.js?v=2.3.8', 'lib/pdf.min.js?v=4.10.38', 'lib/pdf.worker.min.js?v=4.10.38', 'lib/mammoth.browser.min.js?v=1.13.0', 'lib/jszip.min.js?v=3.10.1',

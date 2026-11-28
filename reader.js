@@ -5,8 +5,8 @@
 // - Metni seçip "Alıntılarıma aktar": kitabın Alıntılar bölümüne, renkli vurguyla; orijinal dosyadaki yeri
 //   (PDF/Word/TXT/EPUB, sayfa ya da konum) kaynak/dipnot olarak alıntıya yazılır.
 // - Sayfaya "tekrar oku" işareti ve sayfa yorumu; kaldığı yerden devam.
-import * as DB from './db.js?v=3.5.5';
-import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, go, fmtDateTime } from './ui.js?v=3.5.5';
+import * as DB from './db.js?v=3.5.6';
+import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, go, fmtDateTime } from './ui.js?v=3.5.6';
 
 export const hooks = { openQuoteEditor: null };
 
@@ -186,9 +186,9 @@ async function epubToHtml(blob, onProgress) {
 }
 /** Taranmış PDF'lerde kötü OCR metni sezgisi (0–1). Ekran görüntülerindeki gerçek örneklerle ayarlandı:
  *  bozuk sayfalar 0,16–0,22; düzgün sayfalar 0–0,03 → sınır 0,08. */
-function garbleScore(text) {
+function garbleScore(text, minTokens = 25) {
   const toks = text.split(/\s+/).filter(Boolean);
-  if (toks.length < 25) return 0;
+  if (toks.length < minTokens) return 0;
   let bad = 0;
   for (const t of toks) {
     const w = t.replace(/^[«"“'‘(\[]+|[»"”’'),.;:!?\]·•]+$/g, '');
@@ -203,6 +203,29 @@ function garbleScore(text) {
   return bad / toks.length;
 }
 const GARBLED = 0.08;
+/** Metin görünümü: bozuk paragrafları işaretle (her gösterimde; daha önce kaydedilmiş metinlerde de çalışır).
+ *  Paragraf kendi başına bozuksa ya da bulunduğu PDF sayfasının tamamı bozuksa işaretlenir. */
+function markGarbled() {
+  if (R.mode !== 'text' || !R.flow) return;
+  let group = [];
+  const flush = () => {
+    const pageBad = garbleScore(group.map((x) => x.textContent).join(' ')) > GARBLED;
+    group.forEach((el) => { if (pageBad || garbleScore(el.textContent, 12) > GARBLED) el.dataset.bad = '1'; });
+    group = [];
+  };
+  [...R.flow.children].forEach((el) => { if (el.classList.contains('rd-pdfpage')) flush(); else if (el.tagName === 'P') group.push(el); });
+  flush();
+}
+/** Bozuk paragrafların göründüğü ekran sayfaları (yerleşim değişince yeniden hesaplanır) */
+function badScreens() {
+  const set = new Set();
+  if (R.mode !== 'text' || !R.flow) return set;
+  R.flow.querySelectorAll('p[data-bad]').forEach((el) => {
+    const rs = el.getClientRects(); const fr = R.flow.getBoundingClientRect();
+    for (const r of rs) set.add(Math.max(0, Math.min(R.pages - 1, Math.floor((r.left - fr.left + 2) / R.W))));
+  });
+  return set;
+}
 async function pdfToHtml(pdf, onProgress) {
   let html = '';
   for (let p = 1; p <= pdf.numPages; p++) {
@@ -220,8 +243,7 @@ async function pdfToHtml(pdf, onProgress) {
       if (/[.!?:"”»]$/.test(l) && (!next || /^[A-ZÇĞİÖŞÜ0-9“"«(–-]/.test(next)) && l.length < 90) { paras.push(buf); buf = ''; }
     });
     if (buf) paras.push(buf);
-    const bad = garbleScore(paras.join(' ')) > GARBLED;
-    html += `<span class="rd-pdfpage" data-pdfpage="${p}"${bad ? ' data-bad="1"' : ''}>s. ${p}</span>` + paras.map((x) => `<p>${esc(x)}</p>`).join('');
+    html += `<span class="rd-pdfpage" data-pdfpage="${p}">s. ${p}</span>` + paras.map((x) => `<p>${esc(x)}</p>`).join('');
   }
   return html;
 }
@@ -319,6 +341,7 @@ async function setupFlow(stage, html, params) {
   R.flow = $('#rd-flow'); R.viewEl = $('#rd-view');
   if (document.fonts && document.fonts.ready) await Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 1500))]);
   applyHighlights();
+  markGarbled();
   layoutFlow();
   const pos = params && params.get('pos') != null ? parseFloat(params.get('pos')) : (R.book.readPos && R.book.readPos.mode === R.mode ? R.book.readPos.frac : null);
   const pp = params && params.get('pdfpage');
@@ -494,7 +517,7 @@ function updatePageLabel() {
   const pct = R.pages > 1 ? Math.round((R.page / (R.pages - 1)) * 100) : 100;
   const pdfp = R.mode === 'text' ? currentPdfPage() : null;
   const warn = $('#rd-warn');
-  if (warn) { const bad = R.mode === 'text' && !R.warnOff && pdfp && R.flow.querySelector(`.rd-pdfpage[data-pdfpage="${pdfp}"][data-bad]`); warn.hidden = !bad; }
+  if (warn) { if (R.badW !== R.W || R.badN !== R.pages) { R.bad = badScreens(); R.badW = R.W; R.badN = R.pages; } warn.hidden = !(R.mode === 'text' && !R.warnOff && R.bad.has(R.page)); }
   el.innerHTML = `${R.page + 1} / ${R.pages}${R.mode === 'orig' ? '' : ` · %${pct}`}${pdfp ? ` <small>(PDF s. ${pdfp})</small>` : ''}`;
   const marks = DB.pagemarksOf(R.book.id).filter((m) => samePage(m));
   const rr = $('[data-r="reread"]'); if (rr) rr.classList.toggle('on', marks.some((m) => m.kind === 'reread' && !m.done));
