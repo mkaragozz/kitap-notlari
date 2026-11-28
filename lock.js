@@ -2,8 +2,8 @@
 // Tek PIN ve tek kurtarma kodu vardır; kilit bir kez açılınca tüm kilitli bölümler açılır.
 // PIN cihazda açık metin olarak değil, tuzlanmış SHA-256 özeti olarak saklanır.
 // Not: Bu bir "meraklı gözlere karşı" kilittir; veriler cihazda şifrelenmiş değildir.
-import * as DB from './db.js?v=3.5.4';
-import { $, $$, esc, toast, openSheet, closeSheet, rerender } from './ui.js?v=3.5.4';
+import * as DB from './db.js?v=3.5.5';
+import { $, $$, esc, toast, openSheet, closeSheet, rerender } from './ui.js?v=3.5.5';
 
 const idleMs = () => (parseInt(DB.getSettings().lockMinutes, 10) || 5) * 60 * 1000;
 let unlocked = false;

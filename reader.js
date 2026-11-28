@@ -5,8 +5,8 @@
 // - Metni seçip "Alıntılarıma aktar": kitabın Alıntılar bölümüne, renkli vurguyla; orijinal dosyadaki yeri
 //   (PDF/Word/TXT/EPUB, sayfa ya da konum) kaynak/dipnot olarak alıntıya yazılır.
 // - Sayfaya "tekrar oku" işareti ve sayfa yorumu; kaldığı yerden devam.
-import * as DB from './db.js?v=3.5.4';
-import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, go, fmtDateTime } from './ui.js?v=3.5.4';
+import * as DB from './db.js?v=3.5.5';
+import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, go, fmtDateTime } from './ui.js?v=3.5.5';
 
 export const hooks = { openQuoteEditor: null };
 
@@ -184,6 +184,25 @@ async function epubToHtml(blob, onProgress) {
   }
   return html;
 }
+/** Taranmış PDF'lerde kötü OCR metni sezgisi (0–1). Ekran görüntülerindeki gerçek örneklerle ayarlandı:
+ *  bozuk sayfalar 0,16–0,22; düzgün sayfalar 0–0,03 → sınır 0,08. */
+function garbleScore(text) {
+  const toks = text.split(/\s+/).filter(Boolean);
+  if (toks.length < 25) return 0;
+  let bad = 0;
+  for (const t of toks) {
+    const w = t.replace(/^[«"“'‘(\[]+|[»"”’'),.;:!?\]·•]+$/g, '');
+    if (!w || /^\d+$/.test(w) || /^[-–—•·]$/.test(w)) continue;
+    if (/[lI1ı|]{3,}/.test(w)                         // lll, ııı, Ill, 111 gibi tanıma artıkları
+      || (/\d/.test(w) && /\p{L}/u.test(w))            // 1lny, 1;o
+      || /[\\<>~|{}^`]/.test(w)                        // metinde olmayacak semboller
+      || (/\p{Ll}\p{Lu}/u.test(w))                     // reddetIIIi (kelime ortasında büyük harf)
+      || (w.length === 1 && !/^[oOeEaA]$/.test(w)))    // tek harflik parçalar (ş, ı, v, l …)
+      bad++;
+  }
+  return bad / toks.length;
+}
+const GARBLED = 0.08;
 async function pdfToHtml(pdf, onProgress) {
   let html = '';
   for (let p = 1; p <= pdf.numPages; p++) {
@@ -201,7 +220,8 @@ async function pdfToHtml(pdf, onProgress) {
       if (/[.!?:"”»]$/.test(l) && (!next || /^[A-ZÇĞİÖŞÜ0-9“"«(–-]/.test(next)) && l.length < 90) { paras.push(buf); buf = ''; }
     });
     if (buf) paras.push(buf);
-    html += `<span class="rd-pdfpage" data-pdfpage="${p}">s. ${p}</span>` + paras.map((x) => `<p>${esc(x)}</p>`).join('');
+    const bad = garbleScore(paras.join(' ')) > GARBLED;
+    html += `<span class="rd-pdfpage" data-pdfpage="${p}"${bad ? ' data-bad="1"' : ''}>s. ${p}</span>` + paras.map((x) => `<p>${esc(x)}</p>`).join('');
   }
   return html;
 }
@@ -259,6 +279,7 @@ export async function renderReader(bookId, params) {
       <button class="rd-ic" data-r="prefs" title="Okuma ayarları">Aa</button>
     </div>
     <div class="rd-stage" id="rd-stage"><div class="loading-box"><div class="spinner"></div><div id="rd-load">Kitap açılıyor…</div></div></div>
+    <div class="rd-warn" id="rd-warn" hidden><span>⚠️ Bu sayfanın metni taramadan bozuk geliyor (PDF'in kendi metni).</span><button class="btn sm" data-r="mode">📄 Orijinal görünüm</button><button class="rd-ic sm" data-r="warn-x" aria-label="Kapat">✕</button></div>
     <div class="rd-sel" id="rd-sel" hidden><button class="btn primary" data-r="save-sel">📥 Alıntılarıma aktar</button></div>
     <div class="rd-bottom">
       <button class="rd-ic" data-r="prev" aria-label="Önceki sayfa">‹</button>
@@ -472,6 +493,8 @@ function updatePageLabel() {
   const el = $('#rd-page'); if (!el) return;
   const pct = R.pages > 1 ? Math.round((R.page / (R.pages - 1)) * 100) : 100;
   const pdfp = R.mode === 'text' ? currentPdfPage() : null;
+  const warn = $('#rd-warn');
+  if (warn) { const bad = R.mode === 'text' && !R.warnOff && pdfp && R.flow.querySelector(`.rd-pdfpage[data-pdfpage="${pdfp}"][data-bad]`); warn.hidden = !bad; }
   el.innerHTML = `${R.page + 1} / ${R.pages}${R.mode === 'orig' ? '' : ` · %${pct}`}${pdfp ? ` <small>(PDF s. ${pdfp})</small>` : ''}`;
   const marks = DB.pagemarksOf(R.book.id).filter((m) => samePage(m));
   const rr = $('[data-r="reread"]'); if (rr) rr.classList.toggle('on', marks.some((m) => m.kind === 'reread' && !m.done));
@@ -669,6 +692,7 @@ function bindReader() {
       if (a === 'next') gotoPage(R.page + 1, true, 1);
       if (a === 'goto') gotoDialog();
       if (a === 'prefs') openPrefs();
+      if (a === 'warn-x') { R.warnOff = true; $('#rd-warn').hidden = true; }
       if (a === 'marks') openMarks();
       if (a === 'reread') toggleReread();
       if (a === 'comment') commentClick();
