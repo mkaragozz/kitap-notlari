@@ -171,7 +171,13 @@ uygulandı; sahte ses motoruyla otomatik test edildi, gerçek seslerle **yalnız
 - Kişinin kendi sesini kopyalamak (ses klonlama) tarayıcıda yerleşik değildir; ücretli bulut servisi + biyometrik veri
   demektir (bkz. yasal.md) → önerme.
 
-### 11b. Daha doğal, ücretsiz ve internetsiz sesler (Kitap & Notlarım 3.5.2'de uygulandı ve test edildi)
+### 11b. Tarayıcı içinde çalışan sinir ağı sesleri — DENENDİ, TELEFONDA BAŞARISIZ, KALDIRILDI (3.5.2 → 3.5.3)
+
+**Sonuç önce:** Piper ve MMS masaüstünde çalıştı ama telefon hızına yakın koşullarda (CPU 4x yavaşlatma) ilk sese
+kadar **23 sn (Piper) / 77 sn (MMS)** sürdü; kullanıcının telefonunda "çalıyor görünüyor ama okumuyor" oldu ve kullanıcı
+kaldırılmasını istedi. Ders: ağır bir özelliği yayından ÖNCE telefon koşullarında (CDP `Emulation.setCPUThrottlingRate`
++ ağ yavaşlatma, otomatik oynatma kısıtı açık) ölç; ilk sese kadar geçen süreyi uygulamanın içinden kaydet. Aşağıdaki
+notlar yalnızca bilgi içindir:
 
 Kullanıcı geri bildirimi (gerçek telefon, Android Chrome): telefonun Türkçe sesi tek ve "robot gibi"; tarayıcı kelime
 sınırı bildirmiyor; ekran kilitlenince Web Speech duruyor; Almanca/Bulgarca ses seçilince Türkçe metni o aksanla okuyor
