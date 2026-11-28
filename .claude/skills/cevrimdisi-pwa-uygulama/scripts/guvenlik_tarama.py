@@ -67,7 +67,8 @@ for p in src_files:
             if 'integrity=' not in line:
                 add('ORTA', w, f'dış kaynaktan kod yükleniyor ({m.group(1)[:60]}): lib/ altına kopyala ya da SRI (integrity) ekle')
         # 8) Düz HTTP
-        if re.search(r'["\'`]http://(?!localhost|127\.0\.0\.1|www\.w3\.org)', line):
+        # XML ad alanı tanımları (xmlns, OOXML şemaları) bağlantı değildir
+        if re.search(r'["\'`]http://(?!localhost|127\.0\.0\.1|www\.w3\.org|schemas\.openxmlformats\.org|schemas\.microsoft\.com|purl\.org)', line):
             add('BİLGİ', w, 'http:// adres: https kullan')
         # 9) PIN/parolayı düz metin saklama ipucu
         if re.search(r'localStorage\.setItem\([^)]*(pin|pass|parola|sifre)', line, re.I):

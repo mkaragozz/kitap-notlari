@@ -30,7 +30,8 @@ GitHub Pages `main` dalından yayınlanır. Kullanıcı Türkçe konuşur, tekni
 | `app.js` | Yönlendirme (`route()`, `NAV_OF`, `NAV_ITEMS`), ana sayfa (`renderHome`), kitap formu, alıntı editörü, Diğer (`renderMore`), Ayarlar alt sayfaları, açılış göçleri (migration) ve `APP_VERSION` |
 | `db.js` | IndexedDB (`DB_VERSION`, `STORES`, `files` deposu), ayar varsayılanları (`DEFAULTS`), yedek al/içe aktar |
 | `lists.js` | Kitap bölümleri: `LISTS`, `SECTION_ROUTES`, `PRIVATE_LOCK`, liste kartları, kategoriler, katalog PDF |
-| `reader.js` | E-kitap okuyucu (PDF/Word/TXT/EPUB), vurgular, "Alıntılarıma aktar", 🔊 sesli okuma (Web Speech API: ses/hız/ton, cümle + kelime takibi, otomatik sayfa çevirme, ekranı açık tutma) |
+| `reader.js` | E-kitap okuyucu (PDF/Word/TXT/EPUB), vurgular, "Alıntılarıma aktar", sesli okumanın okuyucu bağlantısı (cümle listesi, CSS Highlight ile cümle/kelime vurgusu, sayfa takibi) |
+| `tts.js` | 🔊 Sesli okuma motoru ve oynatıcı: telefonun sesi (Web Speech, yalnızca Türkçe sesler), indirilebilir Piper/MMS (onnxruntime-web; dosyalar `lib/tts/`, `voices/`, SHA-256 doğrulamalı, `kn-voices` önbelleği), duraklama, kelime takibi, okuyucu dışında süren oynatma + alttaki küçük oynatıcı, Media Session |
 | `cards.js`, `export.js` | Alıntı/düşünce kartları; PDF/Word/Excel dışa aktarma, kaynak satırı |
 | `articles.js`, `blog.js`, `notes.js`, `thoughts.js`, `journal.js`, `reports.js` | Bölümler |
 | `lock.js` | PIN, kurtarma kodu, bölüm kilitleri (`isOpen(section)`) |
@@ -40,7 +41,7 @@ GitHub Pages `main` dalından yayınlanır. Kullanıcı Türkçe konuşur, tekni
 | `sw.js` | Service worker: `V`, `MODS` listesi, önbellek |
 | `privacy.html` | Gizlilik politikası (iletişim: kullanıcının verdiği e-posta) |
 | `KULLANIM.md`, `YAPILACAKLAR.md` | Kullanıcıya yönelik notlar; ertelenen işler (Play Store yüklemesi gibi) |
-| `lib/` | Yerel kopya kütüphaneler + LICENSE: html5-qrcode 2.3.8, pdf.js 3.11.174 (`isEvalSupported:false` şart), mammoth 1.13.0, jszip 3.10.1, docx 8.5.0, xlsx 0.18.5 (yalnızca yazma) |
+| `lib/` | Yerel kopya kütüphaneler + LICENSE: html5-qrcode 2.3.8, pdf.js 4.10.38 legacy (ES modülü, `import()` ile; `isEvalSupported:false`; metin katmanı `new TextLayer(...).render()`), mammoth 1.13.0, jszip 3.10.1, docx 8.5.0. Excel (.xlsx) SheetJS olmadan `export.js` içindeki küçük yazıcıyla (JSZip) üretilir |
 
 ## Altın kural: sürüm eki
 
@@ -56,6 +57,9 @@ Yeni bir `.js` modülü eklersen `sw.js` içindeki `MODS` listesine de ekle; yok
 `lib/` kütüphanelerinin kendi sürüm ekleri vardır (`pdf.min.js?v=3.11.174`); bunlara elle `sed` uygulama — eski bir
 toplu değiştirme bunları `3.31.174` yapmıştı. Betik yalnızca tam eşleşen eki değiştirir.
 `sw.js` `/vadeli/` yolunu bilerek atlar (aynı sitede ayrı uygulama vardı); bu satırı kaldırma.
+`lib/tts/` ve `voices/` dosyaları **sürüm eki almaz** ve `kn-voices` önbelleğinde durur (güncellemede silinmez); bu dosyaları
+değiştirirsen `tts.js` içindeki boyut ve SHA-256 değerlerini de güncelle, yoksa indirme "doğrulanamadı" hatası verir.
+GitHub tek dosyada 100 MB sınırı koyar: MMS modeli `part0/part1` olarak bölündü.
 
 ## Veri değişiklikleri
 
@@ -86,7 +90,7 @@ toplu değiştirme bunları `3.31.174` yapmıştı. Betik yalnızca tam eşleşe
    Kamera ile barkod ve dokunarak metin seçme yalnızca gerçek telefonda denenebilir; bunu kullanıcıya söyle.
 6. **Güvenlik:** `python3 .claude/skills/cevrimdisi-pwa-uygulama/scripts/guvenlik_tarama.py .` (YÜKSEK = 0 olmalı;
    ORTA bulgular 3.5'te tek tek incelendi, hepsi kaçışlanmış ya da sayısal), lib/ sürümleri değiştiyse
-   `bash .claude/skills/cevrimdisi-pwa-uygulama/scripts/bagimlilik_denetimi.sh pdfjs-dist@3.11.174 mammoth@1.13.0 jszip@3.10.1 html5-qrcode@2.3.8 docx@8.5.0 xlsx@0.18.5`.
+   `bash .claude/skills/cevrimdisi-pwa-uygulama/scripts/bagimlilik_denetimi.sh pdfjs-dist@4.10.38 mammoth@1.13.0 jszip@3.10.1 html5-qrcode@2.3.8 docx@8.5.0 onnxruntime-web@1.20.1 @diffusionstudio/piper-wasm@1.0.0 @mintplex-labs/piper-tts-web@1.0.5` (28.11.2026: bilinen danışma yok).
    Güvenilmeyen HTML yalnızca etkisiz belgede (`INERT`) çözülür; yeni alanlar `esc()`/`safeSrc()` ile basılır;
    `index.html`deki satır içi betik değişirse CSP özetini güncelle. Ayrıntı: `cevrimdisi-pwa-uygulama/references/guvenlik.md`.
 7. Ekran görüntülerini gönder, değişiklikleri madde madde (kullanıcının diliyle) anlat, "yayınla" de diye bekle.

@@ -40,6 +40,7 @@
 - Satır içi betiğin özeti: `base64(sha256(<script> ile </script> arasındaki metin))`. Tarama betiği beklenen
   değeri yazar. Betik değişince CSP'yi güncelle.
 - `style-src 'unsafe-inline'` stil öznitelikleri için kabul edilebilir (betik çalıştırmaz); `script-src` için asla.
+- WebAssembly gerekiyorsa (ör. ses motoru) script-src'ye yalnızca `'wasm-unsafe-eval'` ekle; `'unsafe-eval'` ekleme.
 - Meta etiketiyle verilen CSP'de `frame-ancestors` çalışmaz; GitHub Pages özel başlık eklemeye izin vermez.
 - Test edildi (Chromium): bu CSP ile aynı kökenden yüklenen bir betikteki `new Function()` engellendi, satır içi olay
   işleyicileri engellendi. Dikkat: Playwright `page.evaluate` ile çalıştırılan kod CSP'ye takılmaz; CSP'yi sınamak için
@@ -77,13 +78,14 @@ function clean(html) {
 
 - **PDF (pdf.js ≤ 4.1.392):** GHSA-wgrm-67xf-hhpq — zararlı PDF, `isEvalSupported` varsayılan `true` iken
   uygulama kökeninde kod çalıştırabilir. Danışmanın önerdiği önlem: `getDocument({ isEvalSupported: false, … })`.
-  Düzeltilmiş sürüm: 4.2.67 (API değişikliği gerektirir). CSP `'unsafe-eval'` vermediği için ikinci savunma hattı var.
+  Düzeltilmiş sürüm: 4.2.67. Kitap & Notlarım 3.5.2'de **4.10.38 legacy** derlemesine geçildi (ES modülü → `import()`;
+  `renderTextLayer` yerine `new TextLayer({ textContentSource, container, viewport }).render()`; vurgu hizası test edildi).
 - **Word (mammoth):** GHSA-rmjr-87wv-gf87 — `>= 0.3.25, < 1.11.0`, harici bağlantılı resim yoluyla dizin geçişi.
   Çözüm: ≥ 1.11.0 (Kitap & Notlarım'da 1.13.0'a yükseltildi).
 - **EPUB:** zip içindeki XHTML → DOMParser / etkisiz belge → izin listesiyle temizle → resimler `blob:` adresiyle.
-- **Excel (SheetJS 0.18.5):** GHSA-4r6h-8v6p-xvw6 "dosya okurken" prototip kirliliği; danışma sayfası "yalnızca
-  dışa aktaran iş akışları etkilenmez" diyor. GHSA-5pgg-2g8v-p4x9 (ReDoS, < 0.20.2) için tetikleyici yol danışmada
-  belirtilmemiş. Düzeltilmiş sürümler npm'de değil, cdn.sheetjs.com'da; ağ engeli varsa bunu "kalan risk" olarak raporla.
+- **Excel:** SheetJS 0.18.5'in iki açığı vardı (GHSA-4r6h-8v6p-xvw6, GHSA-5pgg-2g8v-p4x9); düzeltilmiş sürümler npm'de değil
+  ve bu ortamdan indirilemedi. Çözüm: SheetJS tamamen kaldırıldı; .xlsx, JSZip ile ~60 satırlık bir OOXML yazıcıyla üretiliyor
+  (openpyxl ile uyarısız açıldığı doğrulandı). Az kullanılan bir özellik için büyük bağımlılık yerine küçük kendi kodu.
 
 ## 7. Bağımlılıklar
 
@@ -115,5 +117,7 @@ function clean(html) {
 | EPUB bölümleri canlı `div`te ayrıştırılıyordu | kod incelemesi + CSP ihlal raporu | etkisiz belge |
 | Günlük/blog resim adresleri kaçışlanmıyordu | tarama betiği | `safeSrc()` |
 | mammoth 1.8.0 | npm audit + GHSA-rmjr-87wv-gf87 | 1.13.0 |
-| docx/xlsx çalışma anında CDN'den | tarama betiği | `lib/` altına yerel kopya |
+| docx/xlsx çalışma anında CDN'den | tarama betiği | `lib/` altına yerel kopya (3.5.2'de xlsx tamamen kaldırıldı) |
+| pdf.js 3.11.174 (açık 4.2.67'de kapandı) | npm audit | 4.10.38 legacy (3.5.2) |
+| SheetJS 0.18.5'in 2 açığı | npm audit + danışma sayfaları | kaldırıldı; kendi .xlsx yazıcısı (3.5.2) |
 | CSP yoktu, satır içi `onclick`/`onerror` vardı | tarama betiği | CSP + olay dinleyicisi |

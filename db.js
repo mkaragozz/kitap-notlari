@@ -324,7 +324,7 @@ const DEFAULTS = {
   // Okuyucu (Ayarlar → Okuma görünümü)
   reader: { bg: '#FBF5E6', fg: '#2B2B2B', font: 'Literata', size: 19, line: 1.6, margin: 22, turn: 'slide' },
   backupFiles: false,
-  tts: { voice: '', rate: 1, pitch: 1 },
+  tts: { engine: 'system', voice: '', rate: 1, pitch: 1, pause: 'normal' },
 };
 const REMOVED = ['apiKey', 'model', 'citeStyle'];
 export function getSettings() {

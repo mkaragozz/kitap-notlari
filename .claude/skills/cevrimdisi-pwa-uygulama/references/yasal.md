@@ -39,7 +39,9 @@ Her `lib/` kütüphanesinin lisans dosyası yanında durmalı. Kitap & Notlarım
 |---|---|
 | pdf.js | Apache License 2.0 |
 | html5-qrcode | Apache License 2.0 |
-| SheetJS (xlsx) | Apache License 2.0 |
+| ONNX Runtime Web (sesli okuma) | MIT |
+| espeak-ng (Piper telaffuzu, wasm içinde) | GPL-3.0 — kaynak adresleri `lib/tts/README.md` |
+| Piper Türkçe sesi (veri) / Meta MMS Türkçe | CC BY-NC-SA 4.0 / CC BY-NC 4.0 — ticari kullanım yok |
 | docx | MIT |
 | JSZip | MIT veya GPLv3 (çift lisans) |
 | mammoth | BSD tarzı ("Redistribution and use in source and binary forms…") |
