@@ -5,10 +5,8 @@
 // - Metni seçip "Alıntılarıma aktar": kitabın Alıntılar bölümüne, renkli vurguyla; orijinal dosyadaki yeri
 //   (PDF/Word/TXT/EPUB, sayfa ya da konum) kaynak/dipnot olarak alıntıya yazılır.
 // - Sayfaya "tekrar oku" işareti ve sayfa yorumu; kaldığı yerden devam.
-// - 🔊 Sesli okuma: telefonun kendi sesleriyle, ses / hız / ton seçimi, okunan cümle vurgulanır.
-import * as DB from './db.js?v=3.5.3';
-import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, go, fmtDateTime } from './ui.js?v=3.5.3';
-import * as TTS from './tts.js?v=3.5.3';
+import * as DB from './db.js?v=3.5.4';
+import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, go, fmtDateTime } from './ui.js?v=3.5.4';
 
 export const hooks = { openQuoteEditor: null };
 
@@ -258,19 +256,10 @@ export async function renderReader(bookId, params) {
       <button class="rd-ic" data-r="reread" title="Bu sayfayı tekrar okunacaklara ekle">🔖</button>
       <button class="rd-ic" data-r="comment" title="Bu sayfaya yorum ekle">💬</button>
       <button class="rd-ic" data-r="marks" title="İşaretler ve alıntılar">📑</button>
-      <button class="rd-ic" data-r="tts" title="Sesli oku">🔊</button>
       <button class="rd-ic" data-r="prefs" title="Okuma ayarları">Aa</button>
     </div>
     <div class="rd-stage" id="rd-stage"><div class="loading-box"><div class="spinner"></div><div id="rd-load">Kitap açılıyor…</div></div></div>
     <div class="rd-sel" id="rd-sel" hidden><button class="btn primary" data-r="save-sel">📥 Alıntılarıma aktar</button></div>
-    <div class="rd-tts" id="rd-tts" hidden>
-      <button class="rd-ic" data-r="tts-stop" title="Durdur ve kapat">⏹</button>
-      <button class="rd-ic" data-r="tts-back" title="Önceki cümle">⏮</button>
-      <button class="rd-ic big" data-r="tts-play" title="Oku">▶</button>
-      <button class="rd-ic" data-r="tts-fwd" title="Sonraki cümle">⏭</button>
-      <span class="tts-rate"><button class="rd-ic sm" data-r="tts-slower" title="Yavaşlat">−</button><b id="tts-rate">1,0×</b><button class="rd-ic sm" data-r="tts-faster" title="Hızlandır">＋</button></span>
-      <button class="rd-ic" data-r="tts-voice" title="Ses, hız ve duraklama">🗣️</button>
-    </div>
     <div class="rd-bottom">
       <button class="rd-ic" data-r="prev" aria-label="Önceki sayfa">‹</button>
       <button class="rd-page" data-r="goto" id="rd-page">…</button>
@@ -290,8 +279,6 @@ export async function renderReader(bookId, params) {
     return;
   }
   bindReader();
-  TTS.ttsMiniRefresh();
-  ttsReattach();
 }
 
 function applyTheme() {
@@ -473,7 +460,6 @@ async function gotoPage(n, animate = true, dir = 0) {
   updatePageLabel();
   clearTimeout(saveTimer);
   saveTimer = setTimeout(savePos, 700);
-  if (!ttsInternal && TTS.ttsActive(R.book.id)) ttsFollowManual();
 }
 function currentPdfPage() {
   if (R.mode === 'orig') return R.page + 1;
@@ -683,14 +669,6 @@ function bindReader() {
       if (a === 'next') gotoPage(R.page + 1, true, 1);
       if (a === 'goto') gotoDialog();
       if (a === 'prefs') openPrefs();
-      if (a === 'tts') { if (TTS.ttsActive(R.book.id)) TTS.ttsStop(); else ttsStartHere(); }
-      if (a === 'tts-play') { if (TTS.ttsActive(R.book.id)) TTS.ttsToggle(); else ttsStartHere(); }
-      if (a === 'tts-stop') TTS.ttsStop();
-      if (a === 'tts-back') TTS.ttsSkip(-1);
-      if (a === 'tts-fwd') TTS.ttsSkip(1);
-      if (a === 'tts-slower') ttsRate(-0.1);
-      if (a === 'tts-faster') ttsRate(0.1);
-      if (a === 'tts-voice') TTS.openVoiceSheet();
       if (a === 'marks') openMarks();
       if (a === 'reread') toggleReread();
       if (a === 'comment') commentClick();
@@ -731,170 +709,11 @@ function bindReader() {
   window.addEventListener('resize', onResize);
   lastTick = Date.now();
   R.cleanup = () => {
-    // Sesli okuma okuyucudan çıkınca da sürer (alttaki küçük oynatıcıyla); yalnızca bağlantı kopar
-    TTS.setView(null); setTtsHighlight(null);
     tickReading(0); flushReading();
     document.removeEventListener('keydown', onKey); document.removeEventListener('selectionchange', onSel); window.removeEventListener('resize', onResize);
     document.body.classList.remove('reading');
-    setTimeout(() => TTS.ttsMiniRefresh(), 0);
     if (R.mode !== 'orig') savePos();
   };
-}
-
-// ================= 🔊 Sesli okuma: okuyucu bağlantısı (ses motorları ve oynatıcı tts.js'te) =================
-// Metin cümlelere, cümleler virgül/noktalı virgül parçalarına bölünür (duraklama için). Okunan cümle sarı,
-// okunan kelime turuncu alt çizgiyle izlenir (CSS Highlight API: DOM'a dokunmaz). Okuyucudan çıkınca okuma
-// sürer; tekrar açılınca okunan cümleye bağlanır.
-// Metin düğümlerini birleştir; PDF metin katmanında parçalar arasına sanal boşluk koy (kelimeler yapışmasın)
-function joinNodes(nodes, sep) {
-  const starts = []; let text = '';
-  nodes.forEach((n, i) => {
-    if (sep && i && text && !/[\s-]$/.test(text) && !/^\s/.test(n.data)) text += ' ';
-    starts.push(text.length); text += n.data;
-  });
-  return { nodes, starts, text };
-}
-function locate(J, off) {
-  let i = J.starts.length - 1;
-  while (i > 0 && J.starts[i] > off) i--;
-  const n = J.nodes[i]; return [n, Math.max(0, Math.min(n.data.length, off - J.starts[i]))];
-}
-function rangeOf(J, a, b) { const r = document.createRange(); const [sn, so] = locate(J, a); const [en, eo] = locate(J, b); r.setStart(sn, so); r.setEnd(en, eo); return r; }
-function sentencesOf(J, extra = {}) {
-  const list = TTS.splitSentences(J.text).map(({ start, end }) => {
-    const raw = J.text.slice(start, end), t = raw.trim(), lead = raw.length - raw.trimStart().length;
-    return { text: t, parts: TTS.partsOf(t), J, off: start + lead, range: rangeOf(J, start + lead, start + lead + t.length), para: false, ...extra };
-  });
-  if (list.length) list[list.length - 1].para = true; // paragrafın son cümlesinden sonra uzun ara
-  return list;
-}
-const BLOCKS = 'p,li,h1,h2,h3,h4,h5,h6,blockquote,pre,td,th,dd,dt,figcaption';
-function flowSentences() {
-  let blocks = [...R.flow.querySelectorAll(BLOCKS)].filter((b) => !b.querySelector(BLOCKS));
-  if (!blocks.length) blocks = [R.flow];
-  const list = [];
-  blocks.forEach((b) => { const nodes = textNodes(b); if (nodes.length) list.push(...sentencesOf(joinNodes(nodes, false))); });
-  // okuyucu dışındayken kaldığı yeri kaydetmek için kitap içindeki yaklaşık konum (0–1)
-  const total = list.reduce((t, x) => t + x.text.length, 0) || 1; let acc = 0;
-  list.forEach((x) => { x.frac = acc / total; acc += x.text.length; });
-  return list;
-}
-function pageOfRange(r) {
-  const rect = r.getClientRects()[0] || r.getBoundingClientRect(); const fr = R.flow.getBoundingClientRect();
-  return Math.max(0, Math.min(R.pages - 1, Math.floor((rect.left - fr.left + 2) / R.W)));
-}
-/** PDF sayfasının metni (okuyucu kapalıyken; vurgusuz) */
-async function pdfPageSentences(doc, n) {
-  const page = await doc.getPage(n);
-  const tc = await page.getTextContent();
-  const text = tc.items.map((it) => it.str + (it.hasEOL ? '\n' : '')).join('').replace(/-\n(?=\p{Ll})/gu, '').replace(/\s*\n\s*/g, ' ');
-  const list = TTS.splitSentences(text).map(({ start, end }) => { const t = text.slice(start, end).trim(); return { text: t, parts: TTS.partsOf(t), pdfPage: n, para: false }; });
-  if (list.length) list[list.length - 1].para = true;
-  return list;
-}
-/** PDF orijinal görünüm: sayfanın seçilebilir metin katmanından cümleler (vurgulanabilir) */
-async function pdfLayerSentences(n) {
-  let tl = null;
-  for (let i = 0; i < 50; i++) { tl = document.querySelector('#rd-pdf .textLayer'); if (tl && textNodes(tl).length) break; await new Promise((r) => setTimeout(r, 100)); }
-  const nodes = tl ? textNodes(tl) : [];
-  if (!nodes.length) return pdfPageSentences(R.pdf, n);
-  return sentencesOf(joinNodes(nodes, true), { pdfPage: n });
-}
-function setTtsHighlight(range, word = null) {
-  if (!(window.CSS && CSS.highlights && window.Highlight)) return;
-  if (range) CSS.highlights.set('kn-tts', new Highlight(range)); else CSS.highlights.delete('kn-tts');
-  if (word) CSS.highlights.set('kn-tts-w', new Highlight(word)); else CSS.highlights.delete('kn-tts-w');
-}
-let ttsInternal = false; // okuma sayfayı kendisi çevirirken "elle çevirme" sayılmasın
-function ttsTurn(pg) { ttsInternal = true; gotoPage(pg, true, pg > R.page ? 1 : -1); ttsInternal = false; }
-function ttsView() {
-  return {
-    bookId: R.book.id,
-    onSentence: (s) => {
-      if (!R) return;
-      if (s.range && s.range.startContainer.isConnected) {
-        if (R.mode !== 'orig') { const pg = pageOfRange(s.range); if (pg !== R.page) ttsTurn(pg); }
-        setTtsHighlight(s.range);
-      } else setTtsHighlight(null);
-      ttsBar();
-    },
-    onWord: (s, start, len) => {
-      if (!R || !s.range || !s.J || !s.range.startContainer.isConnected) return;
-      const wr = rangeOf(s.J, s.off + start, s.off + start + len);
-      if (R.mode !== 'orig') { const pg = pageOfRange(wr); if (pg > R.page) ttsTurn(pg); }
-      setTtsHighlight(s.range, wr);
-    },
-    onClear: () => { setTtsHighlight(null); ttsBar(); },
-  };
-}
-let lastPosSave = 0;
-async function saveTtsPos(bookId, mode, s, force) {
-  if (!s || (!force && Date.now() - lastPosSave < 5000)) return;
-  lastPosSave = Date.now();
-  const b = DB.getBook(bookId); if (!b) return;
-  if (s.pdfPage && mode === 'orig') b.readPos = { mode, pdfPage: s.pdfPage, page: s.pdfPage, frac: 0 };
-  else if (s.frac != null) b.readPos = { mode, frac: s.frac };
-  b.lastReadAt = new Date().toISOString();
-  await DB.saveBook(b);
-}
-function ttsSource() {
-  const book = R.book, bookId = book.id, mode = R.mode, doc = R.mode === 'orig' ? R.pdf : null, pages = R.pages;
-  return {
-    bookId, title: book.title,
-    href: (s) => (s && s.pdfPage && mode === 'orig' ? `#/read/${bookId}?pdfpage=${s.pdfPage}` : `#/read/${bookId}${s && s.frac != null ? `?pos=${s.frac.toFixed(4)}` : ''}`),
-    save: (s) => saveTtsPos(bookId, mode, s),
-    more: mode === 'orig' ? async (last) => {
-      const n = (last && last.pdfPage ? last.pdfPage : 1) + 1; // bitirilen sayfanın bir sonrakisi
-      if (n > pages) return null;
-      if (R && R.book.id === bookId && R.mode === 'orig') { ttsInternal = true; await gotoPage(n - 1, true, 1); ttsInternal = false; return pdfLayerSentences(n); }
-      return pdfPageSentences(doc, n);
-    } : null,
-  };
-}
-async function ttsBuild() {
-  if (R.mode === 'orig') return { list: await pdfLayerSentences(R.page + 1), idx: 0 };
-  const list = flowSentences();
-  let idx = list.findIndex((x) => pageOfRange(x.range) >= R.page); if (idx < 0) idx = 0;
-  return { list, idx };
-}
-async function ttsStartHere() {
-  const { list, idx } = await ttsBuild();
-  if (!list.length) { toast('Bu sayfada okunacak metin bulunamadı'); return; }
-  TTS.setView(ttsView());
-  await TTS.ttsStart(ttsSource(), list, idx);
-  ttsBar();
-}
-/** Kullanıcı elle sayfa çevirince okuma yeni sayfadan sürer */
-async function ttsFollowManual() {
-  if (!R || ttsInternal || !TTS.ttsActive(R.book.id)) return;
-  const { list, idx } = await ttsBuild();
-  if (list.length) TTS.ttsJump(list, idx);
-}
-/** Okuyucu yeniden açıldı ve bu kitap okunuyorsa: okunan cümleye bağlan */
-async function ttsReattach() {
-  if (!R || !TTS.ttsActive(R.book.id)) { ttsBar(); return; }
-  const cur = TTS.ttsCurrent();
-  TTS.setView(ttsView());
-  const { list } = await ttsBuild();
-  if (!cur || !list.length) { ttsBar(); return; }
-  let best = -1, bd = 1e9;
-  list.forEach((x, i) => { if (x.text === cur.text) { const d = Math.abs((x.frac || 0) - (cur.frac || 0)) + (x.pdfPage && cur.pdfPage ? Math.abs(x.pdfPage - cur.pdfPage) : 0); if (d < bd) { bd = d; best = i; } } });
-  if (best >= 0) { TTS.ttsReplaceList(list, best); ttsView().onSentence(list[best]); }
-  ttsBar();
-}
-function ttsBar() {
-  const bar = $('#rd-tts'); if (!bar || !R) return;
-  const on = TTS.ttsActive(R.book.id);
-  bar.hidden = !on;
-  const p = TTS.ttsPrefs();
-  const pl = $('[data-r="tts-play"]', bar); if (pl) { const playing = on && TTS.ttsPlaying(); pl.textContent = playing ? '⏸' : '▶'; pl.title = playing ? 'Duraklat' : 'Oku'; }
-  const rv = $('#tts-rate', bar); if (rv) rv.textContent = p.rate.toFixed(1).replace('.', ',') + '×';
-  const tb = $('[data-r="tts"]'); if (tb) tb.classList.toggle('on', on);
-}
-TTS.onTtsChange(() => ttsBar());
-function ttsRate(d) {
-  const p = TTS.ttsPrefs(); p.rate = Math.round(Math.max(0.5, Math.min(2, p.rate + d)) * 10) / 10;
-  DB.setSettings({ tts: p }); ttsBar(); TTS.ttsRestartCurrent();
 }
 
 /** Okuyucudan çıkılınca (başka sayfaya gidilince) çağrılır */

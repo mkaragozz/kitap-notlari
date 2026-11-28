@@ -75,10 +75,7 @@ export const GUIDE = [
       <li><b>PDF:</b> 📄 <b>Orijinal görünüm</b> sayfayı aynen gösterir (zemin rengi ve yakınlaştırma değişir, sayfa numaraları kitapla aynıdır). 📝 <b>Metin görünümü</b> yazıyı çıkarır; yazı tipi ve boyutu da değişir, resimler ve sayfa düzeni kaybolur. Üstteki 📝/📄 düğmesiyle geçiş yapın.</li>
       <li><b>Alıntı kaydetme:</b> Metni parmağınızla seçin, alttaki <b>📥 Alıntılarıma aktar</b>'a basın. Alıntı kitabın Alıntılar bölümüne sayfa numarasıyla gider; yıldız, etiket, yorum, tekrar oku ve <b>renk</b> seçebilirsiniz. Seçtiğiniz renk metnin üzerinde fosforlu kalem gibi görünür; vurguya dokununca alıntıyı düzenlersiniz.</li>
       <li><b>🔖</b> bulunduğunuz sayfayı <b>Tekrar Oku</b> listesine ekler; <b>💬</b> sayfaya yorum yazar; <b>📑</b> tüm alıntıları, işaretleri ve yorumları listeler, dokununca o yere gider.</li>
-      <li>Kitap sayfasındaki alıntı kartlarında 📖 düğmesi alıntının kitaptaki yerini açar.</li>
-      <li><b>🔊 Sesli okuma (kitabı dinleme):</b> Üstteki 🔊'ye basın; okuma bulunduğunuz sayfadan başlar. Okunan cümle sarı, okunan kelime turuncu alt çizgiyle izlenir ve sayfalar okumaya göre kendiliğinden çevrilir (PDF dahil). ⏸ duraklatır, ⏮ ⏭ cümle atlar, − ＋ hızı değiştirir, 🗣️ ile ses, hız ve <b>duraklama</b> (Kısa / Normal / Uzun: virgülde, cümle ve paragraf sonunda verilen ara) seçilir.
-        <br><b>Ses:</b> Telefonunuzun kendi Türkçe sesi kullanılır; ücretsizdir. Telefonda birden fazla Türkçe ses yüklüyse 🗣️ panelinde listelenir; ton (Kalın / Normal / İnce) ve hız ayarlanabilir.
-        <br><b>Okumayı kapatmadıkça sürer:</b> Okuyucudan çıkıp uygulamanın başka bölümüne geçince okuma devam eder; altta küçük oynatıcı çıkar (⏸ ⏹ 📖 kitaba dön). Ekran kilitlenince telefon okumayı durdurur.</li></ul>
+      <li>Kitap sayfasındaki alıntı kartlarında 📖 düğmesi alıntının kitaptaki yerini açar.</li></ul>
       <p class="muted">Dosyalar yalnızca bu cihazda saklanır. Eski Word biçimi (.doc) desteklenmez; Word'de “.docx” olarak kaydedin. Şifreli (DRM'li) e-kitaplar açılamaz.</p>`,
   },
   {
