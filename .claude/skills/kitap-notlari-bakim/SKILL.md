@@ -30,7 +30,8 @@ GitHub Pages `main` dalından yayınlanır. Kullanıcı Türkçe konuşur, tekni
 | `app.js` | Yönlendirme (`route()`, `NAV_OF`, `NAV_ITEMS`), ana sayfa (`renderHome`), kitap formu, alıntı editörü, Diğer (`renderMore`), Ayarlar alt sayfaları, açılış göçleri (migration) ve `APP_VERSION` |
 | `db.js` | IndexedDB (`DB_VERSION`, `STORES`, `files` deposu), ayar varsayılanları (`DEFAULTS`), yedek al/içe aktar |
 | `lists.js` | Kitap bölümleri: `LISTS`, `SECTION_ROUTES`, `PRIVATE_LOCK`, liste kartları, kategoriler, katalog PDF |
-| `reader.js` | E-kitap okuyucu (PDF/Word/TXT/EPUB), vurgular, "Alıntılarıma aktar", 🔊 sesli okuma (Web Speech API: ses/hız/ton, cümle + kelime takibi, otomatik sayfa çevirme, ekranı açık tutma) |
+| `reader.js` | E-kitap okuyucu (PDF/Word/TXT/EPUB), vurgular, "Alıntılarıma aktar", sesli okumanın okuyucu bağlantısı (cümle listesi, CSS Highlight ile cümle/kelime vurgusu, sayfa takibi) |
+| `tts.js` | 🔊 Sesli okuma motoru ve oynatıcı: telefonun sesi (Web Speech, yalnızca Türkçe sesler), indirilebilir Piper/MMS (onnxruntime-web; dosyalar `lib/tts/`, `voices/`, SHA-256 doğrulamalı, `kn-voices` önbelleği), duraklama, kelime takibi, okuyucu dışında süren oynatma + alttaki küçük oynatıcı, Media Session |
 | `cards.js`, `export.js` | Alıntı/düşünce kartları; PDF/Word/Excel dışa aktarma, kaynak satırı |
 | `articles.js`, `blog.js`, `notes.js`, `thoughts.js`, `journal.js`, `reports.js` | Bölümler |
 | `lock.js` | PIN, kurtarma kodu, bölüm kilitleri (`isOpen(section)`) |
@@ -56,6 +57,9 @@ Yeni bir `.js` modülü eklersen `sw.js` içindeki `MODS` listesine de ekle; yok
 `lib/` kütüphanelerinin kendi sürüm ekleri vardır (`pdf.min.js?v=3.11.174`); bunlara elle `sed` uygulama — eski bir
 toplu değiştirme bunları `3.31.174` yapmıştı. Betik yalnızca tam eşleşen eki değiştirir.
 `sw.js` `/vadeli/` yolunu bilerek atlar (aynı sitede ayrı uygulama vardı); bu satırı kaldırma.
+`lib/tts/` ve `voices/` dosyaları **sürüm eki almaz** ve `kn-voices` önbelleğinde durur (güncellemede silinmez); bu dosyaları
+değiştirirsen `tts.js` içindeki boyut ve SHA-256 değerlerini de güncelle, yoksa indirme "doğrulanamadı" hatası verir.
+GitHub tek dosyada 100 MB sınırı koyar: MMS modeli `part0/part1` olarak bölündü.
 
 ## Veri değişiklikleri
 

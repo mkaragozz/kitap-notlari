@@ -169,3 +169,27 @@ uygulandı; sahte ses motoruyla otomatik test edildi, gerçek seslerle **yalnız
   tekrar iste. Ekran kilitlenince telefonun okumayı durdurup durdurmayacağı cihaza bağlıdır: kullanıcıya söyle.
 - Kişinin kendi sesini kopyalamak (ses klonlama) tarayıcıda yerleşik değildir; ücretli bulut servisi + biyometrik veri
   demektir (bkz. yasal.md) → önerme.
+
+### 11b. Daha doğal, ücretsiz ve internetsiz sesler (Kitap & Notlarım 3.5.2'de uygulandı ve test edildi)
+
+Kullanıcı geri bildirimi (gerçek telefon, Android Chrome): telefonun Türkçe sesi tek ve "robot gibi"; tarayıcı kelime
+sınırı bildirmiyor; ekran kilitlenince Web Speech duruyor; Almanca/Bulgarca ses seçilince Türkçe metni o aksanla okuyor
+(ses çeviri yapmaz → listede yalnızca kitabın dilindeki sesleri göster). Edge (Android) bu telefonda uygulamaya hiç ses vermedi.
+
+- **Piper** (rhasspy/piper-voices): Türkçe için yalnızca `tr_TR-dfki-medium` var; konuşmacı erkek (MaryTTS bileşen
+  listesi: "A male Turkish … voice"); veri lisansı CC BY-NC-SA 4.0. Tarayıcıda: `onnxruntime-web` (MIT) + espeak-ng
+  tabanlı fonem üretici wasm (`@diffusionstudio/piper-wasm`, içinde espeak-ng → GPL-3.0). Fonem kimlikleri Python
+  `piper-tts` ile birebir aynı çıktı (doğrulandı). Hız: masaüstü tek iş parçacığında konuşmadan ~4 kat hızlı.
+- **Meta MMS** (`facebook/mms-tts-tur`, CC BY-NC 4.0): hazır ONNX sürümü bulunamadı → `torch.onnx.export` (opset 17)
+  ile dönüştürüldü (114 MB). Belirteç: küçük harf, sözlükte olmayan karakterleri at, aralara 0 koy (Python ile aynı
+  kimlikler doğrulandı). Hız: masaüstünde konuşmadan ~1,4 kat **yavaş** → telefonda takılabilir; kullanıcıya söyle.
+  int8 küçültme 38 MB'a indirdi ama wasm'da daha yavaş çalıştı.
+- Paketler varsayılan olarak cdnjs / jsdelivr / huggingface'ten yükler → hepsini kendi sitende barındır, `wasmPaths`
+  ve `locateFile`'ı kendi yoluna çevir. Dosyaları kullanıcı "İndir" deyince indir, SHA-256 doğrula, ayrı ve sürümden
+  bağımsız bir Cache Storage'a yaz; service worker bu yolları yalnızca o önbellekten sunsun.
+- CSP'ye yalnızca `'wasm-unsafe-eval'` eklenir; aynı kökenden yüklenen betikte `new Function` hâlâ engellenir (test edildi).
+- Duraklama: cümleyi virgül/noktalı virgül parçalarına böl, her parçayı ayrı üret, aralara sessizlik örnekleri ekle,
+  tek WAV yap (arka planda zamanlayıcıya güvenme). Kelime takibi: parça süresi içinde kelime uzunluğuna göre tahmin.
+- Okuma okuyucudan çıkınca sürsün: oynatıcı modül düzeyinde yaşasın; okuyucu yalnızca "görünüm" kancası bağlasın.
+  PDF'te sonraki sayfa için son cümlenin sayfa numarasını kullan (o anki cümle liste bitince boş olur — yaşanan hata).
+- Kilit ekranında sürmesi için `<audio>` + Media Session; gerçek telefonda doğrulanmalı.

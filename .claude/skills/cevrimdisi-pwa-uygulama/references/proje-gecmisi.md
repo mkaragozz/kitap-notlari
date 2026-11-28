@@ -16,6 +16,8 @@ Amaç: aynı hataları tekrar yapmamak; benzer bir uygulamada hangi sırayla ile
 | 23.11.2026 | 3.2 | Ana sayfa sadeleştirme (arama yanında 📷, Makalelerim kutusu), alt menüde Blog |
 | (başka oturum) | 3.3 | Aynı siteye geçici olarak ayrı bir uygulama eklendi; service worker `/vadeli/` yolunu atlayacak şekilde değişti |
 | 27.11.2026 | 3.4 | Kilitli bölümden çıkınca hemen yeniden kilit (ayarlanabilir); kütüphane sürüm ekleri düzeltildi |
+| 27.11.2026 | 3.5.1 | Sesli okuma (telefonun sesi; ses/hız/ton, cümle + kelime takibi); üç haneli sürüm numarası |
+| 28.11.2026 | 3.5.2 | İndirilebilir Piper (erkek) ve MMS Türkçe sesleri, duraklamalı okuma, yalnızca Türkçe sesler, okuyucu dışında süren okuma + küçük oynatıcı, tahmini kelime takibi |
 | 27.11.2026 | 3.5 | Güvenlik sürümü: CSP, pdf.js önlemi, etkisiz belgede HTML temizleme, `safeSrc`, mammoth 1.13.0, docx/xlsx yerel kopya |
 
 ## Yaşanan sorunlar ve çözümleri

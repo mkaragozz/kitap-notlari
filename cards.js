@@ -1,9 +1,9 @@
 // Alıntı ve düşünce kartları, etiket bağlantıları, ortak liste yardımcıları.
-import * as DB from './db.js?v=3.5.1';
-import * as Lock from './lock.js?v=3.5.1';
-import { pageLabel, sourceText } from './export.js?v=3.5.1';
-import { HL_COLORS } from './reader.js?v=3.5.1';
-import { $, $$, esc, norm, highlight, fmtDate, fmtDateTime, openSheet, starsBadge } from './ui.js?v=3.5.1';
+import * as DB from './db.js?v=3.5.2';
+import * as Lock from './lock.js?v=3.5.2';
+import { pageLabel, sourceText } from './export.js?v=3.5.2';
+import { HL_COLORS } from './reader.js?v=3.5.2';
+import { $, $$, esc, norm, highlight, fmtDate, fmtDateTime, openSheet, starsBadge } from './ui.js?v=3.5.2';
 
 export function pageNum(p) { const n = parseInt(p, 10); return isNaN(n) ? null : n; }
 

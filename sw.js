@@ -4,11 +4,13 @@
 // SÜRÜM DEĞİŞTİRİRKEN: aşağıdaki V değerini ve tüm dosyalardaki "?v=..." eklerini birlikte değiştirin
 // (index.html, *.js içindeki import satırları). Sürüm eki her dosyaya yeni bir adres verir; böylece
 // GitHub'ın önbelleği eski dosyayı veremez ve eski/yeni dosyalar karışmaz.
-const V = '3.5.1';
+const V = '3.5.2';
 const VERSION = 'kn-v' + V;
-const MODS = ['app', 'ui', 'db', 'cards', 'lock', 'scanner', 'thoughts', 'journal', 'export', 'notes', 'guide', 'lists', 'reader', 'articles', 'blog', 'reports'].map((m) => `${m}.js?v=${V}`);
+const MODS = ['app', 'ui', 'db', 'cards', 'lock', 'scanner', 'thoughts', 'journal', 'export', 'notes', 'guide', 'lists', 'reader', 'tts', 'articles', 'blog', 'reports'].map((m) => `${m}.js?v=${V}`);
 const SHELL = ['./', 'index.html', `styles.css?v=${V}`, ...MODS, 'lib/html5-qrcode.min.js?v=2.3.8', 'lib/pdf.min.js?v=3.11.174', 'lib/pdf.worker.min.js?v=3.11.174', 'lib/mammoth.browser.min.js?v=1.13.0', 'lib/jszip.min.js?v=3.10.1',
   'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'privacy.html'];
+// Kullanıcının indirdiği sesli okuma dosyaları (lib/tts, voices/): sürümden bağımsız önbellek, güncellemede silinmez
+const VOICES = 'kn-voices';
 const CDN = /^https:\/\/(cdn\.jsdelivr\.net|cdnjs\.cloudflare\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)\//;
 
 self.addEventListener('install', (e) => {
@@ -18,7 +20,7 @@ self.addEventListener('install', (e) => {
 self.addEventListener('message', (e) => { if (e.data === 'skip-waiting') self.skipWaiting(); });
 
 self.addEventListener('activate', (e) => {
-  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== VERSION && k !== VOICES).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
 self.addEventListener('fetch', (e) => {
@@ -30,6 +32,11 @@ self.addEventListener('fetch', (e) => {
   // Uygulama dosyaları: bu sürümün önbelleğinden (hızlı ve internetsiz açılır).
   // Güncelleme: uygulama dosyaları değiştiğinde yukarıdaki VERSION değeri de değiştirilmelidir;
   // tarayıcı yeni sw.js'i görünce bütün dosyaları birlikte yeniden indirir.
+  if (url.origin === location.origin && (url.pathname.includes('/lib/tts/') || url.pathname.includes('/voices/'))) {
+    // Yalnızca kullanıcı "İndir" deyince uygulama tarafından önbelleğe yazılır; burada otomatik indirilmez
+    e.respondWith(caches.open(VOICES).then(async (c) => (await c.match(req, { ignoreSearch: true })) || fetch(req)));
+    return;
+  }
   if (url.origin === location.origin) {
     e.respondWith(
       caches.open(VERSION).then(async (c) => {

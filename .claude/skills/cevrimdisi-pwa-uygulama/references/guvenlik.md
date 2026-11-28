@@ -40,6 +40,7 @@
 - Satır içi betiğin özeti: `base64(sha256(<script> ile </script> arasındaki metin))`. Tarama betiği beklenen
   değeri yazar. Betik değişince CSP'yi güncelle.
 - `style-src 'unsafe-inline'` stil öznitelikleri için kabul edilebilir (betik çalıştırmaz); `script-src` için asla.
+- WebAssembly gerekiyorsa (ör. ses motoru) script-src'ye yalnızca `'wasm-unsafe-eval'` ekle; `'unsafe-eval'` ekleme.
 - Meta etiketiyle verilen CSP'de `frame-ancestors` çalışmaz; GitHub Pages özel başlık eklemeye izin vermez.
 - Test edildi (Chromium): bu CSP ile aynı kökenden yüklenen bir betikteki `new Function()` engellendi, satır içi olay
   işleyicileri engellendi. Dikkat: Playwright `page.evaluate` ile çalıştırılan kod CSP'ye takılmaz; CSP'yi sınamak için

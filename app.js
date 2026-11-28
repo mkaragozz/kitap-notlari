@@ -1,23 +1,24 @@
-import * as DB from './db.js?v=3.5.1';
-import * as EX from './export.js?v=3.5.1';
-import * as Lock from './lock.js?v=3.5.1';
-import * as Scan from './scanner.js?v=3.5.1';
+import * as DB from './db.js?v=3.5.2';
+import * as EX from './export.js?v=3.5.2';
+import * as Lock from './lock.js?v=3.5.2';
+import * as Scan from './scanner.js?v=3.5.2';
 import { $, $$, esc, view, nav, toast, openSheet, closeSheet, confirmDialog, modal, today, fmtDate, norm, highlight,
-  pickFiles, fileToDataUrl, copyText, starPickerHtml, bindStarPicker, longDate, fmtTime } from './ui.js?v=3.5.1';
+  pickFiles, fileToDataUrl, copyText, starPickerHtml, bindStarPicker, longDate, fmtTime } from './ui.js?v=3.5.2';
 import { pageNum, sortQuotes, allTags, quoteCard, thoughtCard, thoughtText, openRelated, starFilterHtml, applyStarFilter,
-  tagInputHtml, bindTagInput } from './cards.js?v=3.5.1';
-import { renderThoughts, renderThought, THOUGHT_ACTIONS } from './thoughts.js?v=3.5.1';
-import { renderJournal, renderJournalCal, JOURNAL_ACTIONS, getPrompt, managePrompts } from './journal.js?v=3.5.1';
-import { renderNotes, renderNotebook, renderShopping, noteCard, nbIsOpen, NOTE_ACTIONS, openNbookEditor, openShopcatEditor, moveOrder, lockKey } from './notes.js?v=3.5.1';
-import { manageNotebooks as manageThoughtNotebooks } from './thoughts.js?v=3.5.1';
-import { GUIDE } from './guide.js?v=3.5.1';
-import { renderReports, REPORT_ACTIONS } from './reports.js?v=3.5.1';
-import { LISTS, SECTION_ROUTES, PRIVATE_LOCK, privateLockOf, listHref, inList, renderListTab, bindListTab, LIST_ACTIONS, topicChips, topicPickerHtml, bindTopicPicker, openTopicEditor } from './lists.js?v=3.5.1';
-import { renderReader, leaveReader, readerRefresh, hooks as readerHooks, readMeta, fileKind, KIND_LABEL, HL_COLORS, HL_NAMES, BG_PRESETS, FONTS, readerPrefs, autoFg, ttsVoices, ttsVoiceFieldsHtml, bindTtsVoiceFields, ttsSupported, ttsPrefs, ttsStopAll } from './reader.js?v=3.5.1';
-import { renderArticles, renderArticleForm, ARTICLE_ACTIONS } from './articles.js?v=3.5.1';
-import { renderBlog, renderPost, renderPostEditor, BLOG_ACTIONS, postPlain } from './blog.js?v=3.5.1';
+  tagInputHtml, bindTagInput } from './cards.js?v=3.5.2';
+import { renderThoughts, renderThought, THOUGHT_ACTIONS } from './thoughts.js?v=3.5.2';
+import { renderJournal, renderJournalCal, JOURNAL_ACTIONS, getPrompt, managePrompts } from './journal.js?v=3.5.2';
+import { renderNotes, renderNotebook, renderShopping, noteCard, nbIsOpen, NOTE_ACTIONS, openNbookEditor, openShopcatEditor, moveOrder, lockKey } from './notes.js?v=3.5.2';
+import { manageNotebooks as manageThoughtNotebooks } from './thoughts.js?v=3.5.2';
+import { GUIDE } from './guide.js?v=3.5.2';
+import { renderReports, REPORT_ACTIONS } from './reports.js?v=3.5.2';
+import { LISTS, SECTION_ROUTES, PRIVATE_LOCK, privateLockOf, listHref, inList, renderListTab, bindListTab, LIST_ACTIONS, topicChips, topicPickerHtml, bindTopicPicker, openTopicEditor } from './lists.js?v=3.5.2';
+import * as TTS from './tts.js?v=3.5.2';
+import { renderReader, leaveReader, readerRefresh, hooks as readerHooks, readMeta, fileKind, KIND_LABEL, HL_COLORS, HL_NAMES, BG_PRESETS, FONTS, readerPrefs, autoFg } from './reader.js?v=3.5.2';
+import { renderArticles, renderArticleForm, ARTICLE_ACTIONS } from './articles.js?v=3.5.2';
+import { renderBlog, renderPost, renderPostEditor, BLOG_ACTIONS, postPlain } from './blog.js?v=3.5.2';
 
-const APP_VERSION = '3.5.1';
+const APP_VERSION = '3.5.2';
 window.__knStarted = true; // index.html'deki güvenlik ağı için: modüller sorunsuz yüklendi
 const COLORS = [['#7C5CFF', '#FF5DA2'], ['#FF6B57', '#FFB020'], ['#10B8A6', '#2F9BFF'], ['#FF5DA2', '#FFB020'], ['#2F9BFF', '#7C5CFF'], ['#10B8A6', '#7CD957'], ['#FF8A3D', '#FF5D7A']];
 const TAG_COLORS = ['#7C5CFF', '#FF5DA2', '#10B8A6', '#FF6B57', '#2F9BFF', '#FFB020', '#8E5CF7', '#13A88F'];
@@ -127,6 +128,7 @@ function relockOnLeave(parts) {
 }
 function route() {
   const { parts, params, path } = parseHash();
+  setTimeout(() => TTS.ttsMiniRefresh(), 0); // sesli okuma sürüyorsa alttaki küçük oynatıcı
   relockOnLeave(parts);
   const key = parts.length ? NAV_OF[parts[0]] || 'home' : 'home';
   const vis = navOrder();
@@ -1029,7 +1031,7 @@ async function renderSettings(sub = '') {
       <div class="field"><span>Sayfa çevirme</span><div class="seg"><button type="button" class="${p.turn !== 'book' ? 'on' : ''}" data-setturn="slide">↔ Kaydırma</button><button type="button" class="${p.turn === 'book' ? 'on' : ''}" data-setturn="book">📖 Kitap gibi</button></div></div>
       <div class="reader-preview" id="sr-prev" style="background:${p.bg};color:${p.fg || autoFg(p.bg)};font-family:${FONTS.find((f) => f[0] === p.font) ? FONTS.find((f) => f[0] === p.font)[2] : 'serif'};font-size:${p.size}px;line-height:${p.line}">Okumak, başka hayatlara açılan bir penceredir. Bu ön izleme, seçtiğiniz ayarlarla metnin nasıl görüneceğini gösterir.</div>
       <button class="btn block mt" data-act="reader-reset">Varsayılana dön (Krem zemin, Literata)</button></div>
-      <div class="card"><b>🔊 Sesli okuma</b>${ttsSupported() ? `<div id="sr-tts">${ttsVoiceFieldsHtml(ttsPrefs(), await ttsVoices(), 'sv')}</div>` : '<p class="hint">Bu tarayıcı sesli okumayı desteklemiyor.</p>'}</div>`;
+      <div class="card"><b>🔊 Sesli okuma</b><div id="sr-tts">${await TTS.voiceFieldsHtml('sv')}</div></div>`;
   } else if (sub === 'backup') {
     let persisted = null;
     try { persisted = navigator.storage && navigator.storage.persisted ? await navigator.storage.persisted() : null; } catch (e) { /* yok */ }
@@ -1066,7 +1068,8 @@ function bindSettings(sub) {
     view.querySelectorAll('[data-setturn]').forEach((b) => { b.onclick = () => { view.querySelectorAll('[data-setturn]').forEach((x) => x.classList.toggle('on', x === b)); setR({ turn: b.dataset.setturn }); }; });
     $('#sr-color').oninput = (e) => setR({ bg: e.target.value, fg: autoFg(e.target.value) });
     $('#sr-font').onchange = (e) => setR({ font: e.target.value });
-    const tt = $('#sr-tts'); if (tt) bindTtsVoiceFields(tt, 'sv', () => toast('Kaydedildi ✓'));
+    const tt = $('#sr-tts');
+    if (tt) { const draw = async () => { tt.innerHTML = await TTS.voiceFieldsHtml('sv'); TTS.bindVoiceFields(tt, 'sv', draw, () => toast('Kaydedildi ✓')); }; TTS.bindVoiceFields(tt, 'sv', draw, () => toast('Kaydedildi ✓')); }
     [['size', parseInt], ['line', parseFloat], ['margin', parseInt]].forEach(([k, fn]) => { const i = $('#sr-' + k); i.oninput = () => { $('#sr-' + k + '-v').textContent = i.value; setR({ [k]: fn(i.value, 10) }); }; });
   }
   view.querySelectorAll('[data-link]').forEach((c) => {
