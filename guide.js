@@ -77,8 +77,8 @@ export const GUIDE = [
       <li><b>🔖</b> bulunduğunuz sayfayı <b>Tekrar Oku</b> listesine ekler; <b>💬</b> sayfaya yorum yazar; <b>📑</b> tüm alıntıları, işaretleri ve yorumları listeler, dokununca o yere gider.</li>
       <li>Kitap sayfasındaki alıntı kartlarında 📖 düğmesi alıntının kitaptaki yerini açar.</li>
       <li><b>🔊 Sesli okuma (kitabı dinleme):</b> Üstteki 🔊'ye basın; okuma bulunduğunuz sayfadan başlar. Okunan cümle sarı, okunan kelime turuncu alt çizgiyle izlenir ve sayfalar okumaya göre kendiliğinden çevrilir (PDF dahil). ⏸ duraklatır, ⏮ ⏭ cümle atlar, − ＋ hızı değiştirir, 🗣️ ile ses, hız ve <b>duraklama</b> (Kısa / Normal / Uzun: virgülde, cümle ve paragraf sonunda verilen ara) seçilir.
-        <br><b>Sesler:</b> 📱 <b>Telefonun sesi</b> hemen kullanılır (yalnızca Türkçe sesler listelenir; ton ayarı vardır). ⬇️ <b>Piper Türkçe (erkek)</b> ve ⬇️ <b>Meta MMS Türkçe</b> bir kez indirilir (Ayarlar → 📖 Okuma görünümü ya da 🗣️), telefonda saklanır, internetsiz çalışır ve metni hiçbir yere göndermez; istediğinizde “Sil” ile kaldırırsınız. MMS bazı telefonlarda yavaş kalabilir. Bu seslerin lisansları ticari kullanıma izin vermez; kişisel kullanım içindir.
-        <br><b>Okumayı kapatmadıkça sürer:</b> Okuyucudan çıkıp uygulamanın başka bölümüne geçince okuma devam eder; altta küçük oynatıcı çıkar (⏸ ⏹ 📖 kitaba dön). Telefonun sesi ekran kilitlenince durur; indirilen seslerde okuma kilit ekranında sürebilir ve bildirim alanında kontrol düğmeleri çıkar (telefona bağlıdır).</li></ul>
+        <br><b>Ses:</b> Telefonunuzun kendi Türkçe sesi kullanılır; ücretsizdir. Telefonda birden fazla Türkçe ses yüklüyse 🗣️ panelinde listelenir; ton (Kalın / Normal / İnce) ve hız ayarlanabilir.
+        <br><b>Okumayı kapatmadıkça sürer:</b> Okuyucudan çıkıp uygulamanın başka bölümüne geçince okuma devam eder; altta küçük oynatıcı çıkar (⏸ ⏹ 📖 kitaba dön). Ekran kilitlenince telefon okumayı durdurur.</li></ul>
       <p class="muted">Dosyalar yalnızca bu cihazda saklanır. Eski Word biçimi (.doc) desteklenmez; Word'de “.docx” olarak kaydedin. Şifreli (DRM'li) e-kitaplar açılamaz.</p>`,
   },
   {

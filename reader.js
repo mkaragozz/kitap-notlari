@@ -6,9 +6,9 @@
 //   (PDF/Word/TXT/EPUB, sayfa ya da konum) kaynak/dipnot olarak alıntıya yazılır.
 // - Sayfaya "tekrar oku" işareti ve sayfa yorumu; kaldığı yerden devam.
 // - 🔊 Sesli okuma: telefonun kendi sesleriyle, ses / hız / ton seçimi, okunan cümle vurgulanır.
-import * as DB from './db.js?v=3.5.2';
-import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, go, fmtDateTime } from './ui.js?v=3.5.2';
-import * as TTS from './tts.js?v=3.5.2';
+import * as DB from './db.js?v=3.5.3';
+import { $, esc, view, toast, openSheet, closeSheet, confirmDialog, go, fmtDateTime } from './ui.js?v=3.5.3';
+import * as TTS from './tts.js?v=3.5.3';
 
 export const hooks = { openQuoteEditor: null };
 

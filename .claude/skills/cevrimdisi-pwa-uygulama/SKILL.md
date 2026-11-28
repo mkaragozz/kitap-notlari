@@ -150,7 +150,8 @@ değiştirirsen CSP özetini güncelle (tarama betiği doğru özeti yazar).
 - Playwright + Chromium, `python3 -m http.server`, `serviceWorkers: 'block'`; harici servisleri `route` ile taklit et;
   `pageerror` ve `Content Security Policy` içeren konsol iletilerini topla.
 - Kamera, dokunmatik seçim ve sesli okuma gibi cihaz özellikleri yalnızca gerçek telefonda doğrulanır: bunu
-  kullanıcıya açıkça söyle.
+  kullanıcıya açıkça söyle. Ağır bir özellik (büyük model, wasm, büyük dosya) eklemeden önce telefon koşulunu taklit et
+  (CPU 4x yavaş + yavaş ağ) ve kullanıcının hissedeceği süreyi ölç; masaüstündeki hız yanıltıcıdır (3.5.2'de yaşandı).
 - GitHub Pages: çalışma dalında commit → PR → birleştir → `curl https://<kullanıcı>.github.io/<depo>/sw.js | grep "const V"`.
 
 ## 9. Bakım

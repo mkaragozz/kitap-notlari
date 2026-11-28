@@ -18,6 +18,7 @@ Amaç: aynı hataları tekrar yapmamak; benzer bir uygulamada hangi sırayla ile
 | 27.11.2026 | 3.4 | Kilitli bölümden çıkınca hemen yeniden kilit (ayarlanabilir); kütüphane sürüm ekleri düzeltildi |
 | 27.11.2026 | 3.5.1 | Sesli okuma (telefonun sesi; ses/hız/ton, cümle + kelime takibi); üç haneli sürüm numarası |
 | 28.11.2026 | 3.5.2 | İndirilebilir Piper (erkek) ve MMS Türkçe sesleri, duraklamalı okuma, yalnızca Türkçe sesler, okuyucu dışında süren okuma + küçük oynatıcı, tahmini kelime takibi |
+| 28.11.2026 | 3.5.3 | Piper/MMS kaldırıldı (telefonda ilk sese 23/77 sn), yalnızca telefonun sesi; CSP'den `wasm-unsafe-eval` geri alındı; indirilmiş ses önbelleği siliniyor |
 | 27.11.2026 | 3.5 | Güvenlik sürümü: CSP, pdf.js önlemi, etkisiz belgede HTML temizleme, `safeSrc`, mammoth 1.13.0, docx/xlsx yerel kopya |
 
 ## Yaşanan sorunlar ve çözümleri
@@ -35,6 +36,7 @@ Amaç: aynı hataları tekrar yapmamak; benzer bir uygulamada hangi sırayla ile
 | Özel not kilit açıkken "Son notlar"da göründü | Kilit tek seferde açılıp süre dolana kadar açık kalıyordu | Bölümden çıkınca yeniden kilit |
 | Kurtarma kodu kilitli defterde saklandı | Kullanıcı hatası riski | Kılavuz ve kilit ekranında uyarı |
 | Blog/EPUB içeriğinde kod çalışabiliyordu (3.4) | Canlı belgede `innerHTML`; test 3.4'te kodun çalıştığını gösterdi | Etkisiz belge + CSP (3.5) |
+| Sinir ağı sesleri telefonda okumadı (3.5.2) | Ölçüm: CPU 4x yavaşta ilk ses 23 sn (Piper), 77 sn (MMS); yayından önce telefon koşulunda ölçülmemişti | Kaldırıldı (3.5.3); ağır özellikleri önce telefon koşulunda ölç |
 | Samsung İnternet'ten yüklemede Play Koruma uyarısı | **Doğrulanmadı** (gözlem). Chrome ile yüklemede uyarı beklenmez | Chrome ile yükleme önerildi |
 
 ## Kullanıcının tercihleri (bu projede öğrenilen)
